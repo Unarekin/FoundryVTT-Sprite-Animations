@@ -1,7 +1,9 @@
 {
   "SPRITE-ANIMATIONS": {
     "ERRORS": {
-      "INVALIDACTOR": "Invalid actor: {actor}"
+      "INVALIDACTOR": "Invalid actor: {actor}",
+      "INVALIDANIMATION": "Invalid animation: {animation}",
+      "INVALIDTOKEN": "Invalid token: {token}"
     }
   }
 }

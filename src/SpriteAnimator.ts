@@ -1,11 +1,13 @@
 import { AnimationConfig } from "interfaces";
-import { InvalidActorError } from "./errors";
+import { InvalidActorError, InvalidAnimationError, InvalidTokenError } from "./errors";
 import { coerceActor } from "coercion";
 import { addAnimation, addAnimations, clearAnimations, getAnimation, getAnimations, removeAnimation, removeAnimations } from "settings";
-
+import { playAnimation, playAnimations } from "./utils";
 
 export class SpriteAnimator {
   public readonly actor: Actor;
+  public readonly object: Token | null;
+  public readonly document: TokenDocument;
 
   // #region Static Methods
 
@@ -209,6 +211,74 @@ export class SpriteAnimator {
     }
   }
 
+  /**
+   * Play an animation by name
+   * @param {Token} token - {@link Token}
+   * @param {string} name - Name of the animation to play
+   */
+  public static async playAnimation(token: Token, name: string): Promise<void>
+  /**
+   * Play an animation by name
+   * @param {Token} token - {@link Token}
+   * @param {string} name - Name of the animation to play
+   */
+  public static async playAnimation(token: TokenDocument, name: string): Promise<void>
+  /**
+   * Play an animation
+   * @param {Token} token - {@link Token}
+   * @param {AnimationConfig} animation - {@link AnimationConfig}
+   */
+  public static async playAnimation(token: Token, animation: AnimationConfig): Promise<void>
+  /**
+   * Play an animation
+   * @param {TokenDocument} token - {@link TokenDocument}
+   * @param {AnimationConfig} animation - {@link AnimationConfig}
+   */
+  public static async playAnimation(token: TokenDocument, animation: AnimationConfig): Promise<void>
+  public static async playAnimation(arg: unknown, anim: string | AnimationConfig): Promise<void> {
+    try {
+      const actor = coerceActor(arg);
+      if (!(actor instanceof Actor)) throw new InvalidActorError(arg);
+      const animation: AnimationConfig | undefined = typeof anim === "string" ? getAnimation(actor, anim) : anim;
+      if (!animation) throw new InvalidAnimationError(anim);
+      await playAnimation(actor, animation);
+    } catch (err) {
+      console.error(err);
+      if (err instanceof Error) ui.notifications?.error(err.message, { console: false, localize: true });
+    }
+  }
+
+  /**
+   * Plays a sequence of animations on a given {@link Token}
+   * @param {Token} token - {@link Token}
+   * @param {string | AnimationConfig} args - An array of strings or {@link AnimationConfig}s
+   */
+  public static async playAnimations(token: Token, ...args: (string | AnimationConfig)[]): Promise<void>
+  /**
+   * Plays a sequence of animations on a given {@link TokenDocument}
+   * @param {TokenDocument} token - {@link TokenDocument}
+   * @param {string | AnimationConfig} args - An array of strings or {@link AnimationConfig}s
+   */
+  public static async playAnimations(token: TokenDocument, ...args: (string | AnimationConfig)[]): Promise<void>
+  public static async playAnimations(arg: unknown, ...args: (string | AnimationConfig)[]): Promise<void> {
+    try {
+      const token = arg instanceof Token ? arg : arg instanceof TokenDocument ? arg.object : undefined;
+      if (!token?.mesh) throw new InvalidTokenError(arg);
+
+      const actor = coerceActor(token);
+      if (!(actor instanceof Actor)) throw new InvalidActorError(actor);
+
+      const animations = args.map(arg => typeof arg === "string" ? getAnimation(actor, arg) : arg);
+      const hasInvalid = animations.find(anim => !anim);
+      if (hasInvalid) throw new InvalidAnimationError(hasInvalid);
+      await playAnimations(token.mesh, animations as AnimationConfig[]);
+
+    } catch (err) {
+      console.error(err);
+      if (err instanceof Error) ui.notifications?.error(err.message, { console: false, localize: true });
+    }
+  }
+
   // #endregion
 
   // #region Instance Methods
@@ -294,11 +364,66 @@ export class SpriteAnimator {
     return getAnimation(this.actor, name);
   }
 
+  /**
+   * Play an animation for the current {@link Actor}
+   * @param {string} name - Name of the animation to play
+   * @returns A promise that resolves when the animation has finished, unless the animation is set to loop
+   */
+  public async playAnimation(name: string): Promise<void>
+  /**
+   * Play ana nimation for the current {@link Actor}
+   * @param {AnimationConfig} config - {@link AnimationConfig}
+   * @returns A promise that resolves when the animation has finished, unless the animation is set to loop
+   */
+  public async playAnimation(config: AnimationConfig): Promise<void>
+  public async playAnimation(arg: string | AnimationConfig): Promise<void> {
+    try {
+      const config: AnimationConfig | undefined = typeof arg === "string" ? this.getAnimation(arg) : arg;
+      if (!config) throw new InvalidAnimationError(arg);
+      if (!this.object?.mesh) throw new InvalidTokenError(this.object);
+      await playAnimation(this.object.mesh, config);
+    } catch (err) {
+      console.error(err);
+      if (err instanceof Error) ui.notifications?.error(err.message, { console: false, localize: true });
+    }
+  }
+
+  /**
+   * Plays a series of animations in sequence
+   * @param {string | AnimationConfig} args - A list of animations by name or {@link AnimationConfig}
+   */
+  public async playAnimations(...args: (string | AnimationConfig)[]): Promise<void> {
+    try {
+      if (!this.object?.mesh) throw new InvalidTokenError(this.object);
+
+      const animations = args.map(arg => typeof arg === "string" ? this.getAnimation(arg) : arg);
+      const hasInvalid = animations.find(anim => !anim);
+      if (hasInvalid) throw new InvalidAnimationError(hasInvalid);
+      await playAnimations(this.object.mesh, animations as AnimationConfig[]);
+    } catch (err) {
+      console.error(err);
+      if (err instanceof Error) ui.notifications?.error(err.message, { console: false, localize: true });
+    }
+  }
+
   // #endregion
   constructor(token: Token)
   constructor(token: TokenDocument)
-  constructor(actor: Actor)
   constructor(arg: unknown) {
+
+    if (arg instanceof Token) {
+      if (!(arg.actor instanceof Actor)) throw new InvalidActorError(arg.actor);
+      this.object = arg;
+      this.document = arg.document
+      this.actor = arg.actor;
+    } else if (arg instanceof TokenDocument) {
+      if (!(arg.actor instanceof Actor)) throw new InvalidActorError(arg.actor);
+      this.document = arg;
+      this.object = arg.object;
+    } else {
+      throw new InvalidTokenError(arg);
+    }
+
     const actor = coerceActor(arg);
     if (!(actor instanceof Actor)) throw new InvalidActorError(arg);
     this.actor = actor;
