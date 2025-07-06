@@ -10,6 +10,10 @@
 
 Sprite Animations adds a very simple mechanism to swap between a series of animated textures for a token.  This can be helpful for playing attack or casting animations like you might see in a video game.
 
+[Sprite Animation Demo.webm](https://github.com/user-attachments/assets/745a86bf-eb36-49ad-8202-64f084a14e91)
+
+*Sprite assets by [chierit](https://chierit.itch.io/); background by [Nidhoggn](https://opengameart.org/users/nidhoggn) on [OpenGameArt](https://opengameart.org/content/backgrounds-3); video uses the [Project FU](https://github.com/League-of-Fabulous-Developers/FoundryVTT-Fabula-Ultima) system module*
+
 ## Installation
 
 To install this module, copy and paste the following manifest URL into the module installation dialog in Foundry VTT
