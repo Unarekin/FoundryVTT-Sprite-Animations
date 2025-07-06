@@ -1,5 +1,5 @@
 import { AnimationConfig } from "interfaces";
-import { InvalidActorError, InvalidAnimationError, InvalidTokenError } from "./errors";
+import { InvalidActorError, InvalidAnimationError, InvalidTokenError, LocalizedError } from "./errors";
 import { coerceActor, coerceToken } from "coercion";
 import { addAnimation, addAnimations, clearAnimations, getAnimation, getAnimations, removeAnimation, removeAnimations } from "settings";
 import { playAnimation, playAnimations } from "./utils";
@@ -221,6 +221,7 @@ export class SpriteAnimator {
     try {
       const token = coerceToken(target);
       if (!(token instanceof Token)) throw new InvalidTokenError(target);
+      if (!token.document.canUserModify(game?.user as User, "update")) throw new LocalizedError("PERMISSIONDENIED");
       if (typeof anim === "string" && !(token.actor instanceof Actor)) throw new InvalidActorError(target);
       if (!token.mesh) throw new InvalidTokenError(target);
 
@@ -244,6 +245,7 @@ export class SpriteAnimator {
     try {
       const token = coerceToken(target);
       if (!(token instanceof Token)) throw new InvalidTokenError(target);
+      if (!token.document.canUserModify(game?.user as User, "update")) throw new LocalizedError("PERMISSIONDENIED");
       if (!token.mesh) throw new InvalidTokenError(target);
       if (!(token.actor instanceof Actor)) throw new InvalidActorError(token.actor);
 
@@ -359,6 +361,7 @@ export class SpriteAnimator {
   public async playAnimation(config: AnimationConfig): Promise<void>
   public async playAnimation(arg: string | AnimationConfig): Promise<void> {
     try {
+      if (!this.document.canUserModify(game?.user as User, "update")) throw new LocalizedError("PERMISSIONDENIED");
       const config: AnimationConfig | undefined = typeof arg === "string" ? this.getAnimation(arg) : arg;
       if (!config) throw new InvalidAnimationError(arg);
       if (!this.object?.mesh) throw new InvalidTokenError(this.object);
@@ -377,6 +380,7 @@ export class SpriteAnimator {
    */
   public async playAnimations(...args: (string | AnimationConfig)[]): Promise<void> {
     try {
+      if (!this.document.canUserModify(game?.user as User, "update")) throw new LocalizedError("PERMISSIONDENIED");
       if (!this.object?.mesh) throw new InvalidTokenError(this.object);
 
       const animations = args.map(arg => typeof arg === "string" ? this.getAnimation(arg) : arg);
@@ -400,5 +404,7 @@ export class SpriteAnimator {
     this.document = token.document;
     if (!(token.actor instanceof Actor)) throw new InvalidActorError(token.actor);
     this.actor = token.actor;
+
+    if (!token.document.canUserModify(game?.user as User, "update")) throw new LocalizedError("PERMISSIONDENIED");
   }
 }
