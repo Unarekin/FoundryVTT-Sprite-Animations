@@ -3,7 +3,8 @@
     "ERRORS": {
       "INVALIDACTOR": "Invalid actor: {actor}",
       "INVALIDANIMATION": "Invalid animation: {animation}",
-      "INVALIDTOKEN": "Invalid token: {token}"
+      "INVALIDTOKEN": "Invalid token: {token}",
+      "SOCKETNOTINITIALIZED": "Websocket not initialized"
     }
   }
 }

@@ -10,3 +10,13 @@ export function coerceActor(arg: unknown): Actor | undefined {
     if (actor instanceof Actor) return actor;
   }
 }
+
+export function coerceToken(arg: unknown): Token | undefined {
+  if (arg instanceof Token) return arg;
+  if (arg instanceof TokenDocument) return arg.object ?? undefined;
+  if (typeof arg === "string") {
+    const obj = fromUuidSync(arg);
+    if (obj instanceof Token) return obj;
+    if (obj instanceof TokenDocument) return obj.object ?? undefined;
+  }
+}

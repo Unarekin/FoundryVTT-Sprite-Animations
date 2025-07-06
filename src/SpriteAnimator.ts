@@ -1,8 +1,9 @@
 import { AnimationConfig } from "interfaces";
 import { InvalidActorError, InvalidAnimationError, InvalidTokenError } from "./errors";
-import { coerceActor } from "coercion";
+import { coerceActor, coerceToken } from "coercion";
 import { addAnimation, addAnimations, clearAnimations, getAnimation, getAnimations, removeAnimation, removeAnimations } from "settings";
 import { playAnimation, playAnimations } from "./utils";
+import { playAnimations as socketPlayAnimations } from "./sockets";
 
 export class SpriteAnimator {
   public readonly actor: Actor;
@@ -212,36 +213,22 @@ export class SpriteAnimator {
   }
 
   /**
-   * Play an animation by name
-   * @param {Token} token - {@link Token}
-   * @param {string} name - Name of the animation to play
+   * Plays an animation for a given target
+   * @param {Token | TokenDocument | string} target - {@link Token}, {@link TokenDocument}, or id
+   * @param {string | AnimationConfig} anim - Name of the animation or {@link AnimationConfig}
    */
-  public static async playAnimation(token: Token, name: string): Promise<void>
-  /**
-   * Play an animation by name
-   * @param {Token} token - {@link Token}
-   * @param {string} name - Name of the animation to play
-   */
-  public static async playAnimation(token: TokenDocument, name: string): Promise<void>
-  /**
-   * Play an animation
-   * @param {Token} token - {@link Token}
-   * @param {AnimationConfig} animation - {@link AnimationConfig}
-   */
-  public static async playAnimation(token: Token, animation: AnimationConfig): Promise<void>
-  /**
-   * Play an animation
-   * @param {TokenDocument} token - {@link TokenDocument}
-   * @param {AnimationConfig} animation - {@link AnimationConfig}
-   */
-  public static async playAnimation(token: TokenDocument, animation: AnimationConfig): Promise<void>
-  public static async playAnimation(arg: unknown, anim: string | AnimationConfig): Promise<void> {
+  public static async playAnimation(target: Token | TokenDocument | string, anim: string | AnimationConfig): Promise<void> {
     try {
-      const actor = coerceActor(arg);
-      if (!(actor instanceof Actor)) throw new InvalidActorError(arg);
-      const animation: AnimationConfig | undefined = typeof anim === "string" ? getAnimation(actor, anim) : anim;
+      const token = coerceToken(target);
+      if (!(token instanceof Token)) throw new InvalidTokenError(target);
+      if (typeof anim === "string" && !(token.actor instanceof Actor)) throw new InvalidActorError(target);
+      if (!token.mesh) throw new InvalidTokenError(target);
+
+      const animation = typeof anim === "string" ? getAnimation(token.actor!, anim) : anim;
       if (!animation) throw new InvalidAnimationError(anim);
-      await playAnimation(actor, animation);
+
+      void socketPlayAnimations(token.document.uuid, [animation]);
+      await playAnimation(token.mesh, animation);
     } catch (err) {
       console.error(err);
       if (err instanceof Error) ui.notifications?.error(err.message, { console: false, localize: true });
@@ -249,35 +236,29 @@ export class SpriteAnimator {
   }
 
   /**
-   * Plays a sequence of animations on a given {@link Token}
-   * @param {Token} token - {@link Token}
-   * @param {string | AnimationConfig} args - An array of strings or {@link AnimationConfig}s
+   * Plays a series of animations by name or {@link AnimationConfig}
+   * @param {Token | TokenDocument | string} target - {@link Token}, {@link TokenDocument}, or id/uuid
+   * @param {string | AnimationConfig} anims - Array of strings or {@link AnimationConfig}
    */
-  public static async playAnimations(token: Token, ...args: (string | AnimationConfig)[]): Promise<void>
-  /**
-   * Plays a sequence of animations on a given {@link TokenDocument}
-   * @param {TokenDocument} token - {@link TokenDocument}
-   * @param {string | AnimationConfig} args - An array of strings or {@link AnimationConfig}s
-   */
-  public static async playAnimations(token: TokenDocument, ...args: (string | AnimationConfig)[]): Promise<void>
-  public static async playAnimations(arg: unknown, ...args: (string | AnimationConfig)[]): Promise<void> {
+  public static async playAnimations(target: Token | TokenDocument | string, ...anims: (string | AnimationConfig)[]): Promise<void> {
     try {
-      const token = arg instanceof Token ? arg : arg instanceof TokenDocument ? arg.object : undefined;
-      if (!token?.mesh) throw new InvalidTokenError(arg);
+      const token = coerceToken(target);
+      if (!(token instanceof Token)) throw new InvalidTokenError(target);
+      if (!token.mesh) throw new InvalidTokenError(target);
+      if (!(token.actor instanceof Actor)) throw new InvalidActorError(token.actor);
 
-      const actor = coerceActor(token);
-      if (!(actor instanceof Actor)) throw new InvalidActorError(actor);
-
-      const animations = args.map(arg => typeof arg === "string" ? getAnimation(actor, arg) : arg);
+      const animations = anims.map(anim => typeof anim === "string" ? getAnimation(token.actor!, anim) : anim);
       const hasInvalid = animations.find(anim => !anim);
       if (hasInvalid) throw new InvalidAnimationError(hasInvalid);
-      await playAnimations(token.mesh, animations as AnimationConfig[]);
 
+      void socketPlayAnimations(token.document.uuid, animations as AnimationConfig[]);
+      await playAnimations(token.mesh, animations as AnimationConfig[]);
     } catch (err) {
       console.error(err);
       if (err instanceof Error) ui.notifications?.error(err.message, { console: false, localize: true });
     }
   }
+
 
   // #endregion
 
@@ -381,6 +362,8 @@ export class SpriteAnimator {
       const config: AnimationConfig | undefined = typeof arg === "string" ? this.getAnimation(arg) : arg;
       if (!config) throw new InvalidAnimationError(arg);
       if (!this.object?.mesh) throw new InvalidTokenError(this.object);
+
+      void socketPlayAnimations(this.document.uuid, [config]);
       await playAnimation(this.object.mesh, config);
     } catch (err) {
       console.error(err);
@@ -399,7 +382,9 @@ export class SpriteAnimator {
       const animations = args.map(arg => typeof arg === "string" ? this.getAnimation(arg) : arg);
       const hasInvalid = animations.find(anim => !anim);
       if (hasInvalid) throw new InvalidAnimationError(hasInvalid);
+      void socketPlayAnimations(this.document.uuid, animations as AnimationConfig[]);
       await playAnimations(this.object.mesh, animations as AnimationConfig[]);
+
     } catch (err) {
       console.error(err);
       if (err instanceof Error) ui.notifications?.error(err.message, { console: false, localize: true });
