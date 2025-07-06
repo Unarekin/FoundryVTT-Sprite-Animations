@@ -1,0 +1,11 @@
+{
+  "SPRITE-ANIMATIONS": {
+    "ERRORS": {
+      "INVALIDACTOR": "Invalid actor: {actor}",
+      "INVALIDANIMATION": "Invalid animation: {animation}",
+      "INVALIDTOKEN": "Invalid token: {token}",
+      "SOCKETNOTINITIALIZED": "Websocket not initialized",
+      "PERMISSIONDENIED": "Permission denied"
+    }
+  }
+}
