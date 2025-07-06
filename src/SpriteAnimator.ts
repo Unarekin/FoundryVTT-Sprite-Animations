@@ -392,25 +392,13 @@ export class SpriteAnimator {
   }
 
   // #endregion
-  constructor(token: Token)
-  constructor(token: TokenDocument)
   constructor(arg: unknown) {
 
-    if (arg instanceof Token) {
-      if (!(arg.actor instanceof Actor)) throw new InvalidActorError(arg.actor);
-      this.object = arg;
-      this.document = arg.document
-      this.actor = arg.actor;
-    } else if (arg instanceof TokenDocument) {
-      if (!(arg.actor instanceof Actor)) throw new InvalidActorError(arg.actor);
-      this.document = arg;
-      this.object = arg.object;
-    } else {
-      throw new InvalidTokenError(arg);
-    }
-
-    const actor = coerceActor(arg);
-    if (!(actor instanceof Actor)) throw new InvalidActorError(arg);
-    this.actor = actor;
+    const token = coerceToken(arg);
+    if (!(token instanceof Token)) throw new InvalidTokenError(arg);
+    this.object = token;
+    this.document = token.document;
+    if (!(token.actor instanceof Actor)) throw new InvalidActorError(token.actor);
+    this.actor = token.actor;
   }
 }
