@@ -112,7 +112,9 @@ export class SpriteAnimationsConfig extends foundry.applications.api.HandlebarsA
   public static async onSubmit(this: SpriteAnimationsConfig, e: Event | SubmitEvent, elem: HTMLFormElement, formData: foundry.applications.ux.FormDataExtended) {
     try {
       const parsed = this.parseForm();
+      console.log("Submitted:", parsed);
       await setAnimations(this.actor, parsed);
+
     } catch (err) {
       console.error(err);
       if (err instanceof Error) ui.notifications?.error(err.message, { console: false, localize: true });

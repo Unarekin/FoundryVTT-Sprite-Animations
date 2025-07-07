@@ -2,7 +2,8 @@ import { TRANSLATION_KEY } from "./constants";
 import { SpriteAnimationPlayer } from "./applications";
 
 Hooks.on("renderTokenHUD", (app: foundry.applications.hud.TokenHUD) => {
-  const col = app.element.querySelector(`.col.left`);
+
+  const col = app.element instanceof HTMLElement ? app.element.querySelector(`.col.left`) : (app.element as JQuery<HTMLElement>).find(`.col.left`)[0];
   if (!(col instanceof HTMLElement)) return;
 
   const button = document.createElement("button");
