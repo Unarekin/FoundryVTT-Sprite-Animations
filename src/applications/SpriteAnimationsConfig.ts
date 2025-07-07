@@ -1,12 +1,10 @@
-import { AnimationConfigRenderContext } from "./types";
+import { AnimationConfigRenderContext, AnimationContext } from "./types";
 import { InvalidAnimationError } from "errors";
 import { TRANSLATION_KEY } from "../constants";
 import { AnimationConfig } from "interfaces";
 import { SpriteAnimator } from "SpriteAnimator";
 import { mimeType } from "utils";
 import { setAnimations } from "settings";
-
-type AnimationContext = (AnimationConfig & { isVideo: boolean });
 
 export class SpriteAnimationsConfig extends foundry.applications.api.HandlebarsApplicationMixin(foundry.applications.api.ApplicationV2) {
   static DEFAULT_OPTIONS = {
@@ -32,7 +30,10 @@ export class SpriteAnimationsConfig extends foundry.applications.api.HandlebarsA
   static PARTS: Record<string, foundry.applications.api.HandlebarsApplicationMixin.HandlebarsTemplatePart> = {
     body: {
       template: `modules/${__MODULE_ID__}/templates/animationConfig.hbs`,
-      templates: [`modules/${__MODULE_ID__}/templates/animationRow.hbs`]
+      templates: [
+        `modules/${__MODULE_ID__}/templates/animationRow.hbs`,
+        `modules/${__MODULE_ID__}/templates/animationPreview.hbs`
+      ]
     },
     footer: {
       template: `templates/generic/form-footer.hbs`
@@ -111,7 +112,9 @@ export class SpriteAnimationsConfig extends foundry.applications.api.HandlebarsA
   public static async onSubmit(this: SpriteAnimationsConfig, e: Event | SubmitEvent, elem: HTMLFormElement, formData: foundry.applications.ux.FormDataExtended) {
     try {
       const parsed = this.parseForm();
+      console.log("Submitted:", parsed);
       await setAnimations(this.actor, parsed);
+
     } catch (err) {
       console.error(err);
       if (err instanceof Error) ui.notifications?.error(err.message, { console: false, localize: true });

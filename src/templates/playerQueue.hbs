@@ -1,0 +1,6 @@
+<section>
+  {{#each queue}}
+    <a data-action="removeQueueItem" data-animation="{{@index}}">{{name}}</a>
+    {{#unless @last}}&nbsp;&gt;&nbsp;{{/unless}}
+  {{/each}}
+</section>
