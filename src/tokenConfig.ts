@@ -25,7 +25,8 @@ function addHeaderButton(app: unknown, controls: foundry.applications.api.Applic
 ["getHeaderControlsTokenConfig",
   "getHeaderControlsPrototypeTokenConfig",
   "getActorSheetHeaderButtons",
-  "getHeaderControlsActorSheetV2"
+  "getHeaderControlsActorSheetV2",
+  "getTokenConfigHeaderButtons"
 ].forEach(hook => {
   console.log("Setting hook:", hook);
   // eslint-disable-next-line @typescript-eslint/no-unsafe-call, @typescript-eslint/no-unsafe-member-access
