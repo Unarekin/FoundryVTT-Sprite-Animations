@@ -13,7 +13,10 @@ export function coerceActor(arg: unknown): Actor | undefined {
 
 export function coerceToken(arg: unknown): Token | undefined {
   if (arg instanceof Token) return arg;
-  if (arg instanceof TokenDocument) return arg.object ?? undefined;
+  if (arg instanceof TokenDocument) {
+    if (arg.object instanceof Token) return arg.object;
+    return canvas?.scene?.tokens.get(arg.id ?? "")?.object ?? undefined;
+  }
   if (typeof arg === "string") {
     const obj = fromUuidSync(arg);
     if (obj instanceof Token) return obj;
