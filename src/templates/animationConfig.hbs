@@ -1,0 +1,17 @@
+<section data-role="sprite-animations">
+  <p>{{localize "SPRITE-ANIMATIONS.CONFIG.DESCRIPTION"}}</p>
+
+  <section data-role="animation-list">
+    {{#each animations as |animation|}}
+      {{> "modules/sprite-animations/templates/animationRow.hbs" animation isToken=../isToken}}
+    {{/each}}
+  </section>
+  <div class="flexrow">
+    <div class="flex1"></div>
+    <div class="flex0">
+      <a data-action="addAnimation" title="{{localize "SPRITE-ANIMATIONS.CONFIG.ADD"}}">
+        <i class="fa-solid fa-plus"></i>
+      </a>
+    </div>
+  </div>
+</section>

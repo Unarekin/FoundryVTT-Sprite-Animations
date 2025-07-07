@@ -1,5 +1,8 @@
 import { AnimationConfig } from "./interfaces";
 
+import mimeJSON from "./mime.json";
+const mimeDB = mimeJSON as Record<string, string>;
+
 function applyProperPixels(mesh: foundry.canvas.primary.PrimarySpriteMesh) {
   if (game.modules?.get("proper-pixels")?.active) {
     // eslint-disable-next-line @typescript-eslint/no-unsafe-assignment, @typescript-eslint/no-unsafe-call, @typescript-eslint/no-unsafe-member-access
@@ -74,4 +77,17 @@ async function animationEnd(resource: PIXI.VideoResource): Promise<void> {
       resolve();
     }, { once: true });
   })
+}
+
+
+/**
+ * Attempts to determine the MIME type of a given file
+ * @param {string} path - File name/path
+ * @returns 
+ */
+export function mimeType(path: string) {
+  const ext = path.split(".").pop();
+  if (!ext) return "application/octet-stream";
+  else if (mimeDB[ext]) return mimeDB[ext];
+  else return "application/octet-stream";
 }

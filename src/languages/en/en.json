@@ -1,3 +1,13 @@
 {
-  "SPRITE-ANIMATIONS": {}
+  "SPRITE-ANIMATIONS": {
+    "CONFIG": {
+      "HEADER": "Sprite Animations",
+      "DESCRIPTION": "Use the following options to add, remove, and update pre-configured animations for this token.",
+      "LOOP": "Loop",
+      "NAME": "Name",
+      "PLAY": "Play Animation",
+      "ADD": "Add Animation",
+      "CONFIRMREMOVE": "Are you sure you wish to remove this animation?"
+    }
+  }
 }

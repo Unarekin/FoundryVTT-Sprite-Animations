@@ -1,0 +1,32 @@
+<section data-role="animation-row" data-animation="{{name}}">
+  <div class="flexrow">
+    <div data-role="preview" style="width:128px" data-src="{{src}}" >
+      {{#if isVideo}}
+        <video width="128" autoplay loop="true">
+          <source src="{{src}}">
+        </video>
+      {{else}}
+        <img src="{{src}}" style="max-width:128px;max-height:128px;">
+      {{/if}}
+    </div>
+    <div class="flexcol flex1">
+      <div class="form-group">
+        <label for="name">{{localize "SPRITE-ANIMATIONS.CONFIG.NAME"}}</label>
+        <input type="text" data-role="name" name="name" id="name" value="{{name}}" required >
+      </div>
+      <div class="form-group">
+        <label for="src">{{localize "Image"}}</label>
+        <file-picker id="file" name="file" type="imagevideo" value="{{src}}"  data-role="src"></file-picker>
+      </div>
+      <div class="form-group">
+        <label for="loop">{{localize "SPRITE-ANIMATIONS.CONFIG.LOOP"}}</label>
+        <input type="checkbox" name="loop" id="loop" {{checked loop}} >
+      </div>
+    </div>
+    <div class="flex0" style="margin-left:2em">
+      <a data-action="deleteAnimation"  title="{{localize " Delete"}}">
+        <i class="fa-solid fa-trash"></i>
+      </a>
+    </div>
+  </div>
+</section>
