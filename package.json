@@ -1,7 +1,7 @@
 {
   "name": "foundryvtt-sprite-animations",
   "version": "1.0.0",
-  "description": "",
+  "description": "A module for Foundry VTT to provide a simple method to swap token art for playing animations.",
   "homepage": "https://github.com/Unarekin/FoundryVTT-Sprite-Animations#readme",
   "bugs": {
     "url": "https://github.com/Unarekin/FoundryVTT-Sprite-Animations/issues"

@@ -1,7 +1,7 @@
 {
   "id": "sprite-animations",
   "title": "Sprite Animations",
-  "description": "",
+  "description": "A module for Foundry VTT to provide a simple method to swap token art for playing animations.",
   "version": "#{VERSION}#",
   "library": "false",
   "compatibility": {
