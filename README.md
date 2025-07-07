@@ -99,6 +99,9 @@ try {
 }
 ```
 
+# API Documentation
+[API Documentation](https://unarekin.github.io/FoundryVTT-Sprite-Animations/)
+
 # Known Issues
 
 - Currently does not support the [Pixel Perfect](https://foundryvtt.com/packages/pixel-perfect) module.  Using both side-by-side will prevent the token's texture from updating when Sprite Animations does its thing.
