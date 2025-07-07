@@ -1,6 +1,7 @@
 import { SpriteAnimationsConfig } from "./applications";
 
 function getHeaderButtons(app: unknown): foundry.applications.api.ApplicationV2.HeaderControlsEntry[] {
+  // eslint-disable-next-line @typescript-eslint/no-unsafe-return
   return [
     {
       icon: "fa-solid fa-person-running",
@@ -14,7 +15,7 @@ function getHeaderButtons(app: unknown): foundry.applications.api.ApplicationV2.
         // eslint-disable-next-line @typescript-eslint/no-unsafe-member-access
         void (new SpriteAnimationsConfig((app as any).actor as Actor)).render({ force: true });
       }
-    }
+    } as any
   ]
 }
 
