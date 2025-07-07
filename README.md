@@ -19,7 +19,7 @@ Sprite Animations adds a very simple mechanism to swap between a series of anima
 To install this module, copy and paste the following manifest URL into the module installation dialog in Foundry VTT
 
 ```
-https://github.com/Unarekin/FoundryVTT-Sprite-Animations/releases/download/1.0.0-alpha1/module.json
+https://github.com/Unarekin/FoundryVTT-Sprite-Animations/releases/latest/download/module.json
 ```
 
 # Usage
