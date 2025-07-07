@@ -1,5 +1,20 @@
 {
   "SPRITE-ANIMATIONS": {
+    "HUD": {
+      "PLAY": "Sprite Animation Player"
+    },
+    "PLAYER": {
+      "TITLE": "Sprite Animation Player",
+      "DESCRIPTION": "Use the buttons below to either play an animation right away, or build a queue of animations to play in sequence.",
+      "PLAY": "Play Animation",
+      "QUEUE": "Queue Animation",
+      "QUEUELIST": "Queue",
+      "NONE": "Nothing queued",
+      "REMOVE": "Remove from queue",
+      "PLAYQUEUE": "Play animation queue",
+      "CLEAR": "Clear queue",
+      "CLEARCONFIRM": "Are you sure you wish to clear the animation queue?"
+    },
     "CONFIG": {
       "HEADER": "Sprite Animations",
       "DESCRIPTION": "Use the following options to add, remove, and update pre-configured animations for this token.",
