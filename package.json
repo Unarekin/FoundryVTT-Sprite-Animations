@@ -31,7 +31,7 @@
     "esbuild-sass-plugin": "^3.3.1",
     "eslint": "^9.27.0",
     "fvtt-types": "github:League-of-Foundry-Developers/foundry-vtt-types#main",
-    "typedoc": "^0.26.10",
+    "typedoc": "^0.28.0",
     "typedoc-github-wiki-theme": "^2.0.0",
     "typedoc-plugin-dt-links": "^1.0.2",
     "typedoc-plugin-markdown": "^4.2.9",
