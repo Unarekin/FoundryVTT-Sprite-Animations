@@ -67,11 +67,28 @@ export async function playAnimations(mesh: foundry.canvas.primary.PrimarySpriteM
       if (!loop) await animationEnd(resource);
     }
   }
-
-
 }
 
-async function animationEnd(resource: PIXI.VideoResource): Promise<void> {
+export async function queueAnimation(mesh: foundry.canvas.primary.PrimarySpriteMesh, config: AnimationConfig): Promise<void> {
+  await queueAnimations(mesh, [config]);
+}
+
+export async function queueAnimations(mesh: foundry.canvas.primary.PrimarySpriteMesh, configs: AnimationConfig[]): Promise<void> {
+  await preloadTextures(...configs);
+
+  if (mesh.texture?.baseTexture.resource instanceof PIXI.VideoResource) {
+    const source = mesh.texture.baseTexture.resource.source;
+    // Ensure the video is actually playing and not already paused, ended, or just hasn't loaded yet
+    if ((source.currentTime > 0 && !source.paused && !source.ended && source.readyState > 2)) {
+      mesh.texture.baseTexture.resource.source.loop = false;
+      await animationEnd(mesh.texture.baseTexture.resource);
+    }
+  }
+
+  await playAnimations(mesh, configs);
+}
+
+export async function animationEnd(resource: PIXI.VideoResource): Promise<void> {
   return new Promise(resolve => {
     resource.source.addEventListener("ended", () => {
       resolve();
