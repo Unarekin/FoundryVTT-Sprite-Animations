@@ -1,6 +1,6 @@
 import { InvalidActorError, InvalidAnimationError, InvalidTokenError, LocalizedError } from "errors";
 import { AnimationConfig } from "interfaces";
-import { playAnimations as utilPlayAnimations } from "./utils";
+import { playAnimations as utilPlayAnimations, queueAnimations as utilQueueAnimations } from "./utils";
 import { getAnimation } from "settings";
 import { coerceToken } from "coercion";
 
@@ -17,7 +17,8 @@ if (!hooksRegistered) {
 
     // eslint-disable-next-line @typescript-eslint/no-unsafe-call, @typescript-eslint/no-unsafe-member-access
     socket.register("play", doPlayAnimations);
-
+    // eslint-disable-next-line @typescript-eslint/no-unsafe-call, @typescript-eslint/no-unsafe-member-access
+    socket.register("queue", doQueueAnimations);
   });
   hooksRegistered = true;
 }
@@ -27,6 +28,19 @@ export function playAnimations(tokenId: string, animations: (AnimationConfig | s
   if (!socket) throw new LocalizedError("SOCKETNOTINITIALIZED");
   // eslint-disable-next-line @typescript-eslint/no-unsafe-call, @typescript-eslint/no-unsafe-member-access
   socket.executeForOthers("play", tokenId, animations);
+}
+
+async function doQueueAnimations(uuid: string, animations: (AnimationConfig | string)[]) {
+  const token = coerceToken(uuid);
+  if (!(token instanceof Token)) throw new InvalidTokenError(uuid);
+  if (!token.mesh) throw new InvalidTokenError(uuid);
+
+  if (!(token.actor instanceof Actor)) throw new InvalidActorError(token.actor);
+  const configs = animations.map(anim => typeof anim === "string" ? getAnimation(token.actor!, anim) : anim);
+  const hasInvalid = configs.find(anim => !anim);
+  if (hasInvalid) throw new InvalidAnimationError(hasInvalid);
+
+  await utilQueueAnimations(token.mesh, animations as AnimationConfig[]);
 }
 
 async function doPlayAnimations(uuid: string, animations: (AnimationConfig | string)[]) {
@@ -42,4 +56,10 @@ async function doPlayAnimations(uuid: string, animations: (AnimationConfig | str
   if (hasInvalid) throw new InvalidAnimationError(hasInvalid);
 
   await utilPlayAnimations(token.mesh, animations as AnimationConfig[]);
+}
+
+export function queueAnimations(tokenId: string, animations: (AnimationConfig | string)[]): void {
+  if (!socket) throw new LocalizedError("SOCKETNOTINITIALIZED");
+  // eslint-disable-next-line @typescript-eslint/no-unsafe-call, @typescript-eslint/no-unsafe-member-access
+  socket.executeForOthers("queue", tokenId, animations);
 }
