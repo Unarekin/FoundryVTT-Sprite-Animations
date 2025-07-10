@@ -3,7 +3,7 @@ import { InvalidActorError, InvalidAnimationError, InvalidTokenError, LocalizedE
 import { coerceActor, coerceToken } from "coercion";
 import { addAnimation, addAnimations, clearAnimations, getAnimation, getAnimations, removeAnimation, removeAnimations } from "settings";
 import { playAnimation, playAnimations, queueAnimation, queueAnimations } from "./utils";
-import { playAnimations as socketPlayAnimations } from "./sockets";
+import { playAnimations as socketPlayAnimations, queueAnimations as socketQueueAnimations } from "./sockets";
 
 export class SpriteAnimator {
   public readonly actor: Actor;
@@ -228,6 +228,7 @@ export class SpriteAnimator {
       const animation = typeof anim === "string" ? getAnimation(token.actor!, anim) : anim;
       if (!animation) throw new InvalidAnimationError(anim);
 
+      void socketQueueAnimations(token.document.uuid, [animation]);
       await queueAnimation(token.mesh, animation);
     } catch (err) {
       console.error(err);
@@ -252,6 +253,7 @@ export class SpriteAnimator {
       const hasInvalid = animations.find(anim => !anim);
       if (hasInvalid) throw new InvalidAnimationError(hasInvalid);
 
+      void socketQueueAnimations(token.document.uuid, animations as AnimationConfig[]);
       await queueAnimations(token.mesh, animations as AnimationConfig[]);
 
     } catch (err) {
@@ -326,6 +328,8 @@ export class SpriteAnimator {
       if (!config) throw new InvalidAnimationError(arg);
       if (!this.object?.mesh) throw new InvalidTokenError(this.object);
 
+
+      void socketQueueAnimations(this.document.uuid, [config]);
       await queueAnimation(this.object.mesh, config);
     } catch (err) {
       console.error(err);
@@ -347,6 +351,7 @@ export class SpriteAnimator {
       const hasInvalid = animations.find(anim => !anim);
       if (hasInvalid) throw new InvalidAnimationError(hasInvalid);
 
+      void socketQueueAnimations(this.document.uuid, animations as AnimationConfig[]);
       await queueAnimations(this.object.mesh, animations as AnimationConfig[]);
     } catch (err) {
       console.error(err);
