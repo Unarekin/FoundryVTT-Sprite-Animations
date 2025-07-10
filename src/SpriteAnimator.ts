@@ -2,8 +2,8 @@ import { AnimationConfig } from "interfaces";
 import { InvalidActorError, InvalidAnimationError, InvalidTokenError, LocalizedError } from "./errors";
 import { coerceActor, coerceToken } from "coercion";
 import { addAnimation, addAnimations, clearAnimations, getAnimation, getAnimations, removeAnimation, removeAnimations } from "settings";
-import { playAnimation, playAnimations } from "./utils";
-import { playAnimations as socketPlayAnimations } from "./sockets";
+import { playAnimation, playAnimations, queueAnimation, queueAnimations } from "./utils";
+import { playAnimations as socketPlayAnimations, queueAnimations as socketQueueAnimations } from "./sockets";
 
 export class SpriteAnimator {
   public readonly actor: Actor;
@@ -213,6 +213,56 @@ export class SpriteAnimator {
   }
 
   /**
+   * Will play an animation after the current one ends, if one is playing.
+   * @param {Token | TokenDocument} target = {@link Token} or {@link TokenDocument}
+   * @param {string | AnimationConfig} anim - {@link AnimationConfig} or name of an animation}
+   */
+  public static async queueAnimation(target: Token | TokenDocument | string, anim: string | AnimationConfig): Promise<void> {
+    try {
+      const token = coerceToken(target);
+      if (!(token instanceof Token)) throw new InvalidTokenError(target);
+      if (!token.document.canUserModify(game?.user as User, "update")) throw new LocalizedError("PERMISSIONDENIED");
+      if (typeof anim === "string" && !(token.actor instanceof Actor)) throw new InvalidActorError(target);
+      if (!token.mesh) throw new InvalidTokenError(target);
+
+      const animation = typeof anim === "string" ? getAnimation(token.actor!, anim) : anim;
+      if (!animation) throw new InvalidAnimationError(anim);
+
+      void socketQueueAnimations(token.document.uuid, [animation]);
+      await queueAnimation(token.mesh, animation);
+    } catch (err) {
+      console.error(err);
+      if (err instanceof Error) ui.notifications?.error(err.message, { console: false, localize: true });
+    }
+  }
+
+  /**
+   * Will play a set of animations after the current one ends, if one is playing
+   * @param {Token | TokenDocument} target - {@link Token} or {@link TokenDocument}
+   * @param {string | AnimationConfig} anims - Array of {@link AnimationConfig}s or strings
+   */
+  public static async queueAnimations(target: Token | TokenDocument | string, ...anims: (string | AnimationConfig)[]): Promise<void> {
+    try {
+      const token = coerceToken(target);
+      if (!(token instanceof Token)) throw new InvalidTokenError(target);
+      if (!token.document.canUserModify(game?.user as User, "update")) throw new LocalizedError("PERMISSIONDENIED");
+      if (!token.mesh) throw new InvalidTokenError(target);
+      if (!(token.actor instanceof Actor)) throw new InvalidActorError(token.actor);
+
+      const animations = anims.map(anim => typeof anim === "string" ? getAnimation(token.actor!, anim) : anim);
+      const hasInvalid = animations.find(anim => !anim);
+      if (hasInvalid) throw new InvalidAnimationError(hasInvalid);
+
+      void socketQueueAnimations(token.document.uuid, animations as AnimationConfig[]);
+      await queueAnimations(token.mesh, animations as AnimationConfig[]);
+
+    } catch (err) {
+      console.error(err);
+      if (err instanceof Error) ui.notifications?.error(err.message, { console: false, localize: true });
+    }
+  }
+
+  /**
    * Plays an animation for a given target
    * @param {Token | TokenDocument | string} target - {@link Token}, {@link TokenDocument}, or id
    * @param {string | AnimationConfig} anim - Name of the animation or {@link AnimationConfig}
@@ -265,6 +315,49 @@ export class SpriteAnimator {
   // #endregion
 
   // #region Instance Methods
+
+  /**
+   * Play an animation after the current one finishes, if one is playing.
+   * @param {Token | TokenDocument} target - {@link Token} or {@link TokenDocument}
+   * @param {string | AnimationConfig} anim - {@link AnimationConfig} or name of an animation
+   */
+  public async queueAnimation(arg: string | AnimationConfig): Promise<void> {
+    try {
+      if (!this.document.canUserModify(game?.user as User, "update")) throw new LocalizedError("PERMISSIONDENIED");
+      const config: AnimationConfig | undefined = typeof arg === "string" ? this.getAnimation(arg) : arg;
+      if (!config) throw new InvalidAnimationError(arg);
+      if (!this.object?.mesh) throw new InvalidTokenError(this.object);
+
+
+      void socketQueueAnimations(this.document.uuid, [config]);
+      await queueAnimation(this.object.mesh, config);
+    } catch (err) {
+      console.error(err);
+      if (err instanceof Error) ui.notifications?.error(err.message, { console: false, localize: true });
+    }
+  }
+
+  /**
+   * Play a set of animations after the current one ends, if one is playing.
+   * @param {Token | TokenDocument} target - {@link Token} or {@link TokenDocument}
+   * @param {string | AnimationConfig} anims - Array of strings or {@link AnimationConfig}s.
+   */
+  public async queueAnimations(...args: (string | AnimationConfig)[]): Promise<void> {
+    try {
+      if (!this.document.canUserModify(game?.user as User, "update")) throw new LocalizedError("PERMISSIONDENIED");
+      if (!this.object?.mesh) throw new InvalidTokenError(this.object);
+
+      const animations = args.map(arg => typeof arg === "string" ? this.getAnimation(arg) : arg);
+      const hasInvalid = animations.find(anim => !anim);
+      if (hasInvalid) throw new InvalidAnimationError(hasInvalid);
+
+      void socketQueueAnimations(this.document.uuid, animations as AnimationConfig[]);
+      await queueAnimations(this.object.mesh, animations as AnimationConfig[]);
+    } catch (err) {
+      console.error(err);
+      if (err instanceof Error) ui.notifications?.error(err.message, { console: false, localize: true });
+    }
+  }
 
   /**
    * Adds an animation to the current {@link Actor}
