@@ -315,6 +315,46 @@ export class SpriteAnimator {
   // #region Instance Methods
 
   /**
+   * Play an animation after the current one finishes, if one is playing.
+   * @param {Token | TokenDocument} target - {@link Token} or {@link TokenDocument}
+   * @param {string | AnimationConfig} anim - {@link AnimationConfig} or name of an animation
+   */
+  public async queueAnimation(arg: string | AnimationConfig): Promise<void> {
+    try {
+      if (!this.document.canUserModify(game?.user as User, "update")) throw new LocalizedError("PERMISSIONDENIED");
+      const config: AnimationConfig | undefined = typeof arg === "string" ? this.getAnimation(arg) : arg;
+      if (!config) throw new InvalidAnimationError(arg);
+      if (!this.object?.mesh) throw new InvalidTokenError(this.object);
+
+      await queueAnimation(this.object.mesh, config);
+    } catch (err) {
+      console.error(err);
+      if (err instanceof Error) ui.notifications?.error(err.message, { console: false, localize: true });
+    }
+  }
+
+  /**
+   * Play a set of animations after the current one ends, if one is playing.
+   * @param {Token | TokenDocument} target - {@link Token} or {@link TokenDocument}
+   * @param {string | AnimationConfig} anims - Array of strings or {@link AnimationConfig}s.
+   */
+  public async queueAnimations(...args: (string | AnimationConfig)[]): Promise<void> {
+    try {
+      if (!this.document.canUserModify(game?.user as User, "update")) throw new LocalizedError("PERMISSIONDENIED");
+      if (!this.object?.mesh) throw new InvalidTokenError(this.object);
+
+      const animations = args.map(arg => typeof arg === "string" ? this.getAnimation(arg) : arg);
+      const hasInvalid = animations.find(anim => !anim);
+      if (hasInvalid) throw new InvalidAnimationError(hasInvalid);
+
+      await queueAnimations(this.object.mesh, animations as AnimationConfig[]);
+    } catch (err) {
+      console.error(err);
+      if (err instanceof Error) ui.notifications?.error(err.message, { console: false, localize: true });
+    }
+  }
+
+  /**
    * Adds an animation to the current {@link Actor}
    * @param {AnimationConfig} animation - {@link AnimationConfig}
    */
