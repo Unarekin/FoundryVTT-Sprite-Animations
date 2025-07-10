@@ -19,7 +19,7 @@
     "build:prod": "NODE_ENV=production node build.mjs"
   },
   "devDependencies": {
-    "@eslint/js": "^9.27.0",
+    "@eslint/js": "^9.11.0",
     "@foundryvtt/foundryvtt-cli": "^1.1.0",
     "deepmerge-ts": "^7.1.5",
     "esbuild": "^0.25.5",
@@ -29,15 +29,10 @@
     "esbuild-plugin-json-merge": "^0.1.0",
     "esbuild-plugin-noexternal": "^0.1.6",
     "esbuild-sass-plugin": "^3.3.1",
-    "eslint": "^9.27.0",
+    "eslint": "^9.11.0",
     "fvtt-types": "github:League-of-Foundry-Developers/foundry-vtt-types#main",
-    "typedoc": "^0.28.0",
-    "typedoc-github-wiki-theme": "^2.0.0",
-    "typedoc-plugin-dt-links": "^1.0.2",
-    "typedoc-plugin-markdown": "^4.2.9",
-    "typedoc-plugin-md": "^0.3.1",
+    "typedoc": "^0.26.10",
     "typedoc-plugin-rename-defaults": "^0.7.1",
-    "typedoc-umlclass": "^0.10.0",
     "typescript": "<5.6.0",
     "typescript-eslint": "^8.6.0",
     "yocto-spinner": "^0.2.3"
