@@ -7,7 +7,7 @@ import { InvalidAnimationError } from "errors";
 
 export class SpriteAnimationPlayer extends foundry.applications.api.HandlebarsApplicationMixin(foundry.applications.api.ApplicationV2) {
 
-  public readonly actor: Actor;
+  public readonly actor: Actor | null = null;
 
   static DEFAULT_OPTIONS = {
     window: {
@@ -53,7 +53,7 @@ export class SpriteAnimationPlayer extends foundry.applications.api.HandlebarsAp
   static async PlayQueue(this: SpriteAnimationPlayer) {
     try {
       if (!this.animationQueue.length) return;
-      await SpriteAnimator.playAnimations(this.token, ...this.animationQueue);
+      await SpriteAnimator.playAnimations(this.sprite, ...this.animationQueue);
     } catch (err) {
       console.error(err);
       if (err instanceof Error) ui.notifications?.error(err.message, { console: false, localize: true });
@@ -110,7 +110,7 @@ export class SpriteAnimationPlayer extends foundry.applications.api.HandlebarsAp
     try {
       const id = elem.dataset.animation;
       if (!id) throw new InvalidAnimationError(id);
-      const animation = SpriteAnimator.getAnimation(this.token, id);
+      const animation = SpriteAnimator.getAnimation(this.sprite, id);
       if (!animation) throw new InvalidAnimationError(id);
       this.animationQueue.push(animation);
       await this.updateQueue();
@@ -133,9 +133,9 @@ export class SpriteAnimationPlayer extends foundry.applications.api.HandlebarsAp
     try {
       const id = elem.dataset.animation;
       if (!id) throw new InvalidAnimationError(id);
-      const animation = SpriteAnimator.getAnimation(this.token, id);
+      const animation = SpriteAnimator.getAnimation(this.sprite as unknown, id);
       if (!animation) throw new InvalidAnimationError(id);
-      await SpriteAnimator.playAnimation(this.token, id);
+      await SpriteAnimator.playAnimation(this.sprite, id);
     } catch (err) {
       console.error(err);
       if (err instanceof Error) ui.notifications?.error(err.message, { console: false, localize: true });
@@ -152,7 +152,7 @@ export class SpriteAnimationPlayer extends foundry.applications.api.HandlebarsAp
   async _prepareContext(options: foundry.applications.api.ApplicationV2.RenderOptions): Promise<AnimationPlayerRenderContext> {
     const context = {
       ...(await super._prepareContext(options)),
-      animations: this.parseAnimations(SpriteAnimator.getAnimations(this.actor)),
+      animations: this.parseAnimations(SpriteAnimator.getAnimations(this.sprite) ?? []),
       buttons: [
         { type: "submit", icon: "fa-solid fa-times", label: "Close" } as foundry.applications.api.ApplicationV2.FormFooterButton
       ]
@@ -161,8 +161,8 @@ export class SpriteAnimationPlayer extends foundry.applications.api.HandlebarsAp
     return context;
   }
 
-  constructor(public readonly token: Token, options?: foundry.applications.api.HandlebarsApplicationMixin.Configuration) {
+  constructor(public readonly sprite: Token | Tile, options?: foundry.applications.api.HandlebarsApplicationMixin.Configuration) {
     super(options);
-    this.actor = token.actor!;
+    if (sprite instanceof Token) this.actor = sprite.actor;
   }
 }

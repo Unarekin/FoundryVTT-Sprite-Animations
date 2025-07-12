@@ -1,6 +1,6 @@
 import { AnimationConfig } from "interfaces";
 import { InvalidActorError, InvalidAnimationError, InvalidSpriteError, InvalidTokenError, LocalizedError, PermissionDeniedError } from "./errors";
-import { coerceActor, coerceAnimation, coerceSprite } from "coercion";
+import { coerceActor, coerceAnimatable, coerceAnimation, coerceSprite } from "coercion";
 import { addAnimation, addAnimations, clearAnimations, getAnimation, getAnimations, removeAnimation, removeAnimations } from "settings";
 import { playAnimation, playAnimations, queueAnimation, queueAnimations } from "./utils";
 import { playAnimations as socketPlayAnimations, queueAnimations as socketQueueAnimations } from "./sockets";
@@ -12,55 +12,35 @@ export class SpriteAnimator {
 
   // #region Static Methods
 
+
   /**
-   * Retrieves animation by name.
-   * @param {Token} token - {@link Token}
-   * @param {string} name - Name of the animation
+   * Retrieves an animation by name.
+   * @param {Token | Tile | TileDocument | Actor} arg 
+   * @param {string} name 
+   * @returns 
    */
-  public static getAnimation(token: Token, name: string): AnimationConfig | undefined
-  /**
-   * Retrieves animation by name.
-   * @param {TokenDocument} token - {@link TokenDocument}
-   * @param {string} name - Name of the animation
-   */
-  public static getAnimation(token: TokenDocument, name: string): AnimationConfig | undefined
-  /**
-   * Retrieves animation by name.
-   * @param {Actor} actor - {@link Actor}
-   * @param {string} name - Name of the animation
-   */
-  public static getAnimation(actor: Actor, name: string): AnimationConfig | undefined
   public static getAnimation(arg: unknown, name: string): AnimationConfig | undefined {
     try {
-      const actor = coerceActor(arg);
-      if (!(actor instanceof Actor)) throw new InvalidActorError(arg);
-      return getAnimation(actor, name);
+      const animatable = coerceAnimatable(arg);
+      if (!animatable) throw new InvalidSpriteError(animatable);
+      return getAnimation(animatable, name);
     } catch (err) {
       console.error(err);
       if (err instanceof Error) ui.notifications?.error(err.message, { console: false, localize: true });
     }
   }
 
+
   /**
-   * Retrieves all animations for the {@link Actor} associated with a given {@link Token}
-   * @param {Token} token - {@link Token}
+   * Retrieves all animations from an object
+   * @param arg 
+   * @returns 
    */
-  public static getAnimations(token: Token): AnimationConfig[]
-  /**
-   * Retrieves all animations for the {@link Actor} associated with a given {@link TokenDocument}
-   * @param {TokenDocument} token - {@link TokenDocument}
-   */
-  public static getAnimations(token: TokenDocument): AnimationConfig[]
-  /**
-   * Retrieves all animations for a given {@link Actor}
-   * @param {Actor} actor - {@link Actor}
-   */
-  public static getAnimations(actor: Actor): AnimationConfig[]
   public static getAnimations(arg: unknown): AnimationConfig[] | undefined {
     try {
-      const actor = coerceActor(arg);
-      if (!(actor instanceof Actor)) throw new InvalidActorError(arg);
-      return getAnimations(actor);
+      const animatable = coerceAnimatable(arg);
+      if (!animatable) throw new InvalidSpriteError(arg);
+      return getAnimations(animatable);
     } catch (err) {
       console.error(err);
       if (err instanceof Error) ui.notifications?.error(err.message, { console: false, localize: true });

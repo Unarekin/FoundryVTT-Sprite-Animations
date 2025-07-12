@@ -66,3 +66,13 @@ export function coerceAnimation(anim: string | AnimationConfig, target?: unknown
     else if (sprite instanceof Actor || sprite instanceof Tile || sprite instanceof TileDocument) return getAnimation(sprite, anim);
   }
 }
+
+export function coerceAnimatable(arg: unknown): Actor | Tile | TileDocument | undefined {
+  if (arg instanceof Actor || arg instanceof Tile || arg instanceof TileDocument) return arg;
+
+  const actor = coerceActor(arg);
+  if (actor instanceof Actor) return actor;
+
+  const tile = coerceTile(arg);
+  if (tile instanceof Tile) return tile;
+}
