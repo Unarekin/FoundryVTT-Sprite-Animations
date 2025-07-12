@@ -1,7 +1,7 @@
 import { AnimationConfigRenderContext, AnimationContext } from "./types";
 import { InvalidAnimationError } from "errors";
 import { TRANSLATION_KEY } from "../constants";
-import { AnimationConfig } from "interfaces";
+import { AnimationConfig, Animatable } from "interfaces";
 import { SpriteAnimator } from "SpriteAnimator";
 import { mimeType } from "utils";
 import { setAnimations } from "settings";
@@ -113,7 +113,7 @@ export class SpriteAnimationsConfig extends foundry.applications.api.HandlebarsA
     try {
       const parsed = this.parseForm();
       console.log("Submitted:", parsed);
-      await setAnimations(this.actor, parsed);
+      await setAnimations(this.object, parsed);
 
     } catch (err) {
       console.error(err);
@@ -215,10 +215,10 @@ export class SpriteAnimationsConfig extends foundry.applications.api.HandlebarsA
     return animation;
   }
 
-  constructor(public readonly actor: Actor, options?: foundry.applications.api.HandlebarsApplicationMixin.Configuration) {
+  constructor(public readonly object: Animatable, options?: foundry.applications.api.HandlebarsApplicationMixin.Configuration) {
     super(options);
 
-    const animations = this.parseAnimations(SpriteAnimator.getAnimations(actor));
+    const animations = this.parseAnimations(SpriteAnimator.getAnimations(object) ?? []);
     this.animations.splice(0, this.animations.length, ...animations);
   }
 }

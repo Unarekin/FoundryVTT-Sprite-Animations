@@ -1,4 +1,5 @@
 import { AnimationConfig } from "./interfaces";
+import { Animatable } from "./interfaces";
 
 declare global {
   interface FlagConfig {
@@ -14,8 +15,6 @@ declare global {
     }
   }
 }
-
-type Animatable = Actor | Tile | TileDocument;
 
 /**
  * Retrieves all animations from an {@link Animatable}
