@@ -1,8 +1,7 @@
-import { InvalidActorError, InvalidAnimationError, InvalidTokenError, LocalizedError } from "errors";
+import { InvalidAnimationError, InvalidSpriteError, LocalizedError } from "errors";
 import { AnimationConfig } from "interfaces";
 import { playAnimations as utilPlayAnimations, queueAnimations as utilQueueAnimations } from "./utils";
-import { getAnimation } from "settings";
-import { coerceToken } from "coercion";
+import { coerceAnimation, coerceSprite } from "coercion";
 
 let socket: any;
 
@@ -24,42 +23,36 @@ if (!hooksRegistered) {
 }
 
 export { socket };
-export function playAnimations(tokenId: string, animations: (AnimationConfig | string)[]): void {
+export function playAnimations(spriteId: string, animations: (AnimationConfig | string)[]): void {
   if (!socket) throw new LocalizedError("SOCKETNOTINITIALIZED");
   // eslint-disable-next-line @typescript-eslint/no-unsafe-call, @typescript-eslint/no-unsafe-member-access
-  socket.executeForOthers("play", tokenId, animations);
+  socket.executeForOthers("play", spriteId, animations);
 }
 
 async function doQueueAnimations(uuid: string, animations: (AnimationConfig | string)[]) {
-  const token = coerceToken(uuid);
-  if (!(token instanceof Token)) throw new InvalidTokenError(uuid);
-  if (!token.mesh) throw new InvalidTokenError(uuid);
+  const sprite = coerceSprite(uuid);
+  if (!sprite?.mesh) throw new InvalidSpriteError(uuid);
 
-  if (!(token.actor instanceof Actor)) throw new InvalidActorError(token.actor);
-  const configs = animations.map(anim => typeof anim === "string" ? getAnimation(token.actor!, anim) : anim);
+  const configs = animations.map(anim => coerceAnimation(anim, sprite));
   const hasInvalid = configs.find(anim => !anim);
   if (hasInvalid) throw new InvalidAnimationError(hasInvalid);
 
-  await utilQueueAnimations(token.mesh, animations as AnimationConfig[]);
+  await utilQueueAnimations(sprite.mesh, animations as AnimationConfig[]);
 }
 
 async function doPlayAnimations(uuid: string, animations: (AnimationConfig | string)[]) {
-  // await SpriteAnimator.playAnimations(uuid, ...animations);
-  // await utilPlayAnimations()
-  const token = coerceToken(uuid);
-  if (!(token instanceof Token)) throw new InvalidTokenError(uuid);
-  if (!token.mesh) throw new InvalidTokenError(uuid);
+  const sprite = coerceSprite(uuid);
+  if (!sprite?.mesh) throw new InvalidSpriteError(uuid);
 
-  if (!(token.actor instanceof Actor)) throw new InvalidActorError(token.actor);
-  const configs = animations.map(anim => typeof anim === "string" ? getAnimation(token.actor!, anim) : anim);
+  const configs = animations.map(anim => coerceAnimation(anim, sprite));
   const hasInvalid = configs.find(anim => !anim);
   if (hasInvalid) throw new InvalidAnimationError(hasInvalid);
 
-  await utilPlayAnimations(token.mesh, animations as AnimationConfig[]);
+  await utilPlayAnimations(sprite.mesh, animations as AnimationConfig[]);
 }
 
-export function queueAnimations(tokenId: string, animations: (AnimationConfig | string)[]): void {
+export function queueAnimations(spriteId: string, animations: (AnimationConfig | string)[]): void {
   if (!socket) throw new LocalizedError("SOCKETNOTINITIALIZED");
   // eslint-disable-next-line @typescript-eslint/no-unsafe-call, @typescript-eslint/no-unsafe-member-access
-  socket.executeForOthers("queue", tokenId, animations);
+  socket.executeForOthers("queue", spriteId, animations);
 }
