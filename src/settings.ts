@@ -23,8 +23,10 @@ declare global {
  */
 export function getAnimations(target: Animatable): AnimationConfig[] {
   if (target instanceof Actor) return target.getFlag("sprite-animations", "animations") ?? [];
-  else if (target instanceof Tile) return target.document.getFlag("sprite-animations", "animations") ?? [];
-  else if (target instanceof TileDocument) return target.getFlag("sprite-animations", "animations") ?? [];
+  // eslint-disable-next-line @typescript-eslint/no-unsafe-call, @typescript-eslint/no-unsafe-member-access
+  else if (target instanceof Tile) return (target.document as any).getFlag("sprite-animations", "animations") as AnimationConfig[] ?? [];
+  // eslint-disable-next-line @typescript-eslint/no-unsafe-call, @typescript-eslint/no-unsafe-member-access
+  else if (target instanceof TileDocument) return (target as any).getFlag("sprite-animations", "animations") as AnimationConfig[] ?? [];
   else return [];
 }
 
@@ -96,8 +98,10 @@ export async function removeAnimation(target: Animatable, name: string): Promise
 export async function setAnimations(target: Animatable, animations: AnimationConfig[]): Promise<void> {
   // await target.setFlag("sprite-animations", "animations", animations);
   if (target instanceof Actor) await target.setFlag("sprite-animations", "animations", animations);
-  else if (target instanceof Tile) await target.document.setFlag("sprite-animations", "animations", animations);
-  else if (target instanceof TileDocument) await target.setFlag("sprite-animations", "animations", animations);
+  // eslint-disable-next-line @typescript-eslint/no-unsafe-call, @typescript-eslint/no-unsafe-member-access
+  else if (target instanceof Tile) await (target.document as any).setFlag("sprite-animations", "animations", animations);
+  // eslint-disable-next-line @typescript-eslint/no-unsafe-call, @typescript-eslint/no-unsafe-member-access
+  else if (target instanceof TileDocument) await (target as any).setFlag("sprite-animations", "animations", animations);
 }
 
 /**
