@@ -1,66 +1,47 @@
 import { AnimationConfig } from "interfaces";
-import { InvalidActorError, InvalidAnimationError, InvalidTokenError, LocalizedError } from "./errors";
-import { coerceActor, coerceToken } from "coercion";
+import { InvalidActorError, InvalidAnimationError, InvalidSpriteError, InvalidTokenError, LocalizedError, PermissionDeniedError } from "./errors";
+import { coerceActor, coerceAnimatable, coerceAnimation, coerceSprite } from "coercion";
 import { addAnimation, addAnimations, clearAnimations, getAnimation, getAnimations, removeAnimation, removeAnimations } from "settings";
 import { playAnimation, playAnimations, queueAnimation, queueAnimations } from "./utils";
 import { playAnimations as socketPlayAnimations, queueAnimations as socketQueueAnimations } from "./sockets";
 
 export class SpriteAnimator {
-  public readonly actor: Actor;
-  public readonly object: Token | null;
-  public readonly document: TokenDocument;
+  public readonly actor: Actor | null = null;
+  public readonly object: Token | Tile | null;
+  public readonly document: TokenDocument | TileDocument;
 
   // #region Static Methods
 
+
   /**
-   * Retrieves animation by name.
-   * @param {Token} token - {@link Token}
-   * @param {string} name - Name of the animation
+   * Retrieves an animation by name.
+   * @param {Token | Tile | TileDocument | Actor} arg 
+   * @param {string} name 
+   * @returns 
    */
-  public static getAnimation(token: Token, name: string): AnimationConfig | undefined
-  /**
-   * Retrieves animation by name.
-   * @param {TokenDocument} token - {@link TokenDocument}
-   * @param {string} name - Name of the animation
-   */
-  public static getAnimation(token: TokenDocument, name: string): AnimationConfig | undefined
-  /**
-   * Retrieves animation by name.
-   * @param {Actor} actor - {@link Actor}
-   * @param {string} name - Name of the animation
-   */
-  public static getAnimation(actor: Actor, name: string): AnimationConfig | undefined
   public static getAnimation(arg: unknown, name: string): AnimationConfig | undefined {
     try {
-      const actor = coerceActor(arg);
-      if (!(actor instanceof Actor)) throw new InvalidActorError(arg);
-      return getAnimation(actor, name);
+      const animatable = coerceAnimatable(arg);
+      if (!animatable) throw new InvalidSpriteError(animatable);
+      return getAnimation(animatable, name);
     } catch (err) {
       console.error(err);
       if (err instanceof Error) ui.notifications?.error(err.message, { console: false, localize: true });
     }
   }
 
+
   /**
-   * Retrieves all animations for the {@link Actor} associated with a given {@link Token}
-   * @param {Token} token - {@link Token}
+   * Retrieves all animations from an object
+   * @param arg 
+   * @returns 
    */
-  public static getAnimations(token: Token): AnimationConfig[]
-  /**
-   * Retrieves all animations for the {@link Actor} associated with a given {@link TokenDocument}
-   * @param {TokenDocument} token - {@link TokenDocument}
-   */
-  public static getAnimations(token: TokenDocument): AnimationConfig[]
-  /**
-   * Retrieves all animations for a given {@link Actor}
-   * @param {Actor} actor - {@link Actor}
-   */
-  public static getAnimations(actor: Actor): AnimationConfig[]
   public static getAnimations(arg: unknown): AnimationConfig[] | undefined {
     try {
-      const actor = coerceActor(arg);
-      if (!(actor instanceof Actor)) throw new InvalidActorError(arg);
-      return getAnimations(actor);
+      console.log("Getting animations:", arg);
+      const animatable = coerceAnimatable(arg);
+      if (!animatable) throw new InvalidSpriteError(arg);
+      return getAnimations(animatable);
     } catch (err) {
       console.error(err);
       if (err instanceof Error) ui.notifications?.error(err.message, { console: false, localize: true });
@@ -214,22 +195,20 @@ export class SpriteAnimator {
 
   /**
    * Will play an animation after the current one ends, if one is playing.
-   * @param {Token | TokenDocument} target = {@link Token} or {@link TokenDocument}
+   * @param {Token | TokenDocument | Tile | TileDocument} target = {@link Token} or {@link TokenDocument}
    * @param {string | AnimationConfig} anim - {@link AnimationConfig} or name of an animation}
    */
-  public static async queueAnimation(target: Token | TokenDocument | string, anim: string | AnimationConfig): Promise<void> {
+  public static async queueAnimation(target: Token | TokenDocument | Tile | TileDocument | string, anim: string | AnimationConfig): Promise<void> {
     try {
-      const token = coerceToken(target);
-      if (!(token instanceof Token)) throw new InvalidTokenError(target);
-      if (!token.document.canUserModify(game?.user as User, "update")) throw new LocalizedError("PERMISSIONDENIED");
-      if (typeof anim === "string" && !(token.actor instanceof Actor)) throw new InvalidActorError(target);
-      if (!token.mesh) throw new InvalidTokenError(target);
+      const sprite = coerceSprite(target);
+      if (!sprite?.mesh) throw new InvalidSpriteError(target);
+      if (!sprite.document.canUserModify(game?.user as User, "update")) throw new PermissionDeniedError();
 
-      const animation = typeof anim === "string" ? getAnimation(token.actor!, anim) : anim;
+      const animation = coerceAnimation(anim, sprite);
       if (!animation) throw new InvalidAnimationError(anim);
 
-      void socketQueueAnimations(token.document.uuid, [animation]);
-      await queueAnimation(token.mesh, animation);
+      void socketQueueAnimations(sprite.document.uuid, [animation]);
+      await queueAnimation(sprite.mesh, animation);
     } catch (err) {
       console.error(err);
       if (err instanceof Error) ui.notifications?.error(err.message, { console: false, localize: true });
@@ -238,23 +217,19 @@ export class SpriteAnimator {
 
   /**
    * Will play a set of animations after the current one ends, if one is playing
-   * @param {Token | TokenDocument} target - {@link Token} or {@link TokenDocument}
+   * @param {Token | TokenDocument | Tile | TileDocument} target - {@link Token} or {@link TokenDocument}
    * @param {string | AnimationConfig} anims - Array of {@link AnimationConfig}s or strings
    */
-  public static async queueAnimations(target: Token | TokenDocument | string, ...anims: (string | AnimationConfig)[]): Promise<void> {
+  public static async queueAnimations(target: Token | TokenDocument | Tile | TileDocument | string, ...anims: (string | AnimationConfig)[]): Promise<void> {
     try {
-      const token = coerceToken(target);
-      if (!(token instanceof Token)) throw new InvalidTokenError(target);
-      if (!token.document.canUserModify(game?.user as User, "update")) throw new LocalizedError("PERMISSIONDENIED");
-      if (!token.mesh) throw new InvalidTokenError(target);
-      if (!(token.actor instanceof Actor)) throw new InvalidActorError(token.actor);
-
-      const animations = anims.map(anim => typeof anim === "string" ? getAnimation(token.actor!, anim) : anim);
+      const sprite = coerceSprite(target);
+      if (!sprite?.mesh) throw new InvalidSpriteError(target);
+      const animations = anims.map(anim => coerceAnimation(anim, sprite));
       const hasInvalid = animations.find(anim => !anim);
       if (hasInvalid) throw new InvalidAnimationError(hasInvalid);
 
-      void socketQueueAnimations(token.document.uuid, animations as AnimationConfig[]);
-      await queueAnimations(token.mesh, animations as AnimationConfig[]);
+      void socketQueueAnimations(sprite.document.uuid, animations as AnimationConfig[]);
+      await queueAnimations(sprite.mesh, animations as AnimationConfig[]);
 
     } catch (err) {
       console.error(err);
@@ -267,19 +242,21 @@ export class SpriteAnimator {
    * @param {Token | TokenDocument | string} target - {@link Token}, {@link TokenDocument}, or id
    * @param {string | AnimationConfig} anim - Name of the animation or {@link AnimationConfig}
    */
-  public static async playAnimation(target: Token | TokenDocument | string, anim: string | AnimationConfig): Promise<void> {
+  public static async playAnimation(target: Token | TokenDocument | Tile | TileDocument | string, anim: string | AnimationConfig): Promise<void> {
     try {
-      const token = coerceToken(target);
-      if (!(token instanceof Token)) throw new InvalidTokenError(target);
-      if (!token.document.canUserModify(game?.user as User, "update")) throw new LocalizedError("PERMISSIONDENIED");
-      if (typeof anim === "string" && !(token.actor instanceof Actor)) throw new InvalidActorError(target);
-      if (!token.mesh) throw new InvalidTokenError(target);
 
-      const animation = typeof anim === "string" ? getAnimation(token.actor!, anim) : anim;
+      const sprite = coerceSprite(target);
+      if (!(sprite instanceof Token || sprite instanceof Tile)) throw new InvalidSpriteError(target);
+
+      if (!sprite.document.canUserModify(game?.user as User, "update")) throw new PermissionDeniedError();
+      if (!sprite.mesh) throw new InvalidSpriteError(target);
+
+      // Validate animation
+      const animation = coerceAnimation(anim, sprite);
       if (!animation) throw new InvalidAnimationError(anim);
 
-      void socketPlayAnimations(token.document.uuid, [animation]);
-      await playAnimation(token.mesh, animation);
+      void socketPlayAnimations(sprite.document.uuid, [animation]);
+      await playAnimation(sprite.mesh, animation);
     } catch (err) {
       console.error(err);
       if (err instanceof Error) ui.notifications?.error(err.message, { console: false, localize: true });
@@ -291,20 +268,17 @@ export class SpriteAnimator {
    * @param {Token | TokenDocument | string} target - {@link Token}, {@link TokenDocument}, or id/uuid
    * @param {string | AnimationConfig} anims - Array of strings or {@link AnimationConfig}
    */
-  public static async playAnimations(target: Token | TokenDocument | string, ...anims: (string | AnimationConfig)[]): Promise<void> {
+  public static async playAnimations(target: Token | TokenDocument | Tile | TileDocument | string, ...anims: (string | AnimationConfig)[]): Promise<void> {
     try {
-      const token = coerceToken(target);
-      if (!(token instanceof Token)) throw new InvalidTokenError(target);
-      if (!token.document.canUserModify(game?.user as User, "update")) throw new LocalizedError("PERMISSIONDENIED");
-      if (!token.mesh) throw new InvalidTokenError(target);
-      if (!(token.actor instanceof Actor)) throw new InvalidActorError(token.actor);
-
-      const animations = anims.map(anim => typeof anim === "string" ? getAnimation(token.actor!, anim) : anim);
+      const sprite = coerceSprite(target);
+      if (!sprite?.mesh) throw new InvalidSpriteError(target);
+      if (!sprite.document.canUserModify(game?.user as User, "update")) throw new PermissionDeniedError();
+      const animations = anims.map(anim => coerceAnimation(anim, sprite));
       const hasInvalid = animations.find(anim => !anim);
       if (hasInvalid) throw new InvalidAnimationError(hasInvalid);
 
-      void socketPlayAnimations(token.document.uuid, animations as AnimationConfig[]);
-      await playAnimations(token.mesh, animations as AnimationConfig[]);
+      void socketPlayAnimations(sprite.document.uuid, animations as AnimationConfig[]);
+      await playAnimations(sprite.mesh, animations as AnimationConfig[]);
     } catch (err) {
       console.error(err);
       if (err instanceof Error) ui.notifications?.error(err.message, { console: false, localize: true });
@@ -318,13 +292,13 @@ export class SpriteAnimator {
 
   /**
    * Play an animation after the current one finishes, if one is playing.
-   * @param {Token | TokenDocument} target - {@link Token} or {@link TokenDocument}
+   * @param {Token | TokenDocument | Tile | TileDocument} target - {@link Token} or {@link TokenDocument}
    * @param {string | AnimationConfig} anim - {@link AnimationConfig} or name of an animation
    */
   public async queueAnimation(arg: string | AnimationConfig): Promise<void> {
     try {
       if (!this.document.canUserModify(game?.user as User, "update")) throw new LocalizedError("PERMISSIONDENIED");
-      const config: AnimationConfig | undefined = typeof arg === "string" ? this.getAnimation(arg) : arg;
+      const config = coerceAnimation(arg, this.document);
       if (!config) throw new InvalidAnimationError(arg);
       if (!this.object?.mesh) throw new InvalidTokenError(this.object);
 
@@ -339,7 +313,7 @@ export class SpriteAnimator {
 
   /**
    * Play a set of animations after the current one ends, if one is playing.
-   * @param {Token | TokenDocument} target - {@link Token} or {@link TokenDocument}
+   * @param {Token | TokenDocument | Tile | TileDocument} target - {@link Token} or {@link TokenDocument}
    * @param {string | AnimationConfig} anims - Array of strings or {@link AnimationConfig}s.
    */
   public async queueAnimations(...args: (string | AnimationConfig)[]): Promise<void> {
@@ -347,7 +321,7 @@ export class SpriteAnimator {
       if (!this.document.canUserModify(game?.user as User, "update")) throw new LocalizedError("PERMISSIONDENIED");
       if (!this.object?.mesh) throw new InvalidTokenError(this.object);
 
-      const animations = args.map(arg => typeof arg === "string" ? this.getAnimation(arg) : arg);
+      const animations = args.map(arg => coerceAnimation(arg, this.document));
       const hasInvalid = animations.find(anim => !anim);
       if (hasInvalid) throw new InvalidAnimationError(hasInvalid);
 
@@ -365,7 +339,10 @@ export class SpriteAnimator {
    */
   public async addAnimation(animation: AnimationConfig): Promise<void> {
     try {
-      await addAnimation(this.actor, animation);
+      if (this.actor instanceof Actor) await addAnimation(this.actor, animation);
+      else if (this.document instanceof TileDocument) await addAnimation(this.document, animation);
+      // This one shouldn't be reached, but we have it just in case.
+      else if (this.object instanceof Tile) await addAnimation(this.object, animation);
     } catch (err) {
       console.error(err);
       if (err instanceof Error) ui.notifications?.error(err.message, { console: false, localize: true });
@@ -378,7 +355,10 @@ export class SpriteAnimator {
    */
   public async addAnimations(...animations: AnimationConfig[]): Promise<void> {
     try {
-      await addAnimations(this.actor, ...animations);
+      if (this.actor instanceof Actor) await addAnimations(this.actor, ...animations);
+      else if (this.document instanceof TileDocument) await addAnimations(this.document, ...animations);
+      // This one shouldn't be reached, but just in case
+      else if (this.object instanceof Tile) await addAnimations(this.object, ...animations);
     } catch (err) {
       console.error(err);
       if (err instanceof Error) ui.notifications?.error(err.message, { console: false, localize: true });
@@ -391,7 +371,10 @@ export class SpriteAnimator {
    */
   public async removeAnimation(name: string): Promise<void> {
     try {
-      await removeAnimation(this.actor, name);
+      if (this.actor instanceof Actor) await removeAnimation(this.actor, name);
+      else if (this.document instanceof TileDocument) await removeAnimation(this.document, name);
+      // This one shouldn't be reached, but just in case
+      else if (this.object instanceof Tile) await removeAnimation(this.object, name);
     } catch (err) {
       console.error(err);
       if (err instanceof Error) ui.notifications?.error(err.message, { console: false, localize: true });
@@ -404,7 +387,10 @@ export class SpriteAnimator {
    */
   public async removeAnimations(...names: string[]): Promise<void> {
     try {
-      await removeAnimations(this.actor, ...names);
+      if (this.actor instanceof Actor) await removeAnimations(this.actor, ...names);
+      else if (this.document instanceof TileDocument) await removeAnimations(this.document, ...names);
+      // This one shouldn't be reached, but just in case
+      else if (this.object instanceof Tile) await removeAnimations(this.object, ...names);
     } catch (err) {
       console.error(err);
       if (err instanceof Error) ui.notifications?.error(err.message, { console: false, localize: true });
@@ -416,7 +402,10 @@ export class SpriteAnimator {
    */
   public async clearAnimations(): Promise<void> {
     try {
-      await clearAnimations(this.actor);
+      if (this.actor instanceof Actor) await clearAnimations(this.actor);
+      else if (this.document instanceof TileDocument) await clearAnimations(this.document);
+      // This one shouldn't be reached, but just in case
+      else if (this.object instanceof Tile) await clearAnimations(this.object);
     } catch (err) {
       console.error(err);
       if (err instanceof Error) ui.notifications?.error(err.message, { console: false, localize: true });
@@ -428,7 +417,10 @@ export class SpriteAnimator {
    * @returns - {@link AnimationConfig}[]
    */
   public getAnimations(): AnimationConfig[] {
-    return getAnimations(this.actor);
+    if (this.actor instanceof Actor) return getAnimations(this.actor);
+    else if (this.document instanceof TileDocument) return getAnimations(this.document);
+    else if (this.object instanceof Tile) return getAnimations(this.object);
+    else return [];
   }
 
   /**
@@ -437,7 +429,9 @@ export class SpriteAnimator {
    * @returns - {@link AnimationConfig} | undefined
    */
   public getAnimation(name: string): AnimationConfig | undefined {
-    return getAnimation(this.actor, name);
+    if (this.actor instanceof Actor) return getAnimation(this.actor, name);
+    else if (this.document instanceof TileDocument) return getAnimation(this.document, name);
+    else if (this.object instanceof Tile) return getAnimation(this.object, name);
   }
 
   /**
@@ -455,7 +449,7 @@ export class SpriteAnimator {
   public async playAnimation(arg: string | AnimationConfig): Promise<void> {
     try {
       if (!this.document.canUserModify(game?.user as User, "update")) throw new LocalizedError("PERMISSIONDENIED");
-      const config: AnimationConfig | undefined = typeof arg === "string" ? this.getAnimation(arg) : arg;
+      const config = coerceAnimation(arg, this.document);
       if (!config) throw new InvalidAnimationError(arg);
       if (!this.object?.mesh) throw new InvalidTokenError(this.object);
 
@@ -476,9 +470,10 @@ export class SpriteAnimator {
       if (!this.document.canUserModify(game?.user as User, "update")) throw new LocalizedError("PERMISSIONDENIED");
       if (!this.object?.mesh) throw new InvalidTokenError(this.object);
 
-      const animations = args.map(arg => typeof arg === "string" ? this.getAnimation(arg) : arg);
+      const animations = args.map(arg => coerceAnimation(arg, this.document));
       const hasInvalid = animations.find(anim => !anim);
       if (hasInvalid) throw new InvalidAnimationError(hasInvalid);
+
       void socketPlayAnimations(this.document.uuid, animations as AnimationConfig[]);
       await playAnimations(this.object.mesh, animations as AnimationConfig[]);
 
@@ -490,14 +485,11 @@ export class SpriteAnimator {
 
   // #endregion
   constructor(arg: unknown) {
-
-    const token = coerceToken(arg);
-    if (!(token instanceof Token)) throw new InvalidTokenError(arg);
-    this.object = token;
-    this.document = token.document;
-    if (!(token.actor instanceof Actor)) throw new InvalidActorError(token.actor);
-    this.actor = token.actor;
-
-    if (!token.document.canUserModify(game?.user as User, "update")) throw new LocalizedError("PERMISSIONDENIED");
+    const sprite = coerceSprite(arg);
+    if (!sprite?.document.canUserModify(game?.user as User, "update")) throw new PermissionDeniedError();
+    if (!sprite) throw new InvalidSpriteError(arg);
+    this.object = sprite;
+    this.document = sprite.document;
+    if (sprite instanceof Token) this.actor = sprite.actor;
   }
 }
