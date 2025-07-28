@@ -18,13 +18,13 @@
 }
 
 .animation-config {
-  .animation-list {
-    display: flex;
-    flex-wrap: wrap;
-    overflow-y: auto;
-    flex-direction: row;
-    max-height: 256px;
-  }
+  overflow-y: auto;
+  // .animation-list {
+  //   // display: flex;
+  //   // flex-wrap: wrap;
+  //   // flex-direction: row;
+  //   // max-height: 256px;
+  // }
 
   .animation-row {
     width: 512px;

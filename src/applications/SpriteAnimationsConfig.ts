@@ -15,7 +15,8 @@ export class SpriteAnimationsConfig extends foundry.applications.api.HandlebarsA
       resizable: true
     },
     position: {
-      width: 1000
+      // width: 1000
+      width: 512
     },
     tag: "form",
     form: {
@@ -219,7 +220,7 @@ export class SpriteAnimationsConfig extends foundry.applications.api.HandlebarsA
         label: "SPRITE-ANIMATIONS.CONFIG.TABS.ANIMATIONS",
         group: "primary",
         active: true,
-        cssClass: "active"
+        cssClass: "active animation-config"
       },
       mesh: {
         id: "mesh",
