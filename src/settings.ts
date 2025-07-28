@@ -1,19 +1,94 @@
-import { AnimationConfig } from "./interfaces";
+import { AnimationConfig, MeshAdjustmentConfig } from "./interfaces";
 import { Animatable } from "./interfaces";
+import { DEFAULT_MESH_ADJUSTMENT } from "./constants";
+import { coerceAnimatable } from "coercion";
+
+
 
 declare global {
   interface FlagConfig {
     Actor: {
       "sprite-animations": {
         animations: AnimationConfig[];
+        meshAdjustments: MeshAdjustmentConfig;
       }
     },
     TileDocument: {
       "sprite-animations": {
         animations: AnimationConfig[];
+        meshAdjustments: MeshAdjustmentConfig;
       }
     }
   }
+}
+
+
+export function applyMeshAdjustments(target: Token | TokenDocument | Tile | TileDocument) {
+  if (!canvas?.scene) return;
+  const animatable = coerceAnimatable(target);
+  if (!animatable) return;
+  const adjustments = getMeshAdjustments(animatable);
+
+  const mesh = animatable instanceof Tile ? animatable.mesh : animatable instanceof TileDocument ? animatable.object?.mesh : target instanceof Token ? target.mesh : target instanceof TokenDocument ? target.object?.mesh : undefined;
+  if (!mesh) return;
+
+
+  const doc = (target instanceof Token || target instanceof Tile) ? target.document : target;
+  if (!doc) return;
+
+  // Determine base height of mesh, before applying scale.
+  // let meshScale = 1;
+  const baseWidth = doc instanceof TileDocument ? doc.width : doc.getSize().width;
+  const baseHeight = doc instanceof TileDocument ? doc.height : doc.getSize().height;
+
+  if (!doc.object?.texture) return;
+  if (!mesh.texture) return;
+
+  const { width: textureWidth, height: textureHeight } = mesh.texture;
+  let sx;
+  let sy;
+  switch (doc.texture.fit) {
+    case "fill":
+      sx = baseWidth / textureWidth;
+      sy = baseHeight / textureHeight;
+      break;
+    case "cover":
+      sx = sy = Math.max(baseWidth / textureWidth, baseHeight / textureHeight);
+      break;
+    case "contain":
+      sx = sy = Math.min(baseWidth / textureWidth, baseHeight / textureHeight);
+      break;
+    case "width":
+      sx = sy = baseWidth / textureWidth;
+      break;
+    case "height":
+      sx = sy = baseHeight / textureHeight;
+      break;
+  }
+
+  sx *= doc.texture.scaleX;
+  sy *= doc.texture.scaleY;
+
+  mesh.scale.set(sx, sy);
+  if (adjustments?.enable) {
+    mesh.width += adjustments.width;
+    mesh.height += adjustments.height;
+    mesh.x = doc.x + (baseWidth * mesh.anchor.x) + adjustments.x;
+    mesh.y = doc.y + (baseHeight * mesh.anchor.y) + adjustments.y;
+  } else {
+    // Ensure mesh position is where it ought to be when unadjusted
+    mesh.x = doc.x + (baseWidth * mesh.anchor.x);
+    mesh.y = doc.y + (baseHeight * mesh.anchor.y);
+  }
+}
+
+export function getMeshAdjustments(target: Animatable): MeshAdjustmentConfig | undefined {
+  if (target instanceof Actor) return target.getFlag("sprite-animations", "meshAdjustments") ?? DEFAULT_MESH_ADJUSTMENT;
+  // eslint-disable-next-line @typescript-eslint/no-unsafe-call, @typescript-eslint/no-unsafe-member-access
+  else if (target instanceof Tile) return (target.document as any).getFlag("sprite-animations", "meshAdjustments") as MeshAdjustmentConfig ?? DEFAULT_MESH_ADJUSTMENT;
+  // eslint-disable-next-line @typescript-eslint/no-unsafe-call, @typescript-eslint/no-unsafe-member-access
+  else if (target instanceof TileDocument) return (target as any).getFlag("sprite-animations", "meshAdjustments") as MeshAdjustmentConfig ?? DEFAULT_MESH_ADJUSTMENT;
+
 }
 
 /**
