@@ -1,3 +1,4 @@
+import { getSectionManager } from "./sequencer";
 import { applyMeshAdjustments } from "settings";
 
 Hooks.on("canvasReady", () => {
@@ -20,3 +21,9 @@ Hooks.on("refreshTile", (tile: Tile) => {
   applyMeshAdjustments(tile);
 });
 
+// eslint-disable-next-line @typescript-eslint/no-unsafe-call, @typescript-eslint/no-unsafe-member-access
+(Hooks as any).on("sequencerReady", () => {
+
+  const sectionClass = getSectionManager();
+  Sequencer.SectionManager.registerSection(__MODULE_ID__, "spriteAnimation", sectionClass);
+})
