@@ -71,10 +71,17 @@ export function applyMeshAdjustments(target: Token | TokenDocument | Tile | Tile
 
   mesh.scale.set(sx, sy);
   if (adjustments?.enable) {
-    mesh.width += adjustments.width;
-    mesh.height += adjustments.height;
-    mesh.x = doc.x + (baseWidth * mesh.anchor.x) + adjustments.x;
-    mesh.y = doc.y + (baseHeight * mesh.anchor.y) + adjustments.y;
+    mesh.width += (adjustments.width * doc.width);
+    mesh.height += (adjustments.height * doc.width);
+    mesh.x = doc.x + (baseWidth * mesh.anchor.x);
+    mesh.y = doc.y + (baseHeight * mesh.anchor.y);
+
+    if (doc.texture.scaleX < 0) mesh.x -= (adjustments.x * doc.width);
+    else if (doc.texture.scaleX > 0) mesh.x += (adjustments.x * doc.width);
+
+    if (doc.texture.scaleY < 0) mesh.y -= (adjustments.y * doc.height);
+    else if (doc.texture.scaleY > 0) mesh.y += (adjustments.y * doc.height);
+
   } else {
     // Ensure mesh position is where it ought to be when unadjusted
     mesh.x = doc.x + (baseWidth * mesh.anchor.x);

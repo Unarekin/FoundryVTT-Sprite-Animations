@@ -10,6 +10,7 @@ Hooks.on("canvasReady", () => {
   }
 });
 
+
 Hooks.on("refreshToken", (token: Token) => {
   applyMeshAdjustments(token);
 });
