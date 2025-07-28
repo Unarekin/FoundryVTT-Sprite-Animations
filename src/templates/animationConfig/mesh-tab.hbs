@@ -1,0 +1,21 @@
+<section
+  class="tab {{tab.cssClass}} flex1"
+  data-group="primary"
+  data-tab="mesh"
+>
+  <p>{{localize "SPRITE-ANIMATIONS.CONFIG.MESH.DESCRIPTION"}}</p>
+
+  <div class="form-group">
+    <label for="enableAdjustments">{{localize
+        "SPRITE-ANIMATIONS.CONFIG.MESH.ENABLE"
+      }}</label>
+    <input
+      type="checkbox"
+      {{checked enableAdjustments}}
+      name="enableAdjustments"
+      id="enableAdjustments"
+    />
+  </div>
+
+  <div class="form-group"></div>
+</section>

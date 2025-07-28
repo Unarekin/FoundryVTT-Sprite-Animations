@@ -22,7 +22,15 @@
       "NAME": "Name",
       "PLAY": "Play Animation",
       "ADD": "Add Animation",
-      "CONFIRMREMOVE": "Are you sure you wish to remove this animation?"
+      "CONFIRMREMOVE": "Are you sure you wish to remove this animation?",
+      "MESH": {
+        "DESCRIPTION": "The following options can be used to adjust the display of the underlying SpriteMesh used for this token or tile, should you need to adjust the scale or positioning relative to the actual placeable object's selectable area, in order to fit larger animations.",
+        "ENABLE": "Enable Mesh Adjustments"
+      },
+      "TABS": {
+        "ANIMATIONS": "Animations",
+        "MESH": "Sprite Mesh"
+      }
     }
   }
 }

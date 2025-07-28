@@ -15,7 +15,8 @@ export class SpriteAnimationsConfig extends foundry.applications.api.HandlebarsA
       resizable: true
     },
     position: {
-      width: 900
+      // width: 1000
+      width: 512
     },
     tag: "form",
     form: {
@@ -35,16 +36,32 @@ export class SpriteAnimationsConfig extends foundry.applications.api.HandlebarsA
     header: {
       template: `modules/${__MODULE_ID__}/templates/animationConfig/header.hbs`
     },
-    controls: {
-      template: `modules/${__MODULE_ID__}/templates/animationConfig/controls.hbs`
+    tabs: {
+      template: `templates/generic/tab-navigation.hbs`
     },
-    config: {
-      template: `modules/${__MODULE_ID__}/templates/animationConfig/config.hbs`,
+    animations: {
+      template: `modules/${__MODULE_ID__}/templates/animationConfig/animations-tab.hbs`,
+      scrollable: [".animation-list"],
       templates: [
+        `modules/${__MODULE_ID__}/templates/animationConfig/controls.hbs`,
+        `modules/${__MODULE_ID__}/templates/animationConfig/config.hbs`,
         `modules/${__MODULE_ID__}/templates/animationConfig/animationRow.hbs`,
         `modules/${__MODULE_ID__}/templates/animationPreview.hbs`
       ]
     },
+    mesh: {
+      template: `modules/${__MODULE_ID__}/templates/animationConfig/mesh-tab.hbs`
+    },
+    // controls: {
+    //   template: `modules/${__MODULE_ID__}/templates/animationConfig/controls.hbs`
+    // },
+    // config: {
+    //   template: `modules/${__MODULE_ID__}/templates/animationConfig/config.hbs`,
+    //   templates: [
+    //     `modules/${__MODULE_ID__}/templates/animationConfig/animationRow.hbs`,
+    //     `modules/${__MODULE_ID__}/templates/animationPreview.hbs`
+    //   ]
+    // },
     footer: {
       template: `templates/generic/form-footer.hbs`
     }
@@ -178,7 +195,16 @@ export class SpriteAnimationsConfig extends foundry.applications.api.HandlebarsA
     }
   }
 
-  async _prepareContext(options: foundry.applications.api.ApplicationV2.RenderOptions): Promise<AnimationConfigRenderContext> {
+  async _preparePartContext(partId: string, context: AnimationConfigRenderContext, options: AnimationConfigRenderOptions): Promise<AnimationConfigRenderContext> {
+    const newContext = await super._preparePartContext(partId, context, options) as AnimationConfigRenderContext;
+
+    if (partId in (context.tabs ?? []))
+      newContext.tab = newContext.tabs?.[partId];
+
+    return newContext;
+  }
+
+  async _prepareContext(options: AnimationConfigRenderOptions): Promise<AnimationConfigRenderContext> {
     const context: AnimationConfigRenderContext = {
       ...(await super._prepareContext(options)),
       animations: this.animations,
@@ -186,29 +212,28 @@ export class SpriteAnimationsConfig extends foundry.applications.api.HandlebarsA
         { type: "submit", icon: "fa-solid fa-save", label: "SETTINGS.Save" }
       ]
     }
+
+    context.tabs = {
+      animations: {
+        id: "animations",
+        icon: "fa-solid fa-person-running",
+        label: "SPRITE-ANIMATIONS.CONFIG.TABS.ANIMATIONS",
+        group: "primary",
+        active: true,
+        cssClass: "active animation-config"
+      },
+      mesh: {
+        id: "mesh",
+        icon: "fa-solid fa-cube",
+        label: "SPRITE-ANIMATIONS.CONFIG.TABS.MESH",
+        group: "primary",
+        active: false,
+        cssClass: ""
+      }
+    }
+
+    console.log("Context:", context);
     return context;
-  }
-
-  protected async _onRender(context: AnimationConfigRenderContext, options: AnimationConfigRenderOptions): Promise<void> {
-
-    // const ROW_ITEM_WIDTH = 512;
-
-    // if (this.animations.length >= 3) {
-    //   foundry.utils.mergeObject(options, {
-    //     position: {
-    //       width: (ROW_ITEM_WIDTH * 3)
-    //     }
-    //   });
-    // } else if (this.animations.length >= 2) {
-    //   foundry.utils.mergeObject(options, {
-    //     position: {
-    //       width: (ROW_ITEM_WIDTH * 2)
-    //     }
-    //   });
-    // }
-
-    await super._onRender(context, options);
-
   }
 
   protected parseAnimations(animations: AnimationConfig[]): AnimationContext[] {

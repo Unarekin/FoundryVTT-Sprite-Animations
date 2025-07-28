@@ -22,7 +22,6 @@ function getHeaderButtons(app: unknown): foundry.applications.api.ApplicationV2.
 }
 
 function addHeaderButton(app: unknown, controls: foundry.applications.api.ApplicationV2.HeaderControlsEntry[]) {
-  console.log("Adding header button:", app);
   controls.unshift(...getHeaderButtons(app));
 }
 
