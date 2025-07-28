@@ -1,6 +1,6 @@
-<section data-role="sprite-animation-player">
+<div data-role="sprite-animation-player" class="flexcol">
   <p>{{localize "SPRITE-ANIMATIONS.PLAYER.DESCRIPTION"}}</p>
-  <section data-role="animation-queue">
+  <div data-role="animation-queue" class="flex0">
     <div class="form-group">
       <label>{{localize "SPRITE-ANIMATIONS.PLAYER.QUEUELIST"}}</label>
       <div data-role="queue-list">
@@ -10,17 +10,33 @@
     <div class="flexrow">
       <div class="flex1"></div>
       <div class="flex0" style="margin-right:1em;">
-        <a data-action="clearQueue" class="disabled" title="{{localize "SPRITE-ANIMATIONS.PLAYER.CLEAR"}}"><i class="fa-solid fa-trash"></i></a>
+        <a
+          data-action="clearQueue"
+          class="disabled"
+          title="{{localize 'SPRITE-ANIMATIONS.PLAYER.CLEAR'}}"
+        ><i class="fa-solid fa-trash"></i></a>
       </div>
       <div class="flex0">
-        <a data-action="playQueue" class="disabled" title="{{localize "SPRITE-ANIMATIONS.PLAYER.PLAYQUEUE"}}"><i class="fa-solid fa-play"></i></a>
+        <a
+          data-action="playQueue"
+          class="disabled"
+          title="{{localize 'SPRITE-ANIMATIONS.PLAYER.PLAYQUEUE'}}"
+        ><i class="fa-solid fa-play"></i></a>
       </div>
     </div>
-  </section>
-  <hr >
-  <section data-role="animation-list">
+  </div>
+  <hr />
+  <div class="animation-list flex1" data-role="animation-list">
     {{#each animations as |animation|}}
-      {{> "modules/sprite-animations/templates/playerRow.hbs" animation}}
+      <div>{{animation.name}}</div>
     {{/each}}
-  </section>
-</section>
+  </div>
+  {{!-- <div class="flexcol">
+    <section data-role="animation-list" style="display:flex">
+      {{#each animations as |animation|}}
+        {{> "modules/sprite-animations/templates/playerRow.hbs" animation}}
+      {{/each}}
+    </section>
+    <div class="flex1"></div>
+  </div> --}}
+</div>
