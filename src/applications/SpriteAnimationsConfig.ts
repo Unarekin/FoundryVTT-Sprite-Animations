@@ -1,10 +1,10 @@
 import { AnimationConfigRenderContext, AnimationConfigRenderOptions, AnimationContext } from "./types";
 import { InvalidAnimationError } from "errors";
-import { TRANSLATION_KEY } from "../constants";
-import { AnimationConfig, Animatable } from "interfaces";
+import { DEFAULT_MESH_ADJUSTMENT, TRANSLATION_KEY } from "../constants";
+import { AnimationConfig, Animatable, MeshAdjustmentConfig } from "interfaces";
 import { SpriteAnimator } from "SpriteAnimator";
 import { mimeType } from "utils";
-import { setAnimations } from "settings";
+import { getMeshAdjustments, setAnimations, setMeshAdjustments } from "settings";
 
 export class SpriteAnimationsConfig extends foundry.applications.api.HandlebarsApplicationMixin(foundry.applications.api.ApplicationV2) {
   static DEFAULT_OPTIONS = {
@@ -68,7 +68,8 @@ export class SpriteAnimationsConfig extends foundry.applications.api.HandlebarsA
   }
 
 
-  protected animations: AnimationContext[] = [];
+  protected readonly animations: AnimationContext[] = [];
+  protected readonly adjustments: MeshAdjustmentConfig;
 
 
   public static async AddAnimation(this: SpriteAnimationsConfig): Promise<void> {
@@ -135,12 +136,13 @@ export class SpriteAnimationsConfig extends foundry.applications.api.HandlebarsA
     }
   }
 
-  // eslint-disable-next-line @typescript-eslint/no-unused-vars
   public static async onSubmit(this: SpriteAnimationsConfig, e: Event | SubmitEvent, elem: HTMLFormElement, formData: foundry.applications.ux.FormDataExtended) {
     try {
+      const data = foundry.utils.expandObject(formData.object);
       const parsed = this.parseForm();
-      console.log("Submitted:", parsed);
       await setAnimations(this.object, parsed);
+      // eslint-disable-next-line @typescript-eslint/no-unsafe-argument, @typescript-eslint/no-unsafe-member-access
+      await setMeshAdjustments(this.object, (data as any).meshAdjustments);
 
     } catch (err) {
       console.error(err);
@@ -205,12 +207,14 @@ export class SpriteAnimationsConfig extends foundry.applications.api.HandlebarsA
   }
 
   async _prepareContext(options: AnimationConfigRenderOptions): Promise<AnimationConfigRenderContext> {
+
     const context: AnimationConfigRenderContext = {
       ...(await super._prepareContext(options)),
       animations: this.animations,
       buttons: [
         { type: "submit", icon: "fa-solid fa-save", label: "SETTINGS.Save" }
-      ]
+      ],
+      meshAdjustments: this.adjustments
     }
 
     context.tabs = {
@@ -232,7 +236,6 @@ export class SpriteAnimationsConfig extends foundry.applications.api.HandlebarsA
       }
     }
 
-    console.log("Context:", context);
     return context;
   }
 
@@ -272,5 +275,6 @@ export class SpriteAnimationsConfig extends foundry.applications.api.HandlebarsA
 
     const animations = this.parseAnimations(SpriteAnimator.getAnimations(object) ?? []);
     this.animations.splice(0, this.animations.length, ...animations);
+    this.adjustments = getMeshAdjustments(object) ?? DEFAULT_MESH_ADJUSTMENT;
   }
 }

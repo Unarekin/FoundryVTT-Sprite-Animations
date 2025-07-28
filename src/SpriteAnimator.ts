@@ -38,7 +38,6 @@ export class SpriteAnimator {
    */
   public static getAnimations(arg: unknown): AnimationConfig[] | undefined {
     try {
-      console.log("Getting animations:", arg);
       const animatable = coerceAnimatable(arg);
       if (!animatable) throw new InvalidSpriteError(arg);
       return getAnimations(animatable);

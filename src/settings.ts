@@ -115,6 +115,14 @@ export function getMeshAdjustments(target: Animatable): MeshAdjustmentConfig | u
 
 }
 
+export async function setMeshAdjustments(target: Animatable, adjustments: Partial<MeshAdjustmentConfig>): Promise<void> {
+  if (target instanceof Actor) await target.setFlag("sprite-animations", "meshAdjustments", ensureDefaultAdjustments(adjustments));
+  // eslint-disable-next-line @typescript-eslint/no-unsafe-call, @typescript-eslint/no-unsafe-member-access
+  else if (target instanceof Tile) await (target.document as any).setFlag("sprite-animations", "meshAdjustments", ensureDefaultAdjustments(adjustments));
+  // eslint-disable-next-line @typescript-eslint/no-unsafe-call, @typescript-eslint/no-unsafe-member-access
+  else if (target instanceof TileDocument) await (target as any).setFlag("sprite-animations", "meshAdjustments", ensureDefaultAdjustments(adjustments));
+}
+
 /**
  * Retrieves all animations from an {@link Animatable}
  * @param {Animatable} target - {@link Animatable}
