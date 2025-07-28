@@ -144,6 +144,10 @@ export class SpriteAnimationsConfig extends foundry.applications.api.HandlebarsA
       // eslint-disable-next-line @typescript-eslint/no-unsafe-argument, @typescript-eslint/no-unsafe-member-access
       await setMeshAdjustments(this.object, (data as any).meshAdjustments);
 
+      // If it's a tile, call its refresh function since it won't ahppen automatically.
+      if (this.object instanceof Tile) this.object.refresh();
+      else if (this.object instanceof TileDocument) this.object.object?.refresh();
+
     } catch (err) {
       console.error(err);
       if (err instanceof Error) ui.notifications?.error(err.message, { console: false, localize: true });
