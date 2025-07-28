@@ -97,12 +97,21 @@ export function applyMeshAdjustments(target: Token | TokenDocument | Tile | Tile
   }
 }
 
+function ensureDefaultAdjustments(adjustments: Partial<MeshAdjustmentConfig>): MeshAdjustmentConfig {
+  const newAdjustments = {};
+  foundry.utils.mergeObject(newAdjustments, DEFAULT_MESH_ADJUSTMENT);
+  foundry.utils.mergeObject(newAdjustments, adjustments);
+
+  return newAdjustments as MeshAdjustmentConfig;
+}
+
 export function getMeshAdjustments(target: Animatable): MeshAdjustmentConfig | undefined {
-  if (target instanceof Actor) return target.getFlag("sprite-animations", "meshAdjustments") ?? DEFAULT_MESH_ADJUSTMENT;
+
+  if (target instanceof Actor) return ensureDefaultAdjustments(target.getFlag("sprite-animations", "meshAdjustments"));
   // eslint-disable-next-line @typescript-eslint/no-unsafe-call, @typescript-eslint/no-unsafe-member-access
-  else if (target instanceof Tile) return (target.document as any).getFlag("sprite-animations", "meshAdjustments") as MeshAdjustmentConfig ?? DEFAULT_MESH_ADJUSTMENT;
+  else if (target instanceof Tile) return ensureDefaultAdjustments((target.document as any).getFlag("sprite-animations", "meshAdjustments") as MeshAdjustmentConfig);
   // eslint-disable-next-line @typescript-eslint/no-unsafe-call, @typescript-eslint/no-unsafe-member-access
-  else if (target instanceof TileDocument) return (target as any).getFlag("sprite-animations", "meshAdjustments") as MeshAdjustmentConfig ?? DEFAULT_MESH_ADJUSTMENT;
+  else if (target instanceof TileDocument) return ensureDefaultAdjustments((target as any).getFlag("sprite-animations", "meshAdjustments") as MeshAdjustmentConfig);
 
 }
 
