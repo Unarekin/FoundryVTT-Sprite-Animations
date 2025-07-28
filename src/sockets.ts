@@ -1,32 +1,72 @@
 import { InvalidAnimationError, InvalidSpriteError, LocalizedError } from "errors";
-import { AnimationConfig } from "interfaces";
+import { AnimationConfig, PlaySocketMessage, QueueSocketMessage, SocketMessage } from "interfaces";
 import { playAnimations as utilPlayAnimations, queueAnimations as utilQueueAnimations } from "./utils";
 import { coerceAnimation, coerceSprite } from "coercion";
 
-let socket: any;
 
-// Ensure hook is only registered once, even if file is included in multiple locations
-let hooksRegistered = false;
-if (!hooksRegistered) {
-  // TODO: Actually get HookConfig working at all
-  // eslint-disable-next-line @typescript-eslint/no-unsafe-call, @typescript-eslint/no-unsafe-member-access
-  (Hooks as any).once("socketlib.ready", () => {
-    // eslint-disable-next-line @typescript-eslint/no-unsafe-assignment, @typescript-eslint/no-unsafe-call, @typescript-eslint/no-unsafe-member-access
-    socket = socketlib.registerModule(__MODULE_ID__);
+// let socket: any;
 
-    // eslint-disable-next-line @typescript-eslint/no-unsafe-call, @typescript-eslint/no-unsafe-member-access
-    socket.register("play", doPlayAnimations);
-    // eslint-disable-next-line @typescript-eslint/no-unsafe-call, @typescript-eslint/no-unsafe-member-access
-    socket.register("queue", doQueueAnimations);
-  });
-  hooksRegistered = true;
+const SOCKET_IDENTIFIER = `module.${__MODULE_ID__}`;
+
+Hooks.once("ready", () => {
+
+  if (!game.socket) throw new LocalizedError("SOCKETNOTINITIALIZED");
+
+  game.socket.on(SOCKET_IDENTIFIER, (message: SocketMessage) => {
+    // Early exit
+    if (!message.users.includes((game.user as User).id ?? "")) return;
+
+    switch (message.type) {
+      case "play": {
+        const msg = message as PlaySocketMessage;
+        doPlayAnimations(msg.target, msg.animations).catch((err: Error) => { ui.notifications?.error(err.message, { localize: true }) });
+        break;
+      }
+      case "queue": {
+        const msg = message as QueueSocketMessage;
+        doQueueAnimations(msg.target, msg.animations).catch((err: Error) => { ui.notifications?.error(err.message, { localize: true }) });
+        break;
+      }
+    }
+  })
+})
+
+
+function createMessage<t extends SocketMessage = SocketMessage>(message: Partial<t>): t {
+  // eslint-disable-next-line @typescript-eslint/no-unsafe-return
+  return {
+    id: foundry.utils.randomID(),
+    timestamp: Date.now(),
+    sender: game.user?.id ?? "",
+    ...message
+  } as any;
 }
 
-export { socket };
+
 export function playAnimations(spriteId: string, animations: (AnimationConfig | string)[]): void {
-  if (!socket) throw new LocalizedError("SOCKETNOTINITIALIZED");
-  // eslint-disable-next-line @typescript-eslint/no-unsafe-call, @typescript-eslint/no-unsafe-member-access
-  socket.executeForOthers("play", spriteId, animations);
+  if (!game.socket) throw new LocalizedError("SOCKETNOTINITIALIZED");
+  const msg = createMessage<PlaySocketMessage>({
+    type: "play",
+    target: spriteId,
+    users: game.users?.filter(user => user.active).map(user => user.id),
+    animations
+  });
+
+  game.socket.emit(SOCKET_IDENTIFIER, msg);
+}
+
+export function queueAnimations(spriteId: string, animations: (AnimationConfig | string)[]): void {
+  if (!game.socket) throw new LocalizedError("SOCKETNOTINITIALIZED");
+  const msg = createMessage<QueueSocketMessage>({
+    type: "queue",
+    target: spriteId,
+    users: game.users?.filter(user => user.active).map(user => user.id),
+    animations
+  });
+
+  game.socket.emit(SOCKET_IDENTIFIER, msg);
+
+
 }
 
 async function doQueueAnimations(uuid: string, animations: (AnimationConfig | string)[]) {
@@ -49,10 +89,4 @@ async function doPlayAnimations(uuid: string, animations: (AnimationConfig | str
   if (hasInvalid) throw new InvalidAnimationError(hasInvalid);
 
   await utilPlayAnimations(sprite.mesh, animations as AnimationConfig[]);
-}
-
-export function queueAnimations(spriteId: string, animations: (AnimationConfig | string)[]): void {
-  if (!socket) throw new LocalizedError("SOCKETNOTINITIALIZED");
-  // eslint-disable-next-line @typescript-eslint/no-unsafe-call, @typescript-eslint/no-unsafe-member-access
-  socket.executeForOthers("queue", spriteId, animations);
 }

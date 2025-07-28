@@ -1,17 +1,22 @@
-import { AnimationConfigRenderContext, AnimationContext } from "./types";
+import { AnimationConfigRenderContext, AnimationConfigRenderOptions, AnimationContext } from "./types";
 import { InvalidAnimationError } from "errors";
-import { TRANSLATION_KEY } from "../constants";
-import { AnimationConfig, Animatable } from "interfaces";
+import { DEFAULT_MESH_ADJUSTMENT, TRANSLATION_KEY } from "../constants";
+import { AnimationConfig, Animatable, MeshAdjustmentConfig } from "interfaces";
 import { SpriteAnimator } from "SpriteAnimator";
 import { mimeType } from "utils";
-import { setAnimations } from "settings";
+import { getMeshAdjustments, setAnimations, setMeshAdjustments } from "settings";
 
 export class SpriteAnimationsConfig extends foundry.applications.api.HandlebarsApplicationMixin(foundry.applications.api.ApplicationV2) {
   static DEFAULT_OPTIONS = {
     window: {
       title: "SPRITE-ANIMATIONS.CONFIG.HEADER",
       icon: "fa-solid fa-person-running",
-      contentClasses: ["standard-form"]
+      contentClasses: ["standard-form", "flexcol", "animation-config"],
+      resizable: true
+    },
+    position: {
+      // width: 1000
+      width: 512
     },
     tag: "form",
     form: {
@@ -28,20 +33,43 @@ export class SpriteAnimationsConfig extends foundry.applications.api.HandlebarsA
   }
 
   static PARTS: Record<string, foundry.applications.api.HandlebarsApplicationMixin.HandlebarsTemplatePart> = {
-    body: {
-      template: `modules/${__MODULE_ID__}/templates/animationConfig.hbs`,
+    header: {
+      template: `modules/${__MODULE_ID__}/templates/animationConfig/header.hbs`
+    },
+    tabs: {
+      template: `templates/generic/tab-navigation.hbs`
+    },
+    animations: {
+      template: `modules/${__MODULE_ID__}/templates/animationConfig/animations-tab.hbs`,
+      scrollable: [".animation-list"],
       templates: [
-        `modules/${__MODULE_ID__}/templates/animationRow.hbs`,
+        `modules/${__MODULE_ID__}/templates/animationConfig/controls.hbs`,
+        `modules/${__MODULE_ID__}/templates/animationConfig/config.hbs`,
+        `modules/${__MODULE_ID__}/templates/animationConfig/animationRow.hbs`,
         `modules/${__MODULE_ID__}/templates/animationPreview.hbs`
       ]
     },
+    mesh: {
+      template: `modules/${__MODULE_ID__}/templates/animationConfig/mesh-tab.hbs`
+    },
+    // controls: {
+    //   template: `modules/${__MODULE_ID__}/templates/animationConfig/controls.hbs`
+    // },
+    // config: {
+    //   template: `modules/${__MODULE_ID__}/templates/animationConfig/config.hbs`,
+    //   templates: [
+    //     `modules/${__MODULE_ID__}/templates/animationConfig/animationRow.hbs`,
+    //     `modules/${__MODULE_ID__}/templates/animationPreview.hbs`
+    //   ]
+    // },
     footer: {
       template: `templates/generic/form-footer.hbs`
     }
   }
 
 
-  protected animations: AnimationContext[] = [];
+  protected readonly animations: AnimationContext[] = [];
+  protected readonly adjustments: MeshAdjustmentConfig;
 
 
   public static async AddAnimation(this: SpriteAnimationsConfig): Promise<void> {
@@ -108,12 +136,17 @@ export class SpriteAnimationsConfig extends foundry.applications.api.HandlebarsA
     }
   }
 
-  // eslint-disable-next-line @typescript-eslint/no-unused-vars
   public static async onSubmit(this: SpriteAnimationsConfig, e: Event | SubmitEvent, elem: HTMLFormElement, formData: foundry.applications.ux.FormDataExtended) {
     try {
+      const data = foundry.utils.expandObject(formData.object);
       const parsed = this.parseForm();
-      console.log("Submitted:", parsed);
       await setAnimations(this.object, parsed);
+      // eslint-disable-next-line @typescript-eslint/no-unsafe-argument, @typescript-eslint/no-unsafe-member-access
+      await setMeshAdjustments(this.object, (data as any).meshAdjustments);
+
+      // If it's a tile, call its refresh function since it won't ahppen automatically.
+      if (this.object instanceof Tile) this.object.refresh();
+      else if (this.object instanceof TileDocument) this.object.object?.refresh();
 
     } catch (err) {
       console.error(err);
@@ -168,20 +201,46 @@ export class SpriteAnimationsConfig extends foundry.applications.api.HandlebarsA
     }
   }
 
-  async _prepareContext(options: foundry.applications.api.ApplicationV2.RenderOptions): Promise<AnimationConfigRenderContext> {
+  async _preparePartContext(partId: string, context: AnimationConfigRenderContext, options: AnimationConfigRenderOptions): Promise<AnimationConfigRenderContext> {
+    const newContext = await super._preparePartContext(partId, context, options) as AnimationConfigRenderContext;
+
+    if (partId in (context.tabs ?? []))
+      newContext.tab = newContext.tabs?.[partId];
+
+    return newContext;
+  }
+
+  async _prepareContext(options: AnimationConfigRenderOptions): Promise<AnimationConfigRenderContext> {
+
     const context: AnimationConfigRenderContext = {
       ...(await super._prepareContext(options)),
       animations: this.animations,
       buttons: [
         { type: "submit", icon: "fa-solid fa-save", label: "SETTINGS.Save" }
-      ]
+      ],
+      meshAdjustments: this.adjustments
     }
+
+    context.tabs = {
+      animations: {
+        id: "animations",
+        icon: "fa-solid fa-person-running",
+        label: "SPRITE-ANIMATIONS.CONFIG.TABS.ANIMATIONS",
+        group: "primary",
+        active: true,
+        cssClass: "active animation-config"
+      },
+      mesh: {
+        id: "mesh",
+        icon: "fa-solid fa-cube",
+        label: "SPRITE-ANIMATIONS.CONFIG.TABS.MESH",
+        group: "primary",
+        active: false,
+        cssClass: ""
+      }
+    }
+
     return context;
-  }
-
-  protected async _onRender(context: AnimationConfigRenderContext, options: foundry.applications.api.ApplicationV2.RenderOptions): Promise<void> {
-    await super._onRender(context, options);
-
   }
 
   protected parseAnimations(animations: AnimationConfig[]): AnimationContext[] {
@@ -220,5 +279,6 @@ export class SpriteAnimationsConfig extends foundry.applications.api.HandlebarsA
 
     const animations = this.parseAnimations(SpriteAnimator.getAnimations(object) ?? []);
     this.animations.splice(0, this.animations.length, ...animations);
+    this.adjustments = getMeshAdjustments(object) ?? DEFAULT_MESH_ADJUSTMENT;
   }
 }

@@ -6,7 +6,8 @@
       "INVALIDTOKEN": "Invalid token: {token}",
       "SOCKETNOTINITIALIZED": "Websocket not initialized",
       "PERMISSIONDENIED": "Permission denied",
-      "INVALIDSPRITE": "Invalid sprite: {sprite}"
+      "INVALIDSPRITE": "Invalid sprite: {sprite}",
+      "TARGETALREADYSET": "A target for this sprite animation sequence has already been set."
     }
   }
 }

@@ -1,6 +1,6 @@
 import { mimeType } from "utils";
 import { TRANSLATION_KEY } from "../constants";
-import { AnimationContext, AnimationPlayerRenderContext } from "./types";
+import { AnimationContext, AnimationPlayerRenderContext, AnimationPlayerRenderOptions } from "./types";
 import { AnimationConfig } from "interfaces";
 import { SpriteAnimator } from "SpriteAnimator";
 import { InvalidAnimationError } from "errors";
@@ -13,7 +13,8 @@ export class SpriteAnimationPlayer extends foundry.applications.api.HandlebarsAp
     window: {
       title: `${TRANSLATION_KEY}.PLAYER.TITLE`,
       icon: "fa-solid fa-person-running",
-      contentClasses: ["standard-form"]
+      contentClasses: ["standard-form", "flexcol", "animation-player"],
+      resizable: true
     },
     position: {
       width: 350
@@ -38,13 +39,27 @@ export class SpriteAnimationPlayer extends foundry.applications.api.HandlebarsAp
   }
 
   static PARTS: Record<string, foundry.applications.api.HandlebarsApplicationMixin.HandlebarsTemplatePart> = {
-    body: {
-      template: `modules/${__MODULE_ID__}/templates/animationPlayer.hbs`,
+    header: {
+      template: `modules/${__MODULE_ID__}/templates/animationPlayer/header.hbs`
+    },
+    queue: {
+      template: `modules/${__MODULE_ID__}/templates/animationPlayer/queue.hbs`
+    },
+    animations: {
+      template: `modules/${__MODULE_ID__}/templates/animationPlayer/animations.hbs`,
       templates: [
-        `modules/${__MODULE_ID__}/templates/playerRow.hbs`,
+        `modules/${__MODULE_ID__}/templates/animationPlayer/animationRow.hbs`,
         `modules/${__MODULE_ID__}/templates/animationPreview.hbs`
       ]
     },
+
+    // body: {
+    //   template: `modules/${__MODULE_ID__}/templates/animationPlayer.hbs`,
+    //   templates: [
+    //     `modules/${__MODULE_ID__}/templates/playerRow.hbs`,
+    //     `modules/${__MODULE_ID__}/templates/animationPreview.hbs`
+    //   ]
+    // },
     footer: {
       template: `templates/generic/form-footer.hbs`
     }
@@ -123,10 +138,32 @@ export class SpriteAnimationPlayer extends foundry.applications.api.HandlebarsAp
   protected async updateQueue() {
     const list = this.element.querySelector(`[data-role="queue-list"]`);
     if (list instanceof HTMLElement) {
-      const content = await renderTemplate(`modules/${__MODULE_ID__}/templates/playerQueue.hbs`, { queue: this.animationQueue });
+      const content = await renderTemplate(`modules/${__MODULE_ID__}/templates/animationPlayer/playerQueue.hbs`, { queue: this.animationQueue });
       list.innerHTML = content;
     }
     this.updateQueueButtons();
+  }
+
+  protected async _onRender(context: AnimationPlayerRenderContext, options: AnimationPlayerRenderOptions): Promise<void> {
+
+    const ROW_ITEM_WIDTH = 256;
+
+    const animations = this.parseAnimations(SpriteAnimator.getAnimations(this.sprite) ?? []);
+    if (animations.length >= 3) {
+      foundry.utils.mergeObject(options, {
+        position: {
+          width: (ROW_ITEM_WIDTH * 3) + 50
+        }
+      });
+    } else if (animations.length >= 2) {
+      foundry.utils.mergeObject(options, {
+        position: {
+          width: (ROW_ITEM_WIDTH * 2) + 50
+        }
+      });
+    }
+
+    await super._onRender(context, options);
   }
 
   static async PlayAnimation(this: SpriteAnimationPlayer, e: Event, elem: HTMLElement) {
@@ -152,7 +189,7 @@ export class SpriteAnimationPlayer extends foundry.applications.api.HandlebarsAp
   async _prepareContext(options: foundry.applications.api.ApplicationV2.RenderOptions): Promise<AnimationPlayerRenderContext> {
     const context = {
       ...(await super._prepareContext(options)),
-      animations: this.parseAnimations(SpriteAnimator.getAnimations(this.sprite) ?? []),
+      animations: this.parseAnimations(SpriteAnimator.getAnimations(this.sprite) ?? []).sort((a, b) => a.name.localeCompare(b.name)),
       buttons: [
         { type: "submit", icon: "fa-solid fa-times", label: "Close" } as foundry.applications.api.ApplicationV2.FormFooterButton
       ]

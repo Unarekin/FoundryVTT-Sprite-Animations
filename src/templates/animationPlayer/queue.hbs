@@ -1,0 +1,26 @@
+<div class="flex0" data-role="animation-queue">
+  <div class="form-group">
+    <label>{{localize "SPRITE-ANIMATIONS.PLAYER.QUEUELIST"}}</label>
+    <div data-role="queue-list">
+      {{localize "SPRITE-ANIMATIONS.PLAYER.NONE"}}
+    </div>
+  </div>
+  <div class="flexrow">
+    <div class="flex1"></div>
+    <div class="flex0" style="margin-right:1em;">
+      <a
+        data-action="clearQueue"
+        class="disabled"
+        title="{{localize 'SPRITE-ANIMATIONS.PLAYER.CLEAR'}}"
+      ><i class="fa-solid fa-trash"></i></a>
+    </div>
+    <div class="flex0">
+      <a
+        data-action="playQueue"
+        class="disabled"
+        title="{{localize 'SPRITE-ANIMATIONS.PLAYER.PLAYQUEUE'}}"
+      ><i class="fa-solid fa-play"></i></a>
+    </div>
+  </div>
+  <hr />
+</div>
