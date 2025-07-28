@@ -5,6 +5,8 @@ export type AnimationContext = (AnimationConfig & { isVideo: boolean });
 export interface AnimationConfigRenderContext extends foundry.applications.api.ApplicationV2.RenderContext {
   animations: (AnimationConfig & { isVideo: boolean })[];
   buttons: foundry.applications.api.ApplicationV2.FormFooterButton[];
+
+  tab?: foundry.applications.api.ApplicationV2.Tab;
 }
 
 export type AnimationConfigConfiguration = foundry.applications.api.ApplicationV2.Configuration;

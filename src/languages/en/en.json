@@ -22,7 +22,11 @@
       "NAME": "Name",
       "PLAY": "Play Animation",
       "ADD": "Add Animation",
-      "CONFIRMREMOVE": "Are you sure you wish to remove this animation?"
+      "CONFIRMREMOVE": "Are you sure you wish to remove this animation?",
+      "TABS": {
+        "ANIMATIONS": "Animations",
+        "MESH": "Sprite Mesh"
+      }
     }
   }
 }
