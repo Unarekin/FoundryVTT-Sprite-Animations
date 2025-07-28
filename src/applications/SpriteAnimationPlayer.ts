@@ -138,7 +138,7 @@ export class SpriteAnimationPlayer extends foundry.applications.api.HandlebarsAp
   protected async updateQueue() {
     const list = this.element.querySelector(`[data-role="queue-list"]`);
     if (list instanceof HTMLElement) {
-      const content = await renderTemplate(`modules/${__MODULE_ID__}/templates/playerQueue.hbs`, { queue: this.animationQueue });
+      const content = await renderTemplate(`modules/${__MODULE_ID__}/templates/animationPlayer/playerQueue.hbs`, { queue: this.animationQueue });
       list.innerHTML = content;
     }
     this.updateQueueButtons();
