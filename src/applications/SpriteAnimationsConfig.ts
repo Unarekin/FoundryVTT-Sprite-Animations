@@ -1,4 +1,4 @@
-import { AnimationConfigRenderContext, AnimationContext } from "./types";
+import { AnimationConfigRenderContext, AnimationConfigRenderOptions, AnimationContext } from "./types";
 import { InvalidAnimationError } from "errors";
 import { TRANSLATION_KEY } from "../constants";
 import { AnimationConfig, Animatable } from "interfaces";
@@ -11,7 +11,11 @@ export class SpriteAnimationsConfig extends foundry.applications.api.HandlebarsA
     window: {
       title: "SPRITE-ANIMATIONS.CONFIG.HEADER",
       icon: "fa-solid fa-person-running",
-      contentClasses: ["standard-form"]
+      contentClasses: ["standard-form", "flexcol", "animation-config"],
+      resizable: true
+    },
+    position: {
+      width: 900
     },
     tag: "form",
     form: {
@@ -28,10 +32,16 @@ export class SpriteAnimationsConfig extends foundry.applications.api.HandlebarsA
   }
 
   static PARTS: Record<string, foundry.applications.api.HandlebarsApplicationMixin.HandlebarsTemplatePart> = {
-    body: {
-      template: `modules/${__MODULE_ID__}/templates/animationConfig.hbs`,
+    header: {
+      template: `modules/${__MODULE_ID__}/templates/animationConfig/header.hbs`
+    },
+    controls: {
+      template: `modules/${__MODULE_ID__}/templates/animationConfig/controls.hbs`
+    },
+    config: {
+      template: `modules/${__MODULE_ID__}/templates/animationConfig/config.hbs`,
       templates: [
-        `modules/${__MODULE_ID__}/templates/animationRow.hbs`,
+        `modules/${__MODULE_ID__}/templates/animationConfig/animationRow.hbs`,
         `modules/${__MODULE_ID__}/templates/animationPreview.hbs`
       ]
     },
@@ -179,7 +189,24 @@ export class SpriteAnimationsConfig extends foundry.applications.api.HandlebarsA
     return context;
   }
 
-  protected async _onRender(context: AnimationConfigRenderContext, options: foundry.applications.api.ApplicationV2.RenderOptions): Promise<void> {
+  protected async _onRender(context: AnimationConfigRenderContext, options: AnimationConfigRenderOptions): Promise<void> {
+
+    // const ROW_ITEM_WIDTH = 512;
+
+    // if (this.animations.length >= 3) {
+    //   foundry.utils.mergeObject(options, {
+    //     position: {
+    //       width: (ROW_ITEM_WIDTH * 3)
+    //     }
+    //   });
+    // } else if (this.animations.length >= 2) {
+    //   foundry.utils.mergeObject(options, {
+    //     position: {
+    //       width: (ROW_ITEM_WIDTH * 2)
+    //     }
+    //   });
+    // }
+
     await super._onRender(context, options);
 
   }

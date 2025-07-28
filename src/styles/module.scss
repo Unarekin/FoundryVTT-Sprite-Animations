@@ -1,6 +1,32 @@
-[data-role="sprite-animation-player"] {
+.animation-player {
   .disabled {
     opacity: 50%;
     pointer-events: none;
+  }
+
+  .animation-list {
+    overflow-y: auto;
+    display: flex;
+    flex-direction: row;
+    flex-wrap: wrap;
+    max-height: 256px;
+  }
+
+  .animation-player-row {
+    width: 256px;
+  }
+}
+
+.animation-config {
+  .animation-list {
+    display: flex;
+    flex-wrap: wrap;
+    overflow-y: auto;
+    flex-direction: row;
+    max-height: 256px;
+  }
+
+  .animation-row {
+    width: 512px;
   }
 }
