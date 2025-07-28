@@ -24,68 +24,76 @@ declare global {
 
 
 export function applyMeshAdjustments(target: Token | TokenDocument | Tile | TileDocument) {
-  if (!canvas?.scene) return;
-  const animatable = coerceAnimatable(target);
-  if (!animatable) return;
-  const adjustments = getMeshAdjustments(animatable);
+  try {
+    if (!canvas?.scene) return;
+    const animatable = coerceAnimatable(target);
+    if (!animatable) return;
+    const adjustments = getMeshAdjustments(animatable);
 
-  const mesh = animatable instanceof Tile ? animatable.mesh : animatable instanceof TileDocument ? animatable.object?.mesh : target instanceof Token ? target.mesh : target instanceof TokenDocument ? target.object?.mesh : undefined;
-  if (!mesh) return;
+    const mesh = animatable instanceof Tile ? animatable.mesh : animatable instanceof TileDocument ? animatable.object?.mesh : target instanceof Token ? target.mesh : target instanceof TokenDocument ? target.object?.mesh : undefined;
+    if (!mesh) return;
 
 
-  const doc = (target instanceof Token || target instanceof Tile) ? target.document : target;
-  if (!doc) return;
+    const doc = (target instanceof Token || target instanceof Tile) ? target.document : target;
+    if (!doc) return;
 
-  // Determine base height of mesh, before applying scale.
-  // let meshScale = 1;
-  const baseWidth = doc instanceof TileDocument ? doc.width : doc.getSize().width;
-  const baseHeight = doc instanceof TileDocument ? doc.height : doc.getSize().height;
+    // Determine base height of mesh, before applying scale.
+    // let meshScale = 1;
+    const baseWidth = doc instanceof TileDocument ? doc.width : (doc.width * canvas.scene.dimensions.size);
+    const baseHeight = doc instanceof TileDocument ? doc.height : (doc.height * canvas.scene.dimensions.size);
 
-  if (!doc.object?.texture) return;
-  if (!mesh.texture) return;
+    if (!doc.object?.texture) return;
+    if (!mesh.texture) return;
 
-  const { width: textureWidth, height: textureHeight } = mesh.texture;
-  let sx;
-  let sy;
-  switch (doc.texture.fit) {
-    case "fill":
-      sx = baseWidth / textureWidth;
-      sy = baseHeight / textureHeight;
-      break;
-    case "cover":
-      sx = sy = Math.max(baseWidth / textureWidth, baseHeight / textureHeight);
-      break;
-    case "contain":
-      sx = sy = Math.min(baseWidth / textureWidth, baseHeight / textureHeight);
-      break;
-    case "width":
-      sx = sy = baseWidth / textureWidth;
-      break;
-    case "height":
-      sx = sy = baseHeight / textureHeight;
-      break;
-  }
+    const { width: textureWidth, height: textureHeight } = mesh.texture;
+    let sx;
+    let sy;
+    switch (doc.texture.fit) {
+      case "fill":
+        sx = baseWidth / textureWidth;
+        sy = baseHeight / textureHeight;
+        break;
+      case "cover":
+        sx = sy = Math.max(baseWidth / textureWidth, baseHeight / textureHeight);
+        break;
+      case "contain":
+        sx = sy = Math.min(baseWidth / textureWidth, baseHeight / textureHeight);
+        break;
+      case "width":
+        sx = sy = baseWidth / textureWidth;
+        break;
+      case "height":
+        sx = sy = baseHeight / textureHeight;
+        break;
+    }
 
-  sx *= doc.texture.scaleX;
-  sy *= doc.texture.scaleY;
+    sx *= doc.texture.scaleX;
+    sy *= doc.texture.scaleY;
 
-  mesh.scale.set(sx, sy);
-  if (adjustments?.enable) {
-    mesh.width += (adjustments.width * doc.width);
-    mesh.height += (adjustments.height * doc.width);
-    mesh.x = doc.x + (baseWidth * mesh.anchor.x);
-    mesh.y = doc.y + (baseHeight * mesh.anchor.y);
+    mesh.scale.set(sx, sy);
+    if (adjustments?.enable) {
 
-    if (doc.texture.scaleX < 0) mesh.x -= (adjustments.x * doc.width);
-    else if (doc.texture.scaleX > 0) mesh.x += (adjustments.x * doc.width);
+      const adjustWidth = doc instanceof TileDocument ? doc.width / canvas.scene.dimensions.size : doc.width;
+      const adjustHeight = doc instanceof TileDocument ? doc.height / canvas.scene.dimensions.size : doc.height;
 
-    if (doc.texture.scaleY < 0) mesh.y -= (adjustments.y * doc.height);
-    else if (doc.texture.scaleY > 0) mesh.y += (adjustments.y * doc.height);
+      mesh.width += (adjustments.width * adjustWidth);
+      mesh.height += (adjustments.height * adjustHeight);
+      mesh.x = doc.x + (baseWidth * mesh.anchor.x);
+      mesh.y = doc.y + (baseHeight * mesh.anchor.y);
 
-  } else {
-    // Ensure mesh position is where it ought to be when unadjusted
-    mesh.x = doc.x + (baseWidth * mesh.anchor.x);
-    mesh.y = doc.y + (baseHeight * mesh.anchor.y);
+      if (doc.texture.scaleX < 0) mesh.x -= (adjustments.x * adjustWidth);
+      else if (doc.texture.scaleX > 0) mesh.x += (adjustments.x * adjustWidth);
+
+      if (doc.texture.scaleY < 0) mesh.y -= (adjustments.y * adjustHeight);
+      else if (doc.texture.scaleY > 0) mesh.y += (adjustments.y * adjustHeight);
+
+    } else {
+      // Ensure mesh position is where it ought to be when unadjusted
+      mesh.x = doc.x + (baseWidth * mesh.anchor.x);
+      mesh.y = doc.y + (baseHeight * mesh.anchor.y);
+    }
+  } catch (err) {
+    if (err instanceof Error) ui.notifications?.error(err.message, { localize: true });
   }
 }
 

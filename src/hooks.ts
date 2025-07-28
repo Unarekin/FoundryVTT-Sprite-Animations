@@ -16,7 +16,7 @@ Hooks.on("refreshToken", (token: Token) => {
 });
 
 
-Hooks.on("drawTile", (tile: Tile) => {
+Hooks.on("refreshTile", (tile: Tile) => {
   applyMeshAdjustments(tile);
 });
 
