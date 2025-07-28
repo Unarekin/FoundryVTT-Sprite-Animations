@@ -152,18 +152,16 @@ export class SpriteAnimationPlayer extends foundry.applications.api.HandlebarsAp
     if (animations.length >= 3) {
       foundry.utils.mergeObject(options, {
         position: {
-          width: (ROW_ITEM_WIDTH * 3) + 40
+          width: (ROW_ITEM_WIDTH * 3) + 50
         }
       });
     } else if (animations.length >= 2) {
       foundry.utils.mergeObject(options, {
         position: {
-          width: (ROW_ITEM_WIDTH * 2) + 40
+          width: (ROW_ITEM_WIDTH * 2) + 50
         }
       });
     }
-
-    console.log("Options:", options);
 
     await super._onRender(context, options);
   }
@@ -191,7 +189,7 @@ export class SpriteAnimationPlayer extends foundry.applications.api.HandlebarsAp
   async _prepareContext(options: foundry.applications.api.ApplicationV2.RenderOptions): Promise<AnimationPlayerRenderContext> {
     const context = {
       ...(await super._prepareContext(options)),
-      animations: this.parseAnimations(SpriteAnimator.getAnimations(this.sprite) ?? []),
+      animations: this.parseAnimations(SpriteAnimator.getAnimations(this.sprite) ?? []).sort((a, b) => a.name.localeCompare(b.name)),
       buttons: [
         { type: "submit", icon: "fa-solid fa-times", label: "Close" } as foundry.applications.api.ApplicationV2.FormFooterButton
       ]
