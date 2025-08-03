@@ -38,6 +38,15 @@ Hooks.on("ready", () => {
     type: Boolean,
     default: false
   });
+
+  game.settings?.register(__MODULE_ID__, "collapseHeaderButton", {
+    name: "SPRITE-ANIMATIONS.SETTINGS.COLLAPSEHEADERBUTTON.LABEL",
+    hint: "SPRITE-ANIMATIONS.SETTINGS.COLLAPSEHEADERBUTTON.HINT",
+    scope: "client",
+    config: true,
+    type: Boolean,
+    default: false
+  });
 })
 
 export function canAnimatePlaceable(user: User, target: Token | TokenDocument | Tile | TileDocument | Actor): boolean {

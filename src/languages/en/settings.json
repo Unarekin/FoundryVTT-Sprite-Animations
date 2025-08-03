@@ -4,6 +4,10 @@
       "ANIMATEOTHERS": {
         "LABEL": "Animate others' tokens",
         "HINT": "Allow users to animate tokens they do not own"
+      },
+      "COLLAPSEHEADERBUTTON": {
+        "LABEL": "Collapse application header button",
+        "HINT": "If enabled, will hide the text label for the header button, reducing the space that the button takes up.\nNOTE: Only affects applications that use ApplicationV1."
       }
     }
   }

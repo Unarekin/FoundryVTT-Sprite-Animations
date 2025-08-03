@@ -2,11 +2,15 @@ import { canAnimatePlaceable } from "settings";
 import { SpriteAnimationsConfig } from "./applications";
 
 function getHeaderButtons(app: unknown): foundry.applications.api.ApplicationV2.HeaderControlsEntry[] {
+
+  const shouldHideHeader = app instanceof foundry.applications.api.ApplicationV2 ? false : game?.settings?.get(__MODULE_ID__, "collapseHeaderButton") ?? false;
+
+
   // eslint-disable-next-line @typescript-eslint/no-unsafe-return
   return [
     {
       icon: "fa-solid fa-person-running",
-      label: "SPRITE-ANIMATIONS.CONFIG.HEADER",
+      ...(shouldHideHeader ? {} : { label: "SPRITE-ANIMATIONS.CONFIG.HEADER" }),
       class: "sprite-animations",
       onClick: () => {
         if (app instanceof TileConfig) void (new SpriteAnimationsConfig(app.document)).render({ force: true });
@@ -25,6 +29,7 @@ function getHeaderButtons(app: unknown): foundry.applications.api.ApplicationV2.
 function addHeaderButton(app: unknown, controls: foundry.applications.api.ApplicationV2.HeaderControlsEntry[]) {
   controls.unshift(...getHeaderButtons(app));
 }
+
 
 ["getHeaderControlsTokenConfig",
   "getHeaderControlsTileConfig",
