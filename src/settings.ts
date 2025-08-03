@@ -6,6 +6,13 @@ import { coerceAnimatable } from "coercion";
 
 
 declare global {
+
+  interface SettingsConfig {
+    "sprite-animations": {
+      animateOtherTokens: boolean;
+    }
+  }
+
   interface FlagConfig {
     Actor: {
       "sprite-animations": {
@@ -22,6 +29,29 @@ declare global {
   }
 }
 
+Hooks.on("ready", () => {
+  game.settings?.register(__MODULE_ID__, "animateOtherTokens", {
+    name: "SPRITE-ANIMATIONS.SETTINGS.ANIMATEOTHERS.LABEL",
+    hint: "SPRITE-ANIMATIONS.SETTINGS.ANIMATEOTHERS.HINT",
+    scope: "world",
+    config: true,
+    type: Boolean,
+    default: false
+  });
+})
+
+export function canAnimatePlaceable(user: User, target: Token | TokenDocument | Tile | TileDocument | Actor): boolean {
+  if (game?.settings?.get(__MODULE_ID__, "animateOtherTokens")) return true;
+  if (target instanceof Tile || target instanceof Token) {
+    if (target.can(user, "update")) return true;
+  } else {
+    if (target.canUserModify(user, "update")) return true;
+  }
+
+
+
+  return false;
+}
 
 export function applyMeshAdjustments(target: Token | TokenDocument | Tile | TileDocument) {
   try {

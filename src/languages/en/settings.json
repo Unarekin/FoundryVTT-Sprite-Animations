@@ -1,0 +1,10 @@
+{
+  "SPRITE-ANIMATIONS": {
+    "SETTINGS": {
+      "ANIMATEOTHERS": {
+        "LABEL": "Animate others' tokens",
+        "HINT": "Allow users to animate tokens they do not own"
+      }
+    }
+  }
+}
