@@ -126,8 +126,8 @@ export async function playAnimations(mesh: foundry.canvas.primary.PrimarySpriteM
     applyPixelCompatibility(mesh);
 
 
-    const { resource } = mesh.texture.baseTexture;
-    console.log("Resource:", resource);
+    // eslint-disable-next-line @typescript-eslint/no-unsafe-assignment
+    const { resource } = (mesh.texture?.baseTexture as any);
     if (resource instanceof PIXI.VideoResource) {
       const { source } = resource;
       // Duplicate?

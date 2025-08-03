@@ -2,8 +2,8 @@ import { canAnimatePlaceable } from "settings";
 import { SpriteAnimationsConfig } from "./applications";
 
 function getHeaderButtons(app: unknown): foundry.applications.api.ApplicationV2.HeaderControlsEntry[] {
-
-  const shouldHideHeader = app instanceof foundry.applications.api.ApplicationV2 ? false : game?.settings?.get(__MODULE_ID__, "collapseHeaderButton") ?? false;
+  // eslint-disable-next-line @typescript-eslint/no-unsafe-call, @typescript-eslint/no-unsafe-member-access, @typescript-eslint/no-unsafe-assignment
+  const shouldHideHeader = app instanceof foundry.applications.api.ApplicationV2 ? false : (game?.settings as any)?.get(__MODULE_ID__, "collapseHeaderButton") ?? false;
 
 
   // eslint-disable-next-line @typescript-eslint/no-unsafe-return

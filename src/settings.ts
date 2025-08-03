@@ -30,7 +30,8 @@ declare global {
 }
 
 Hooks.on("ready", () => {
-  game.settings?.register(__MODULE_ID__, "animateOtherTokens", {
+  // eslint-disable-next-line @typescript-eslint/no-unsafe-call, @typescript-eslint/no-unsafe-member-access
+  (game.settings as any)?.register(__MODULE_ID__, "animateOtherTokens", {
     name: "SPRITE-ANIMATIONS.SETTINGS.ANIMATEOTHERS.LABEL",
     hint: "SPRITE-ANIMATIONS.SETTINGS.ANIMATEOTHERS.HINT",
     scope: "world",
@@ -39,7 +40,8 @@ Hooks.on("ready", () => {
     default: false
   });
 
-  game.settings?.register(__MODULE_ID__, "collapseHeaderButton", {
+  // eslint-disable-next-line @typescript-eslint/no-unsafe-call, @typescript-eslint/no-unsafe-member-access
+  (game.settings as any)?.register(__MODULE_ID__, "collapseHeaderButton", {
     name: "SPRITE-ANIMATIONS.SETTINGS.COLLAPSEHEADERBUTTON.LABEL",
     hint: "SPRITE-ANIMATIONS.SETTINGS.COLLAPSEHEADERBUTTON.HINT",
     scope: "client",
@@ -50,7 +52,8 @@ Hooks.on("ready", () => {
 })
 
 export function canAnimatePlaceable(user: User, target: Token | TokenDocument | Tile | TileDocument | Actor): boolean {
-  if (game?.settings?.get(__MODULE_ID__, "animateOtherTokens")) return true;
+  // eslint-disable-next-line @typescript-eslint/no-unsafe-call, @typescript-eslint/no-unsafe-member-access
+  if ((game?.settings as any)?.get(__MODULE_ID__, "animateOtherTokens")) return true;
   if (target instanceof Tile || target instanceof Token) {
     if (target.can(user, "update")) return true;
   } else {
