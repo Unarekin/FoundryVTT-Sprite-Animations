@@ -52,6 +52,33 @@ export async function playAnimation(mesh: foundry.canvas.primary.PrimarySpriteMe
   await playAnimations(mesh, [config]);
 }
 
+async function awaitTextureLoaded(texture: PIXI.Texture): Promise<void> {
+  return new Promise<void>(resolve => {
+    if (!texture.baseTexture.valid) {
+      texture.baseTexture.once("loaded", () => {
+        resolve();
+      });
+    } else {
+      resolve();
+    }
+  })
+}
+
+async function applyTexture(mesh: foundry.canvas.primary.PrimarySpriteMesh, texture: PIXI.Texture): Promise<void> {
+  await awaitTextureLoaded(texture);
+  return new Promise<void>(resolve => {
+    if (!canvas?.app) {
+      resolve();
+    } else {
+      canvas.app.ticker.addOnce(() => {
+        mesh.texture = texture;
+        resolve();
+      })
+    }
+
+  })
+}
+
 export async function playAnimations(mesh: foundry.canvas.primary.PrimarySpriteMesh, configs: AnimationConfig[]): Promise<void> {
   await preloadTextures(...configs);
   const filters = [...mesh.filters ?? []];
@@ -86,25 +113,11 @@ export async function playAnimations(mesh: foundry.canvas.primary.PrimarySpriteM
       if (index !== -1) lastVideoElement[index].elem = vid;
       else lastVideoElement.push({ mesh, elem: vid });
 
-      // mesh.texture = PIXI.Texture.from(vid);
       const texture = PIXI.Texture.from(vid);
-      if (!texture.valid) {
-        texture.baseTexture.once("loaded", () => {
-          mesh.texture = texture;
-        });
-      } else {
-        mesh.texture = texture;
-      }
+      await applyTexture(mesh, texture);
     } else {
-      // mesh.texture = PIXI.Texture.from(config.src);
       const texture = PIXI.Texture.from(config.src);
-      if (!texture.valid) {
-        texture.baseTexture.once("loaded", () => {
-          mesh.texture = texture;
-        });
-      } else {
-        mesh.texture = texture;
-      }
+      await applyTexture(mesh, texture);
     }
 
     // Re-apply filters
@@ -114,12 +127,14 @@ export async function playAnimations(mesh: foundry.canvas.primary.PrimarySpriteM
 
 
     const { resource } = mesh.texture.baseTexture;
+    console.log("Resource:", resource);
     if (resource instanceof PIXI.VideoResource) {
       const { source } = resource;
       // Duplicate?
       source.currentTime = 0;
       await source.play();
       source.loop = loop;
+      console.log("Awaiting animation end");
       if (!loop) await animationEnd(resource);
     }
   }
