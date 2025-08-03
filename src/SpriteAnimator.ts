@@ -1,7 +1,7 @@
 import { AnimationConfig } from "interfaces";
-import { InvalidActorError, InvalidAnimationError, InvalidSpriteError, InvalidTokenError, LocalizedError, PermissionDeniedError } from "./errors";
+import { InvalidActorError, InvalidAnimationError, InvalidSpriteError, InvalidTokenError, PermissionDeniedError } from "./errors";
 import { coerceActor, coerceAnimatable, coerceAnimation, coerceSprite } from "coercion";
-import { addAnimation, addAnimations, clearAnimations, getAnimation, getAnimations, removeAnimation, removeAnimations } from "settings";
+import { addAnimation, addAnimations, canAnimatePlaceable, clearAnimations, getAnimation, getAnimations, removeAnimation, removeAnimations } from "settings";
 import { playAnimation, playAnimations, queueAnimation, queueAnimations } from "./utils";
 import { playAnimations as socketPlayAnimations, queueAnimations as socketQueueAnimations } from "./sockets";
 
@@ -199,9 +199,10 @@ export class SpriteAnimator {
    */
   public static async queueAnimation(target: Token | TokenDocument | Tile | TileDocument | string, anim: string | AnimationConfig): Promise<void> {
     try {
+      if (!game.user) throw new PermissionDeniedError();
       const sprite = coerceSprite(target);
       if (!sprite?.mesh) throw new InvalidSpriteError(target);
-      if (!sprite.document.canUserModify(game?.user as User, "update")) throw new PermissionDeniedError();
+      if (!canAnimatePlaceable(game.user, sprite)) throw new PermissionDeniedError();
 
       const animation = coerceAnimation(anim, sprite);
       if (!animation) throw new InvalidAnimationError(anim);
@@ -247,7 +248,7 @@ export class SpriteAnimator {
       const sprite = coerceSprite(target);
       if (!(sprite instanceof Token || sprite instanceof Tile)) throw new InvalidSpriteError(target);
 
-      if (!sprite.document.canUserModify(game?.user as User, "update")) throw new PermissionDeniedError();
+      if (!(game.user && canAnimatePlaceable(game.user, sprite.document))) throw new PermissionDeniedError();
       if (!sprite.mesh) throw new InvalidSpriteError(target);
 
       // Validate animation
@@ -271,7 +272,7 @@ export class SpriteAnimator {
     try {
       const sprite = coerceSprite(target);
       if (!sprite?.mesh) throw new InvalidSpriteError(target);
-      if (!sprite.document.canUserModify(game?.user as User, "update")) throw new PermissionDeniedError();
+      if (!(game.user && canAnimatePlaceable(game.user, sprite))) throw new PermissionDeniedError();
       const animations = anims.map(anim => coerceAnimation(anim, sprite));
       const hasInvalid = animations.find(anim => !anim);
       if (hasInvalid) throw new InvalidAnimationError(hasInvalid);
@@ -296,7 +297,7 @@ export class SpriteAnimator {
    */
   public async queueAnimation(arg: string | AnimationConfig): Promise<void> {
     try {
-      if (!this.document.canUserModify(game?.user as User, "update")) throw new LocalizedError("PERMISSIONDENIED");
+      if (!(game.user && canAnimatePlaceable(game.user, this.document))) throw new PermissionDeniedError();
       const config = coerceAnimation(arg, this.document);
       if (!config) throw new InvalidAnimationError(arg);
       if (!this.object?.mesh) throw new InvalidTokenError(this.object);
@@ -317,7 +318,7 @@ export class SpriteAnimator {
    */
   public async queueAnimations(...args: (string | AnimationConfig)[]): Promise<void> {
     try {
-      if (!this.document.canUserModify(game?.user as User, "update")) throw new LocalizedError("PERMISSIONDENIED");
+      if (!(game.user && canAnimatePlaceable(game.user, this.document))) throw new PermissionDeniedError();
       if (!this.object?.mesh) throw new InvalidTokenError(this.object);
 
       const animations = args.map(arg => coerceAnimation(arg, this.document));
@@ -447,7 +448,7 @@ export class SpriteAnimator {
   public async playAnimation(config: AnimationConfig): Promise<void>
   public async playAnimation(arg: string | AnimationConfig): Promise<void> {
     try {
-      if (!this.document.canUserModify(game?.user as User, "update")) throw new LocalizedError("PERMISSIONDENIED");
+      if (!(game.user && canAnimatePlaceable(game.user, this.document))) throw new PermissionDeniedError();
       const config = coerceAnimation(arg, this.document);
       if (!config) throw new InvalidAnimationError(arg);
       if (!this.object?.mesh) throw new InvalidTokenError(this.object);
@@ -466,7 +467,7 @@ export class SpriteAnimator {
    */
   public async playAnimations(...args: (string | AnimationConfig)[]): Promise<void> {
     try {
-      if (!this.document.canUserModify(game?.user as User, "update")) throw new LocalizedError("PERMISSIONDENIED");
+      if (!(game.user && canAnimatePlaceable(game.user, this.document))) throw new PermissionDeniedError();
       if (!this.object?.mesh) throw new InvalidTokenError(this.object);
 
       const animations = args.map(arg => coerceAnimation(arg, this.document));
@@ -485,8 +486,8 @@ export class SpriteAnimator {
   // #endregion
   constructor(arg: unknown) {
     const sprite = coerceSprite(arg);
-    if (!sprite?.document.canUserModify(game?.user as User, "update")) throw new PermissionDeniedError();
     if (!sprite) throw new InvalidSpriteError(arg);
+    if (!(game.user && canAnimatePlaceable(game.user, sprite.document))) throw new PermissionDeniedError();
     this.object = sprite;
     this.document = sprite.document;
     if (sprite instanceof Token) this.actor = sprite.actor;

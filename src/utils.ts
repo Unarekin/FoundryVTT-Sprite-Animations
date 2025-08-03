@@ -34,7 +34,14 @@ function applyPixelCompatibility(mesh: foundry.canvas.primary.PrimarySpriteMesh)
 export async function preloadTextures(...animations: AnimationConfig[]): Promise<void> {
   try {
     const textures = animations.map(anim => anim.src);
-    await PIXI.Assets.load(textures);
+    const assets = await PIXI.Assets.load(textures);
+    await Promise.all(Object.values(assets).map((texture: PIXI.Texture) => {
+      if (texture.valid) return Promise.resolve();
+      return new Promise<void>(resolve => {
+        texture.baseTexture.once("loaded", () => { resolve(); });
+      });
+    }))
+
   } catch (err) {
     console.error(err);
     if (err instanceof Error) ui.notifications?.error(err.message, { console: false, localize: true });
@@ -43,6 +50,33 @@ export async function preloadTextures(...animations: AnimationConfig[]): Promise
 
 export async function playAnimation(mesh: foundry.canvas.primary.PrimarySpriteMesh, config: AnimationConfig): Promise<void> {
   await playAnimations(mesh, [config]);
+}
+
+async function awaitTextureLoaded(texture: PIXI.Texture): Promise<void> {
+  return new Promise<void>(resolve => {
+    if (!texture.baseTexture.valid) {
+      texture.baseTexture.once("loaded", () => {
+        resolve();
+      });
+    } else {
+      resolve();
+    }
+  })
+}
+
+async function applyTexture(mesh: foundry.canvas.primary.PrimarySpriteMesh, texture: PIXI.Texture): Promise<void> {
+  await awaitTextureLoaded(texture);
+  return new Promise<void>(resolve => {
+    if (!canvas?.app) {
+      resolve();
+    } else {
+      canvas.app.ticker.addOnce(() => {
+        mesh.texture = texture;
+        resolve();
+      })
+    }
+
+  })
 }
 
 export async function playAnimations(mesh: foundry.canvas.primary.PrimarySpriteMesh, configs: AnimationConfig[]): Promise<void> {
@@ -79,9 +113,11 @@ export async function playAnimations(mesh: foundry.canvas.primary.PrimarySpriteM
       if (index !== -1) lastVideoElement[index].elem = vid;
       else lastVideoElement.push({ mesh, elem: vid });
 
-      mesh.texture = PIXI.Texture.from(vid);
+      const texture = PIXI.Texture.from(vid);
+      await applyTexture(mesh, texture);
     } else {
-      mesh.texture = PIXI.Texture.from(config.src);
+      const texture = PIXI.Texture.from(config.src);
+      await applyTexture(mesh, texture);
     }
 
     // Re-apply filters
@@ -90,13 +126,15 @@ export async function playAnimations(mesh: foundry.canvas.primary.PrimarySpriteM
     applyPixelCompatibility(mesh);
 
 
-    const { resource } = mesh.texture.baseTexture;
+    // eslint-disable-next-line @typescript-eslint/no-unsafe-assignment
+    const { resource } = (mesh.texture?.baseTexture as any);
     if (resource instanceof PIXI.VideoResource) {
       const { source } = resource;
       // Duplicate?
       source.currentTime = 0;
       await source.play();
       source.loop = loop;
+      console.log("Awaiting animation end");
       if (!loop) await animationEnd(resource);
     }
   }
