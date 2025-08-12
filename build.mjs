@@ -201,6 +201,7 @@ if (!__DEV__ || (__DEV__ && !process.argv.slice(2).includes("--no-types"))) {
     config.compilerOptions.declaration = true;
     config.compilerOptions.declarationDir = "types";
     config.compilerOptions.emitDeclarationOnly = true;
+    // config.compilerOptions.outFile = "./dist/index.d.ts";
 
     const { options, fileNames, errors } = ts.parseJsonConfigFileContent(
       config,

@@ -5,7 +5,10 @@ import { AnimationConfig } from "interfaces";
 import { SpriteAnimator } from "SpriteAnimator";
 import { InvalidAnimationError } from "errors";
 
-export class SpriteAnimationPlayer extends foundry.applications.api.HandlebarsApplicationMixin(foundry.applications.api.ApplicationV2) {
+type ApplicationType = typeof foundry.applications.api.ApplicationV2<foundry.applications.api.ApplicationV2.RenderContext, foundry.applications.api.ApplicationV2.Configuration>;
+const MixedClass: foundry.applications.api.HandlebarsApplicationMixin.Mix<ApplicationType> = foundry.applications.api.HandlebarsApplicationMixin(foundry.applications.api.ApplicationV2);
+
+export class SpriteAnimationPlayer extends MixedClass {
 
   public readonly actor: Actor | null = null;
 

@@ -6,7 +6,10 @@ import { SpriteAnimator } from "SpriteAnimator";
 import { mimeType } from "utils";
 import { getMeshAdjustments, setAnimations, setMeshAdjustments } from "settings";
 
-export class SpriteAnimationsConfig extends foundry.applications.api.HandlebarsApplicationMixin(foundry.applications.api.ApplicationV2) {
+type ApplicationType = typeof foundry.applications.api.ApplicationV2<foundry.applications.api.ApplicationV2.RenderContext, foundry.applications.api.ApplicationV2.Configuration>;
+const MixedClass: foundry.applications.api.HandlebarsApplicationMixin.Mix<ApplicationType> = foundry.applications.api.HandlebarsApplicationMixin(foundry.applications.api.ApplicationV2);
+
+export class SpriteAnimationsConfig extends MixedClass {
   static DEFAULT_OPTIONS = {
     window: {
       title: "SPRITE-ANIMATIONS.CONFIG.HEADER",
