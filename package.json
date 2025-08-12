@@ -13,8 +13,8 @@
   "license": "ISC",
   "author": "Unarekin",
   "type": "commonjs",
-  "main": "dist/module.js",
-  "types": "types/module.d.ts",
+  "main": "./dist/module.js",
+  "types": "./types/module.d.ts",
   "scripts": {
     "build": "node build.mjs",
     "build:prod": "NODE_ENV=production node build.mjs",
