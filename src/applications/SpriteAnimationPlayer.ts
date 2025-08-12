@@ -2,8 +2,8 @@ import { mimeType } from "utils";
 import { TRANSLATION_KEY } from "../constants";
 import { AnimationContext, AnimationPlayerRenderContext, AnimationPlayerRenderOptions } from "./types";
 import { AnimationConfig } from "interfaces";
-import { SpriteAnimator } from "SpriteAnimator";
 import { InvalidAnimationError } from "errors";
+import { SpriteAnimator } from "SpriteAnimator";
 
 type ApplicationType = typeof foundry.applications.api.ApplicationV2<foundry.applications.api.ApplicationV2.RenderContext, foundry.applications.api.ApplicationV2.Configuration>;
 const MixedClass: foundry.applications.api.HandlebarsApplicationMixin.Mix<ApplicationType> = foundry.applications.api.HandlebarsApplicationMixin(foundry.applications.api.ApplicationV2);
