@@ -208,7 +208,7 @@ export class SpriteAnimator {
       if (!animation) throw new InvalidAnimationError(anim);
 
       void socketQueueAnimations(sprite.document.uuid, [animation]);
-      await queueAnimation(sprite.mesh, animation);
+      await queueAnimation(sprite, animation);
     } catch (err) {
       console.error(err);
       if (err instanceof Error) ui.notifications?.error(err.message, { console: false, localize: true });
@@ -229,7 +229,7 @@ export class SpriteAnimator {
       if (hasInvalid) throw new InvalidAnimationError(hasInvalid);
 
       void socketQueueAnimations(sprite.document.uuid, animations as AnimationConfig[]);
-      await queueAnimations(sprite.mesh, animations as AnimationConfig[]);
+      await queueAnimations(sprite, animations as AnimationConfig[]);
 
     } catch (err) {
       console.error(err);
@@ -256,7 +256,7 @@ export class SpriteAnimator {
       if (!animation) throw new InvalidAnimationError(anim);
 
       void socketPlayAnimations(sprite.document.uuid, [animation]);
-      await playAnimation(sprite.mesh, animation);
+      await playAnimation(sprite, animation);
     } catch (err) {
       console.error(err);
       if (err instanceof Error) ui.notifications?.error(err.message, { console: false, localize: true });
@@ -278,7 +278,7 @@ export class SpriteAnimator {
       if (hasInvalid) throw new InvalidAnimationError(hasInvalid);
 
       void socketPlayAnimations(sprite.document.uuid, animations as AnimationConfig[]);
-      await playAnimations(sprite.mesh, animations as AnimationConfig[]);
+      await playAnimations(sprite, animations as AnimationConfig[]);
     } catch (err) {
       console.error(err);
       if (err instanceof Error) ui.notifications?.error(err.message, { console: false, localize: true });
@@ -304,7 +304,7 @@ export class SpriteAnimator {
 
 
       void socketQueueAnimations(this.document.uuid, [config]);
-      await queueAnimation(this.object.mesh, config);
+      await queueAnimation(this.object, config);
     } catch (err) {
       console.error(err);
       if (err instanceof Error) ui.notifications?.error(err.message, { console: false, localize: true });
@@ -326,7 +326,7 @@ export class SpriteAnimator {
       if (hasInvalid) throw new InvalidAnimationError(hasInvalid);
 
       void socketQueueAnimations(this.document.uuid, animations as AnimationConfig[]);
-      await queueAnimations(this.object.mesh, animations as AnimationConfig[]);
+      await queueAnimations(this.object, animations as AnimationConfig[]);
     } catch (err) {
       console.error(err);
       if (err instanceof Error) ui.notifications?.error(err.message, { console: false, localize: true });
@@ -454,7 +454,7 @@ export class SpriteAnimator {
       if (!this.object?.mesh) throw new InvalidTokenError(this.object);
 
       void socketPlayAnimations(this.document.uuid, [config]);
-      await playAnimation(this.object.mesh, config);
+      await playAnimation(this.object, config);
     } catch (err) {
       console.error(err);
       if (err instanceof Error) ui.notifications?.error(err.message, { console: false, localize: true });
@@ -475,7 +475,7 @@ export class SpriteAnimator {
       if (hasInvalid) throw new InvalidAnimationError(hasInvalid);
 
       void socketPlayAnimations(this.document.uuid, animations as AnimationConfig[]);
-      await playAnimations(this.object.mesh, animations as AnimationConfig[]);
+      await playAnimations(this.object, animations as AnimationConfig[]);
 
     } catch (err) {
       console.error(err);

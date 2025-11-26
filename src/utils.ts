@@ -48,8 +48,8 @@ export async function preloadTextures(...animations: AnimationConfig[]): Promise
   }
 }
 
-export async function playAnimation(mesh: foundry.canvas.primary.PrimarySpriteMesh, config: AnimationConfig): Promise<void> {
-  await playAnimations(mesh, [config]);
+export async function playAnimation(obj: foundry.canvas.placeables.Token | foundry.canvas.placeables.Tile, config: AnimationConfig): Promise<void> {
+  await playAnimations(obj, [config]);
 }
 
 async function awaitTextureLoaded(texture: PIXI.Texture): Promise<void> {
@@ -64,14 +64,19 @@ async function awaitTextureLoaded(texture: PIXI.Texture): Promise<void> {
   })
 }
 
-async function applyTexture(mesh: foundry.canvas.primary.PrimarySpriteMesh, texture: PIXI.Texture): Promise<void> {
+// async function applyTexture(mesh: foundry.canvas.primary.PrimarySpriteMesh, texture: PIXI.Texture): Promise<void> {
+async function applyTexture(obj: foundry.canvas.placeables.Token | foundry.canvas.placeables.Tile, texture: PIXI.Texture): Promise<void> {
   await awaitTextureLoaded(texture);
   return new Promise<void>(resolve => {
     if (!canvas?.app) {
       resolve();
     } else {
       canvas.app.ticker.addOnce(() => {
-        mesh.texture = texture;
+        if (obj.mesh) {
+          obj.mesh.texture = texture;
+          // eslint-disable-next-line @typescript-eslint/no-unsafe-call, @typescript-eslint/no-unsafe-member-access
+          if ((obj as any).refreshShadow) (obj as any).refreshShadow();
+        }
         resolve();
       })
     }
@@ -79,8 +84,11 @@ async function applyTexture(mesh: foundry.canvas.primary.PrimarySpriteMesh, text
   })
 }
 
-export async function playAnimations(mesh: foundry.canvas.primary.PrimarySpriteMesh, configs: AnimationConfig[]): Promise<void> {
+export async function playAnimations(obj: foundry.canvas.placeables.Token | foundry.canvas.placeables.Tile, configs: AnimationConfig[]): Promise<void> {
   await preloadTextures(...configs);
+  if (!obj.mesh) return;
+  const mesh = obj.mesh;
+
   const filters = [...mesh.filters ?? []];
 
   const vidElements: HTMLVideoElement[] = [];
@@ -114,10 +122,10 @@ export async function playAnimations(mesh: foundry.canvas.primary.PrimarySpriteM
       else lastVideoElement.push({ mesh, elem: vid });
 
       const texture = PIXI.Texture.from(vid);
-      await applyTexture(mesh, texture);
+      await applyTexture(obj, texture);
     } else {
       const texture = PIXI.Texture.from(config.src);
-      await applyTexture(mesh, texture);
+      await applyTexture(obj, texture);
     }
 
     // Re-apply filters
@@ -146,12 +154,14 @@ export async function playAnimations(mesh: foundry.canvas.primary.PrimarySpriteM
   }
 }
 
-export async function queueAnimation(mesh: foundry.canvas.primary.PrimarySpriteMesh, config: AnimationConfig): Promise<void> {
-  await queueAnimations(mesh, [config]);
+export async function queueAnimation(obj: foundry.canvas.placeables.Token | foundry.canvas.placeables.Tile, config: AnimationConfig): Promise<void> {
+  await queueAnimations(obj, [config]);
 }
 
-export async function queueAnimations(mesh: foundry.canvas.primary.PrimarySpriteMesh, configs: AnimationConfig[]): Promise<void> {
+export async function queueAnimations(obj: foundry.canvas.placeables.Token | foundry.canvas.placeables.Tile, configs: AnimationConfig[]): Promise<void> {
   await preloadTextures(...configs);
+  if (!obj.mesh) return;
+  const mesh = obj.mesh;
 
   if (mesh.texture?.baseTexture.resource instanceof PIXI.VideoResource) {
     const source = mesh.texture.baseTexture.resource.source;
@@ -162,7 +172,7 @@ export async function queueAnimations(mesh: foundry.canvas.primary.PrimarySprite
     }
   }
 
-  await playAnimations(mesh, configs);
+  await playAnimations(obj, configs);
 }
 
 export async function animationEnd(resource: PIXI.VideoResource): Promise<void> {

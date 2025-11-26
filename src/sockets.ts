@@ -77,7 +77,7 @@ async function doQueueAnimations(uuid: string, animations: (AnimationConfig | st
   const hasInvalid = configs.find(anim => !anim);
   if (hasInvalid) throw new InvalidAnimationError(hasInvalid);
 
-  await utilQueueAnimations(sprite.mesh, animations as AnimationConfig[]);
+  await utilQueueAnimations(sprite, animations as AnimationConfig[]);
 }
 
 async function doPlayAnimations(uuid: string, animations: (AnimationConfig | string)[]) {
@@ -88,5 +88,5 @@ async function doPlayAnimations(uuid: string, animations: (AnimationConfig | str
   const hasInvalid = configs.find(anim => !anim);
   if (hasInvalid) throw new InvalidAnimationError(hasInvalid);
 
-  await utilPlayAnimations(sprite.mesh, animations as AnimationConfig[]);
+  await utilPlayAnimations(sprite, animations as AnimationConfig[]);
 }
