@@ -75,7 +75,7 @@ async function applyTexture(obj: foundry.canvas.placeables.Token | foundry.canva
         if (obj.mesh) {
           obj.mesh.texture = texture;
           // eslint-disable-next-line @typescript-eslint/no-unsafe-call, @typescript-eslint/no-unsafe-member-access
-          if ((obj as any).refreshShadow) (obj as any).refreshShadow();
+          if ((obj as any).refreshShadow) (obj as any).refreshShadow(true);
         }
         resolve();
       })
