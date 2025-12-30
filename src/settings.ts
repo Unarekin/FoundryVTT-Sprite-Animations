@@ -65,12 +65,12 @@ export function canAnimatePlaceable(user: User, target: Token | TokenDocument | 
   return false;
 }
 
-export function applyMeshAdjustments(target: Token | TokenDocument | Tile | TileDocument) {
+export function applyMeshAdjustments(target: Token | TokenDocument | Tile | TileDocument, adjustments?: MeshAdjustmentConfig) {
   try {
     if (!canvas?.scene) return;
     const animatable = coerceAnimatable(target);
     if (!animatable) return;
-    const adjustments = getMeshAdjustments(animatable);
+    const actualAdjustments = adjustments ?? getMeshAdjustments(animatable);
 
     const mesh = animatable instanceof Tile ? animatable.mesh : animatable instanceof TileDocument ? animatable.object?.mesh : target instanceof Token ? target.mesh : target instanceof TokenDocument ? target.object?.mesh : undefined;
     if (!mesh) return;
@@ -113,21 +113,21 @@ export function applyMeshAdjustments(target: Token | TokenDocument | Tile | Tile
     sy *= doc.texture.scaleY;
 
     mesh.scale.set(sx, sy);
-    if (adjustments?.enable) {
+    if (actualAdjustments?.enable) {
 
       const adjustWidth = doc instanceof TileDocument ? doc.width / canvas.scene.dimensions.size : doc.width;
       const adjustHeight = doc instanceof TileDocument ? doc.height / canvas.scene.dimensions.size : doc.height;
 
-      mesh.width += (adjustments.width * adjustWidth);
-      mesh.height += (adjustments.height * adjustHeight);
+      mesh.width += (actualAdjustments.width * adjustWidth);
+      mesh.height += (actualAdjustments.height * adjustHeight);
       mesh.x = doc.x + (baseWidth * mesh.anchor.x);
       mesh.y = doc.y + (baseHeight * mesh.anchor.y);
 
-      if (doc.texture.scaleX < 0) mesh.x -= (adjustments.x * adjustWidth);
-      else if (doc.texture.scaleX > 0) mesh.x += (adjustments.x * adjustWidth);
+      if (doc.texture.scaleX < 0) mesh.x -= (actualAdjustments.x * adjustWidth);
+      else if (doc.texture.scaleX > 0) mesh.x += (actualAdjustments.x * adjustWidth);
 
-      if (doc.texture.scaleY < 0) mesh.y -= (adjustments.y * adjustHeight);
-      else if (doc.texture.scaleY > 0) mesh.y += (adjustments.y * adjustHeight);
+      if (doc.texture.scaleY < 0) mesh.y -= (actualAdjustments.y * adjustHeight);
+      else if (doc.texture.scaleY > 0) mesh.y += (actualAdjustments.y * adjustHeight);
 
     } else {
       // Ensure mesh position is where it ought to be when unadjusted

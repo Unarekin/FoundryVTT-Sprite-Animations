@@ -7,6 +7,8 @@ export interface AnimationConfigRenderContext extends foundry.applications.api.A
   buttons: foundry.applications.api.ApplicationV2.FormFooterButton[];
 
   meshAdjustments: MeshAdjustmentConfig;
+  adjustPosTooltip: string;
+  adjustSizeTooltip: string;
 
   tab?: foundry.applications.api.ApplicationV2.Tab;
 }

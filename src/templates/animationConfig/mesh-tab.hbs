@@ -6,7 +6,6 @@
   <p>{{localize "SPRITE-ANIMATIONS.CONFIG.MESH.DESCRIPTION"}}</p>
 
   {{#with meshAdjustments}}
-
     <div class="form-group">
       <label for="meshAdjustments.enable">{{localize
           "SPRITE-ANIMATIONS.CONFIG.MESH.ENABLE"
@@ -22,7 +21,8 @@
     <div class="form-group slim">
       <label>{{localize "TOKEN.Dimensions"}}</label>
       <div class="form-fields">
-        <label for="meshAdjustments.width">{{localize "Width"}}</label>
+        {{!-- <label for="meshAdjustments.width">{{localize "Width"}}</label> --}}
+        <label for="meshAdjustments.width">{{localize "SPRITE-ANIMATIONS.CONFIG.MESH.WIDTH.LABEL"}}</label>
         <input
           type="number"
           min="0"
@@ -32,7 +32,11 @@
           id="meshAdjustments.width"
         />
 
-        <label for="meshAdjustments.height">{{localize "Height"}}</label>
+        <button type="button" data-action="toggleLinkSizeDimensions">
+          <i class="fa-solid fa-fw fa-link-simple" inert></i>
+        </button>
+
+        <label for="meshAdjustments.height">{{localize "SPRITE-ANIMATIONS.CONFIG.MESH.HEIGHT.LABEL"}}</label>
         <input
           type="number"
           min="0"
@@ -41,6 +45,8 @@
           name="meshAdjustments.height"
           id="meshAdjustments.height"
         />
+
+        <button type="button" data-role="drag-size" data-tooltip-direction="UP" data-tooltip="{{{adjustPosTooltip}}}"><i class="fa-solid fa-up-down-left-right"></i></button>
       </div>
     </div>
 
@@ -68,6 +74,8 @@
           name="meshAdjustments.y"
           id="meshAdjustments.y"
         />
+
+        <button type="button" data-role="drag-pos" data-tooltip-direction="UP" data-tooltip="{{{adjustPosTooltip}}}"><i class="fa-solid fa-up-down-left-right"></i></button>
       </div>
     </div>
 
