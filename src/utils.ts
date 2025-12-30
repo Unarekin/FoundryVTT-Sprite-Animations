@@ -74,8 +74,18 @@ async function applyTexture(obj: foundry.canvas.placeables.Token | foundry.canva
       canvas.app.ticker.addOnce(() => {
         if (obj.mesh) {
           obj.mesh.texture = texture;
-          // eslint-disable-next-line @typescript-eslint/no-unsafe-call, @typescript-eslint/no-unsafe-member-access
-          if ((obj as any).refreshShadow) (obj as any).refreshShadow(true);
+
+          if (game?.modules?.get("sprite-shadows")?.active) {
+            // eslint-disable-next-line @typescript-eslint/no-unsafe-member-access
+            const config = (obj instanceof Token ? (obj.actor?.flags as any)["sprite-shadows"] as Record<string, unknown> : obj instanceof Tile ? (obj.document.flags as any)["sprite-shadows"] as Record<string, unknown> : undefined) ?? undefined;
+            if (!(config?.type === "stencil" && config.useImage && config.image)) {
+              // eslint-disable-next-line @typescript-eslint/no-unsafe-member-access
+              if ((obj as any).refreshShadow) {
+                // eslint-disable-next-line @typescript-eslint/no-unsafe-call, @typescript-eslint/no-unsafe-member-access
+                (obj as any).refreshShadow(true);
+              }
+            }
+          }
         }
         resolve();
       })
