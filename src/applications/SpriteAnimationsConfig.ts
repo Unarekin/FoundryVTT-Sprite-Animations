@@ -32,7 +32,9 @@ export class SpriteAnimationsConfig extends MixedClass {
       // eslint-disable-next-line @typescript-eslint/unbound-method
       deleteAnimation: SpriteAnimationsConfig.DeleteAnimation,
       // eslint-disable-next-line @typescript-eslint/unbound-method
-      addAnimation: SpriteAnimationsConfig.AddAnimation
+      addAnimation: SpriteAnimationsConfig.AddAnimation,
+      // eslint-disable-next-line @typescript-eslint/unbound-method
+      toggleLinkSizeDimensions: SpriteAnimationsConfig.ToggleLinkSizeDimensions
     }
   }
 
@@ -71,6 +73,7 @@ export class SpriteAnimationsConfig extends MixedClass {
     }
   }
 
+  protected preserveSizeAspectRatio = true;
   protected dragAdjustments = {
     x: "",
     y: "",
@@ -78,7 +81,25 @@ export class SpriteAnimationsConfig extends MixedClass {
     height: ""
   };
 
+  static ToggleLinkSizeDimensions(this: SpriteAnimationsConfig) {
+    try {
+      this.preserveSizeAspectRatio = !this.preserveSizeAspectRatio;
+      const icon = this.element.querySelector(`[data-action="toggleLinkSizeDimensions"] i`);
+      if (icon instanceof HTMLElement) {
+        if (this.preserveSizeAspectRatio) {
+          icon.classList.remove("fa-link-slash");
+          icon.classList.add("fa-link");
+        } else {
+          icon.classList.add("fa-link-slash");
+          icon.classList.remove("fa-link");
+        }
 
+      }
+    } catch (err) {
+      console.error(err);
+      if (err instanceof Error) ui.notifications?.error(err.message, { console: false });
+    }
+  }
 
   protected readonly animations: AnimationContext[] = [];
   protected readonly adjustments: MeshAdjustmentConfig;
@@ -91,15 +112,51 @@ export class SpriteAnimationsConfig extends MixedClass {
     }
   }
 
+  protected forceAdjustmentSizeToAspectRatio() {
+    const widthElem = this.element.querySelector(`[name="meshAdjustments.width"]`);
+    const heightElem = this.element.querySelector(`[name="meshAdjustments.height"]`);
+    if (!(widthElem instanceof HTMLInputElement && heightElem instanceof HTMLInputElement)) return;
+
+    const widthAdjust = parseFloat(widthElem.value);
+    const heightAdjust = parseFloat(heightElem.value);
+
+    let texture: PIXI.Texture | undefined = undefined;
+
+    if (this.object instanceof Actor) {
+      if (this.object.isToken && this.object.token?.texture?.src) texture = PIXI.Texture.from(this.object.token.texture.src);
+      if (!this.object.isToken && this.object.prototypeToken.texture?.src) texture = PIXI.Texture.from(this.object.prototypeToken.texture.src);
+    } else if ((this.object instanceof Tile || this.object instanceof Token) && this.object.document.texture.src) {
+      texture = PIXI.Texture.from(this.object.document.texture.src);
+    } else if ((this.object instanceof TileDocument || this.object instanceof TokenDocument) && this.object.texture?.src) {
+      texture = PIXI.Texture.from(this.object.texture.src)
+    }
+
+    if (texture) {
+      if (texture.width > texture.height) {
+        const aspectRatio = texture.width/texture.height;
+        heightElem.value = Math.floor(widthAdjust * aspectRatio).toString();
+      } else {
+        const aspectRatio = texture.height/texture.width;
+        widthElem.value = Math.floor(heightAdjust * aspectRatio).toString();
+      }
+
+    }
+  }
+
   protected _dragAdjustMouseMove = ((e: MouseEvent) => {
     if (this.dragAdjustments.x)
       this.applyDragAdjustment(this.dragAdjustments.x, e.movementX);
     if (this.dragAdjustments.y)
       this.applyDragAdjustment(this.dragAdjustments.y, e.movementY);
+
     if (this.dragAdjustments.width)
       this.applyDragAdjustment(this.dragAdjustments.width, e.movementX);
     if (this.dragAdjustments.height)
       this.applyDragAdjustment(this.dragAdjustments.height, -e.movementY);
+
+    if (this.preserveSizeAspectRatio)
+      this.forceAdjustmentSizeToAspectRatio();
+
   }).bind(this);
 
   protected _dragAdjustMouseUp = (() => {
