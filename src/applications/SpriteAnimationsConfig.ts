@@ -4,7 +4,8 @@ import { DEFAULT_MESH_ADJUSTMENT, TRANSLATION_KEY } from "../constants";
 import { AnimationConfig, Animatable, MeshAdjustmentConfig } from "interfaces";
 import { SpriteAnimator } from "SpriteAnimator";
 import { mimeType } from "utils";
-import { getMeshAdjustments, setAnimations, setMeshAdjustments } from "settings";
+import { applyMeshAdjustments, getMeshAdjustments, setAnimations, setMeshAdjustments } from "settings";
+import { DeepPartial } from "types";
 
 type ApplicationType = typeof foundry.applications.api.ApplicationV2<foundry.applications.api.ApplicationV2.RenderContext, foundry.applications.api.ApplicationV2.Configuration>;
 const MixedClass: foundry.applications.api.HandlebarsApplicationMixin.Mix<ApplicationType> = foundry.applications.api.HandlebarsApplicationMixin(foundry.applications.api.ApplicationV2);
@@ -31,7 +32,9 @@ export class SpriteAnimationsConfig extends MixedClass {
       // eslint-disable-next-line @typescript-eslint/unbound-method
       deleteAnimation: SpriteAnimationsConfig.DeleteAnimation,
       // eslint-disable-next-line @typescript-eslint/unbound-method
-      addAnimation: SpriteAnimationsConfig.AddAnimation
+      addAnimation: SpriteAnimationsConfig.AddAnimation,
+      // eslint-disable-next-line @typescript-eslint/unbound-method
+      toggleLinkSizeDimensions: SpriteAnimationsConfig.ToggleLinkSizeDimensions
     }
   }
 
@@ -70,10 +73,95 @@ export class SpriteAnimationsConfig extends MixedClass {
     }
   }
 
+  protected preserveSizeAspectRatio = true;
+  protected dragAdjustments = {
+    x: "",
+    y: "",
+    width: "",
+    height: ""
+  };
+
+  static ToggleLinkSizeDimensions(this: SpriteAnimationsConfig) {
+    try {
+      this.preserveSizeAspectRatio = !this.preserveSizeAspectRatio;
+      const icon = this.element.querySelector(`[data-action="toggleLinkSizeDimensions"] i`);
+      if (icon instanceof HTMLElement) {
+        if (this.preserveSizeAspectRatio) {
+          icon.classList.remove("fa-link-slash");
+          icon.classList.add("fa-link");
+        } else {
+          icon.classList.add("fa-link-slash");
+          icon.classList.remove("fa-link");
+        }
+
+      }
+    } catch (err) {
+      console.error(err);
+      if (err instanceof Error) ui.notifications?.error(err.message, { console: false });
+    }
+  }
 
   protected readonly animations: AnimationContext[] = [];
   protected readonly adjustments: MeshAdjustmentConfig;
 
+  protected applyDragAdjustment(selector: string, delta: number) {
+    const elem = this.element.querySelector(selector);
+    if (elem instanceof HTMLInputElement) {
+      elem.value = Math.floor((parseFloat(elem.value) + delta)).toString();
+      elem.dispatchEvent(new Event("change", { bubbles: true }));
+    }
+  }
+
+  protected forceAdjustmentSizeToAspectRatio() {
+    const widthElem = this.element.querySelector(`[name="meshAdjustments.width"]`);
+    const heightElem = this.element.querySelector(`[name="meshAdjustments.height"]`);
+    if (!(widthElem instanceof HTMLInputElement && heightElem instanceof HTMLInputElement)) return;
+
+    const widthAdjust = parseFloat(widthElem.value);
+    const heightAdjust = parseFloat(heightElem.value);
+
+    let texture: PIXI.Texture | undefined = undefined;
+
+    if (this.object instanceof Actor) {
+      if (this.object.isToken && this.object.token?.texture?.src) texture = PIXI.Texture.from(this.object.token.texture.src);
+      if (!this.object.isToken && this.object.prototypeToken.texture?.src) texture = PIXI.Texture.from(this.object.prototypeToken.texture.src);
+    } else if ((this.object instanceof Tile || this.object instanceof Token) && this.object.document.texture.src) {
+      texture = PIXI.Texture.from(this.object.document.texture.src);
+    } else if ((this.object instanceof TileDocument || this.object instanceof TokenDocument) && this.object.texture?.src) {
+      texture = PIXI.Texture.from(this.object.texture.src)
+    }
+
+    if (texture) {
+      if (texture.width > texture.height) {
+        const aspectRatio = texture.width/texture.height;
+        heightElem.value = Math.floor(widthAdjust * aspectRatio).toString();
+      } else {
+        const aspectRatio = texture.height/texture.width;
+        widthElem.value = Math.floor(heightAdjust * aspectRatio).toString();
+      }
+
+    }
+  }
+
+  protected _dragAdjustMouseMove = ((e: MouseEvent) => {
+    if (this.dragAdjustments.x)
+      this.applyDragAdjustment(this.dragAdjustments.x, e.movementX);
+    if (this.dragAdjustments.y)
+      this.applyDragAdjustment(this.dragAdjustments.y, e.movementY);
+
+    if (this.dragAdjustments.width)
+      this.applyDragAdjustment(this.dragAdjustments.width, e.movementX);
+    if (this.dragAdjustments.height)
+      this.applyDragAdjustment(this.dragAdjustments.height, -e.movementY);
+
+    if (this.preserveSizeAspectRatio)
+      this.forceAdjustmentSizeToAspectRatio();
+
+  }).bind(this);
+
+  protected _dragAdjustMouseUp = (() => {
+    this.dragAdjustments.x = this.dragAdjustments.y = this.dragAdjustments.width = this.dragAdjustments.height = "";
+  }).bind(this);
 
   public static async AddAnimation(this: SpriteAnimationsConfig): Promise<void> {
     try {
@@ -123,16 +211,28 @@ export class SpriteAnimationsConfig extends MixedClass {
       if (err instanceof Error) ui.notifications?.error(err.message, { console: false, localize: true });
     }
   }
-
   _onChangeForm(config: foundry.applications.api.ApplicationV2.FormConfiguration, event: Event) {
     try {
       super._onChangeForm(config, event);
 
       if (!(this.element instanceof HTMLFormElement)) return;
       const animations = this.parseForm();
-
       this.animations.splice(0, this.animations.length, ...(this.parseAnimations(JSON.parse(JSON.stringify(animations)) as AnimationConfig[])));
       this.updatePreviews();
+
+      console.log(this.object)
+
+      const formData = foundry.utils.expandObject((new foundry.applications.ux.FormDataExtended(this.element).object)) as AnimationConfigRenderContext;
+      const { meshAdjustments } = formData;
+
+      if (this.object instanceof Actor) {
+        this.object.getActiveTokens().forEach(token => { applyMeshAdjustments(token, meshAdjustments); });
+      } else {
+        applyMeshAdjustments(this.object, meshAdjustments);
+      }
+
+      this.previousAdjustments = foundry.utils.deepClone(meshAdjustments);
+
     } catch (err) {
       console.error(err);
       if (err instanceof Error) ui.notifications?.error(err.message, { console: false, localize: true });
@@ -213,16 +313,82 @@ export class SpriteAnimationsConfig extends MixedClass {
     return newContext;
   }
 
+  async _onFirstRender(context: DeepPartial<AnimationConfigRenderContext>, options: AnimationConfigRenderOptions) {
+    await super._onFirstRender(context, options);
+    window.addEventListener("mousemove", this._dragAdjustMouseMove);
+    window.addEventListener("mouseup", this._dragAdjustMouseUp);
+  }
+
+  _onClose(options: DeepPartial<AnimationConfigRenderOptions>) {
+    window.removeEventListener("mousemove", this._dragAdjustMouseMove);
+    window.removeEventListener("mouseup", this._dragAdjustMouseUp);
+
+    super._onClose(options);
+  }
+
+  protected removeFilterByClass(displayObject: PIXI.DisplayObject, filterType: typeof PIXI.Filter) {
+    if (!displayObject.filters?.length) return;
+    const filters = [...displayObject.filters.filter(filter => filter instanceof filterType)];
+    displayObject.filters = displayObject.filters.filter(filter => !(filter instanceof filterType));
+    filters.forEach(filter => filter.destroy());
+  }
+
+  async _onRender(context: DeepPartial<AnimationConfigRenderContext>, options: DeepPartial<AnimationConfigRenderOptions>) {
+    await super._onRender(context, options);
+    const dragPos = this.element.querySelector(`[data-role="drag-pos"]`);
+    if (dragPos instanceof HTMLButtonElement) {
+      dragPos.addEventListener("mousedown", () => {
+        this.dragAdjustments.x = `[name="meshAdjustments.x"]`;
+        this.dragAdjustments.y = `[name="meshAdjustments.y"]`;
+        this.dragAdjustments.width = this.dragAdjustments.height = "";
+      });
+    }
+
+    const dragSize = this.element.querySelector(`[data-role="drag-size"]`);
+    if (dragSize instanceof HTMLButtonElement) {
+      dragSize.addEventListener("mousedown", () => {
+        this.dragAdjustments.x = this.dragAdjustments.y = "";
+        this.dragAdjustments.width = `[name="meshAdjustments.width"]`;
+        this.dragAdjustments.height = `[name="meshAdjustments.height"]`
+      })
+    }
+  }
+
+  protected previousAdjustments = {
+    enable: false,
+    x: 0,
+    y: 0,
+    width: 0,
+    height: 0
+  }
+
+  protected getSpriteMeshes(): foundry.canvas.primary.PrimarySpriteMesh[] {
+    if (this.object instanceof Actor) {
+      return this.object.getActiveTokens().map(token => token.mesh).filter(mesh => !!mesh);
+    } else if ((this.object instanceof Tile || this.object instanceof Token) && this.object.mesh) {
+      return [this.object.mesh];
+    } else if ((this.object instanceof TileDocument || this.object instanceof TokenDocument) && this.object.object?.mesh) {
+      return [this.object.object.mesh];
+    } else {
+      return [];
+    }
+  }
+
   async _prepareContext(options: AnimationConfigRenderOptions): Promise<AnimationConfigRenderContext> {
 
     const context: AnimationConfigRenderContext = {
       ...(await super._prepareContext(options)),
       animations: this.animations,
+      adjustPosTooltip: "",
+      adjustSizeTooltip: "",
       buttons: [
         { type: "submit", icon: "fa-solid fa-save", label: "SETTINGS.Save" }
       ],
       meshAdjustments: this.adjustments
     }
+
+    this.previousAdjustments = foundry.utils.deepClone(this.adjustments);
+
 
     context.tabs = {
       animations: {
