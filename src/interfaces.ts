@@ -1,3 +1,4 @@
+import { AnimationArgument } from "types";
 
 export type Animatable = Actor | Tile | TileDocument;
 
@@ -38,3 +39,24 @@ export interface QueueSocketMessage extends SocketMessage {
   animations: (string | AnimationConfig)[];
   target: string;
 }
+
+
+
+export interface AnimationFlags {
+  animations: AnimationConfig[];
+  meshAdjustments: MeshAdjustmentConfig;
+}
+
+export interface AnimatedPlaceable {
+  getMesh(): foundry.canvas.primary.PrimarySpriteMesh | undefined;
+  getDocument(): foundry.abstract.Document.Any | undefined;
+  canAnimate: boolean;
+  canUserAnimate(user: User): boolean;
+  meshAdjustments: MeshAdjustmentConfig;
+  getAnimation(name: string): AnimationConfig | undefined;
+
+  playAnimations(...animations: AnimationArgument[]): Promise<void>;
+  playAnimation(animation: AnimationArgument): Promise<void>;
+  queueAnimation(animation: AnimationArgument): Promise<void>;
+  queueAnimations(...animations: AnimationArgument[]): Promise<void>;
+};

@@ -1,5 +1,5 @@
 import { getSectionManager } from "./sequencer";
-import { applyMeshAdjustments } from "settings";
+import { AnimatedTileMixin, AnimatedTokenMixin} from "./placeables";
 
 Hooks.on("canvasReady", () => {
   if (__DEV__) {
@@ -11,19 +11,14 @@ Hooks.on("canvasReady", () => {
   }
 });
 
-
-Hooks.on("refreshToken", (token: Token) => {
-  applyMeshAdjustments(token);
+Hooks.once("init", () => {
+  CONFIG.Token.objectClass = AnimatedTokenMixin(CONFIG.Token.objectClass) as unknown as typeof foundry.canvas.placeables.Token;
+  CONFIG.Tile.objectClass = AnimatedTileMixin(CONFIG.Tile.objectClass) as unknown as typeof foundry.canvas.placeables.Tile;
 });
 
-
-Hooks.on("refreshTile", (tile: Tile) => {
-  applyMeshAdjustments(tile);
-});
 
 // eslint-disable-next-line @typescript-eslint/no-unsafe-call, @typescript-eslint/no-unsafe-member-access
 (Hooks as any).on("sequencerReady", () => {
-
   const sectionClass = getSectionManager();
   Sequencer.SectionManager.registerSection(__MODULE_ID__, "spriteAnimation", sectionClass);
 })

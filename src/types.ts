@@ -1,3 +1,5 @@
+import { AnimationConfig } from "interfaces";
+
 export type IsObject<T> = T extends Readonly<Record<string, any>>
   ? T extends AnyArray | AnyFunction
   ? false
@@ -18,3 +20,5 @@ export type DeepPartial<T> = T extends unknown
 
 export type AnyArray = readonly unknown[];
 export type AnyFunction = (arg0: never, ...args: never[]) => unknown;
+
+export type AnimationArgument = string | AnimationConfig;
