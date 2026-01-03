@@ -1,4 +1,4 @@
-import { AnimationConfig } from "interfaces";
+import { AnimatedPlaceable, AnimationConfig } from "interfaces";
 import { getAnimation } from "settings";
 
 export function coerceActor(arg: unknown): Actor | undefined {
@@ -41,18 +41,18 @@ export function coerceTile(arg: unknown): Tile | undefined {
   }
 }
 
-export function coerceSprite(arg: unknown): Tile | Token | undefined {
-  if (arg instanceof Tile || arg instanceof Token) return arg;
+export function coerceSprite(arg: unknown): AnimatedPlaceable | undefined {
+  if (arg instanceof Tile || arg instanceof Token) return arg as unknown as AnimatedPlaceable;
   if (arg instanceof TileDocument || arg instanceof TokenDocument) {
-    if (arg.object instanceof Tile || arg.object instanceof Token) return arg.object;
-    if (arg instanceof TileDocument) return canvas?.scene?.tiles.get(arg.id ?? "")?.object ?? undefined;
-    if (arg instanceof TokenDocument) return canvas?.scene?.tokens.get(arg.id ?? "")?.object ?? undefined;
+    if (arg.object instanceof Tile || arg.object instanceof Token) return arg.object as unknown as  AnimatedPlaceable;
+    if (arg instanceof TileDocument) return canvas?.scene?.tiles.get(arg.id ?? "")?.object as unknown as AnimatedPlaceable ?? undefined;
+    if (arg instanceof TokenDocument) return canvas?.scene?.tokens.get(arg.id ?? "")?.object as unknown as AnimatedPlaceable ?? undefined;
   }
 
   if (typeof arg === "string") {
     const obj = fromUuidSync<any>(arg);
-    if (obj instanceof Tile || obj instanceof Token) return obj;
-    if (obj instanceof TileDocument || obj instanceof TokenDocument) return obj.object ?? undefined;
+    if (obj instanceof Tile || obj instanceof Token) return obj as unknown as AnimatedPlaceable;
+    if (obj instanceof TileDocument || obj instanceof TokenDocument) return obj.object as unknown as AnimatedPlaceable ?? undefined;
   }
 }
 
