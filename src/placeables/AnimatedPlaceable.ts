@@ -149,7 +149,6 @@ export function AnimatedPlaceableMixin<t extends PlaceableConstructor>(base: t):
             vid.loop = loop;
             vid.playsInline = true;
             vid.style.display = "none";
-            // document.body.appendChild(vid);
 
             const texture = PIXI.Texture.from(config.src);
             await this.applyTexture(texture);
