@@ -5,6 +5,8 @@ export interface RenderContext<t extends foundry.abstract.Document.Any = foundry
     idPrefix: string;
     animations: AnimationConfig[];
     meshAdjustments: MeshAdjustmentConfig;
+    adjustPosTooltip: string;
+    adjustSizeTooltip: string;
     tabs: foundry.applications.api.ApplicationV2.Tab[];
   }
 }

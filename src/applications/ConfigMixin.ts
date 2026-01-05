@@ -1,8 +1,8 @@
 import { DeepPartial } from "fvtt-types/utils";
 import { RenderContext, RenderOptions, Configuration } from "./types";
-import { AnimationFlags } from "interfaces";
+import { AnimatedPlaceable, AnimationConfig, AnimationFlags } from "interfaces";
 import { downloadJSON, generatePreviewTooltip, isImage, isVideo, uploadJSON } from "utils";
-import { DEFAULT_ANIMATION_FLAGS } from "../constants";
+import { DEFAULT_ANIMATION_FLAGS, DEFAULT_MESH_ADJUSTMENT } from "../constants";
 import { LocalizedError } from "errors";
 
 
@@ -54,6 +54,14 @@ export function ConfigMixin<Document extends foundry.abstract.Document.Any, Cont
         ]
       }
     };
+
+    // #region Abstract Things
+    protected abstract getPreviewMesh(): foundry.canvas.primary.PrimarySpriteMesh | undefined;
+    protected abstract getMesh(): foundry.canvas.primary.PrimarySpriteMesh | undefined;
+    protected abstract getAnimationFlags(): AnimationFlags;
+    protected abstract setAnimationFlags(flags: AnimationFlags): Promise<void>;
+    protected abstract getAnimatedPlaceable(): AnimatedPlaceable | undefined;
+    // #endregion
 
     // #region Action Handlers
 
@@ -208,13 +216,139 @@ export function ConfigMixin<Document extends foundry.abstract.Document.Any, Cont
     // #endregion
 
 
+    // #region Drag adjustments
+
+    protected dragAdjustments = {
+      x: "",
+      y: "",
+      width: "",
+      height: ""
+    }
+
+    protected applyDragAdjustment(selector: string, amount: number) {
+      const elem = this.element.querySelector(selector);
+      if (elem instanceof HTMLInputElement) {
+        elem.value = Math.floor(parseFloat(elem.value) + amount).toString();
+        elem.dispatchEvent(new Event("change", { bubbles: true }));
+      }
+    }
+
+    protected _dragAdjustMouseUp = (() => {
+      this.dragAdjustments.x = this.dragAdjustments.y = this.dragAdjustments.width = this.dragAdjustments.height = "";
+    }).bind(this); // pre-bind it so we can attach/detach the listener more readily
+
+    protected _dragAdjustMouseMove = ((e: MouseEvent) => {
+      if (this.dragAdjustments.x) this.applyDragAdjustment(this.dragAdjustments.x, e.movementX);
+      if (this.dragAdjustments.y) this.applyDragAdjustment(this.dragAdjustments.y, e.movementY);
+      if (this.dragAdjustments.width) this.applyDragAdjustment(this.dragAdjustments.width, e.movementX);
+      if (this.dragAdjustments.height) this.applyDragAdjustment(this.dragAdjustments.height, e.movementY);
+
+      // TODO: Preserve aspect ratio
+    }).bind(this); // pre-bind it so we can attach/detach the listener more readily
+
+    // #endregion
+
+    // #region Form Handling
+
+    protected parseAnimationList(): AnimationConfig[] | undefined {
+      const container = this.element.querySelector(`[data-role="animation-list"]`);
+      if (!(container instanceof HTMLElement)) return;
+
+      const currentAnimations: AnimationConfig[] = [];
+
+      const nameElements: HTMLInputElement[] = Array.from(container.querySelectorAll(`[data-role="animation-name"]`));
+      const pathElements: foundry.applications.elements.HTMLFilePickerElement[] = Array.from(container.querySelectorAll(`file-picker`));
+      const loopElements: HTMLInputElement[] = Array.from(container.querySelectorAll(`[data-role="animation-loop"]`));
+
+      for (let i = 0; i < nameElements.length; i++) {
+        const nameElement = nameElements[i];
+        const pathElement = pathElements[i];
+        const loopElement = loopElements[i];
+
+        const animation: AnimationConfig = {
+          name: nameElement.value ?? "",
+          src: pathElement.value ?? "",
+          loop: loopElement.checked ?? false
+        };
+        currentAnimations.push(animation);
+      }
+
+      return currentAnimations;
+    }
+
+    _onChangeForm(formConfig: foundry.applications.api.ApplicationV2.FormConfiguration, event: Event) {
+      super._onChangeForm(formConfig, event);
+
+      const animations = this.parseAnimationList();
+      if (!animations) return;
+
+      this.animationFlagCache ??= foundry.utils.deepClone(DEFAULT_ANIMATION_FLAGS);
+      this.animationFlagCache.animations = animations;
+
+      // TODO: Update mesh adjustment cache
+
+      if (this.form) {
+        const form = foundry.utils.expandObject((new foundry.applications.ux.FormDataExtended(this.form)).object) as Record<string, unknown>;
+
+        // eslint-disable-next-line @typescript-eslint/no-unsafe-member-access
+        const flags = ((form.flags as any)?.["sprite-animations"] as DeepPartial<AnimationFlags> ?? {});
+        const mesh = this.getPreviewMesh();
+
+        if (flags.meshAdjustments && mesh?.object) {
+          const adjustments = foundry.utils.deepClone(DEFAULT_MESH_ADJUSTMENT);
+          foundry.utils.mergeObject(adjustments, flags.meshAdjustments);
+          // (mesh.object as unknown as AnimatedPlaceable).applyAnimationMeshAdjustments(adjustments, true);
+          (mesh.object as unknown as AnimatedPlaceable).previewAnimationAdjustments = {
+            ...adjustments,
+            enable: true,
+          }
+        }
+
+      }
+    }
+
+    _previewChanges(changes: Record<string, unknown>) {
+      const mesh = this.getPreviewMesh();
+      if (mesh) {
+        // eslint-disable-next-line @typescript-eslint/no-unsafe-member-access
+        (mesh.object as unknown as AnimatedPlaceable).previewAnimationAdjustments = ((changes?.flags as any)?.[__MODULE_ID__] as AnimationFlags | undefined)?.meshAdjustments ?? this.getAnimationFlags()?.meshAdjustments ?? DEFAULT_MESH_ADJUSTMENT;
+      }
+      // eslint-disable-next-line @typescript-eslint/no-unsafe-call
+      super._previewChanges(changes);
+    }
+
+    protected async _processSubmitData(event: SubmitEvent, form: HTMLFormElement, formData: foundry.applications.ux.FormDataExtended, options?: unknown): Promise<void> {
+
+      const flags = foundry.utils.getProperty(formData instanceof foundry.applications.ux.FormDataExtended ? foundry.utils.expandObject(formData.object) : formData, `flags.${__MODULE_ID__}`) as AnimationFlags | undefined;
+
+      if (flags) {
+        foundry.utils.deleteProperty(formData as any, `flags.${__MODULE_ID__}`);
+        await this.setAnimationFlags(flags);
+      }
+
+      await super._processSubmitData(event, form, formData, options);
+    }
+
+    _processFormData(event: SubmitEvent | null, html: HTMLFormElement, data: foundry.applications.ux.FormDataExtended) {
+      const parsed = super._processFormData(event, html, data)
+      const animations = this.parseAnimationList();
+      if (animations) {
+        foundry.utils.setProperty(parsed, `flags.${__MODULE_ID__}.animations`, animations)
+      }
+
+      return parsed;
+    }
+
+    // #endregion
+
     _onClose(options: DeepPartial<Options>) {
       this.animationFlagCache = undefined;
+      window.removeEventListener("mousemove", this._dragAdjustMouseMove);
+      window.removeEventListener("mouseup", this._dragAdjustMouseUp);
       super._onClose(options);
     }
 
     protected animationFlagCache: AnimationFlags | undefined = undefined;
-    protected abstract getAnimationFlags(): AnimationFlags;
 
     protected setPreviewTooltips() {
       const previewElements: HTMLElement[] = Array.from(this.element.querySelectorAll(`[data-role="preview-tooltip"]`));
@@ -233,10 +367,35 @@ export function ConfigMixin<Document extends foundry.abstract.Document.Any, Cont
 
     }
 
+    protected async _onFirstRender(context: DeepPartial<Context>, options: DeepPartial<Options>) {
+      await super._onFirstRender(context, options);
+
+      window.addEventListener("mousemove", this._dragAdjustMouseMove);
+      window.addEventListener("mouseup", this._dragAdjustMouseUp);
+    }
+
     protected async _onRender(context: DeepPartial<Context>, options: DeepPartial<Options>) {
       await super._onRender(context, options);
 
       this.setPreviewTooltips();
+
+      const dragPos = this.element.querySelector(`[data-role="drag-pos"]`);
+      if (dragPos instanceof HTMLElement) {
+        dragPos.addEventListener("mousedown", () => {
+          this.dragAdjustments.x = `[name="flags.sprite-animations.meshAdjustments.x"]`;
+          this.dragAdjustments.y = `[name="flags.sprite-animations.meshAdjustments.y"]`;
+          this.dragAdjustments.width = this.dragAdjustments.height = "";
+        })
+      }
+
+      const dragSize = this.element.querySelector(`[data-role="drag-size"]`);
+      if (dragSize instanceof HTMLElement) {
+        dragSize.addEventListener("mousedown", () => {
+          this.dragAdjustments.width = `[name="flags.sprite-animations.meshAdjustments.width"]`;
+          this.dragAdjustments.height = `[name="flags.sprite-animations.meshAdjustments.height"]`;
+          this.dragAdjustments.x = this.dragAdjustments.y = "";
+        })
+      }
 
       // Set up context menus for import/export
       new foundry.applications.ux.ContextMenu(
@@ -303,6 +462,8 @@ export function ConfigMixin<Document extends foundry.abstract.Document.Any, Cont
       context.animations = {
         idPrefix: foundry.utils.randomID(),
         ...(foundry.utils.deepClone(this.animationFlagCache)),
+        adjustPosTooltip: "",
+        adjustSizeTooltip: "",
         tabs: [
           { id: "animations", group: "animations", active: true, cssClass: "", icon: "fa-solid fa-cog", label: "SPRITE-ANIMATIONS.TABS.ANIMATIONS" },
           { id: "mesh", group: "animations", active: false, cssClass: "", icon: "fa-solid fa-cube", label: "SPRITE-ANIMATIONS.TABS.MESH" }

@@ -11,6 +11,24 @@ export function AnimatedTokenMixin(base: TokenConstructor) {
 
     public getMesh() { return this.mesh; }
 
+    protected getDocumentSize() { return this.getSize(); }
+    protected resetAnimationMeshSize() {
+      const mesh = this.getMesh();
+      if (!mesh) return;
+      const { width, height } = this.getDocumentSize();
+      mesh.resize(width, height, { fit: this.document.texture.fit, scaleX: this.document.texture.scaleX, scaleY: this.document.texture.scaleY });
+    }
+
+    protected getAnimationMeshAdjustmentMultipliers(): { x: number, y: number, width: number, height: number } {
+      return {
+        x: this.document.width,
+        y: this.document.height,
+        width: this.document.width,
+        height: this.document.height
+      }
+    }
+
+
     protected getAnimationFlags(): DeepPartial<AnimationFlags> | undefined {
       // eslint-disable-next-line @typescript-eslint/no-unsafe-return, @typescript-eslint/no-unsafe-member-access
       return (this.actor as any)?.flags[__MODULE_ID__];

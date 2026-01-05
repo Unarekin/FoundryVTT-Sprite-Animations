@@ -13,13 +13,20 @@ type PlaceableConstructor = new (...args: any[]) => foundry.canvas.placeables.Pl
 export function AnimatedPlaceableMixin<t extends PlaceableConstructor>(base: t): AnimatedPlaceableInterface & t {
   abstract class AnimatedPlaceable extends base implements AnimatedPlaceableInterface {
 
+    // #region Abstract Methods
     protected abstract getAnimationFlags(): DeepPartial<AnimationFlags> | undefined;
     public abstract getMesh(): foundry.canvas.primary.PrimarySpriteMesh | undefined;
+    protected abstract getDocumentSize(): { width: number, height: number };
+    protected abstract resetAnimationMeshSize();
+    // #endregion
+
     public getDocument(): foundry.abstract.Document.Any | undefined { return this.document; }
+
+    protected previewAnimationAdjustments: MeshAdjustmentConfig | undefined = undefined;
 
     protected applyPixelCorrection() {
       // TODO: Handle Pixel Perfect module
-      
+
       // Apply Proper Pixels adjustment if enabled
       // eslint-disable-next-line @typescript-eslint/no-unsafe-call, @typescript-eslint/no-unsafe-member-access
       if (game.modules?.get("proper-pixels")?.active && !(game.modules?.get("tagger")?.active && globalThis.Tagger.hasTags(this, "ignore-pixel"))) {
@@ -107,7 +114,7 @@ export function AnimatedPlaceableMixin<t extends PlaceableConstructor>(base: t):
     public get spriteAnimations() { return this.getAnimationFlags()?.animations ?? []; }
 
     /** {@link MeshAdjustmentConfig} */
-    public get meshAdjustments(): MeshAdjustmentConfig {
+    public get animationMeshAdjustments(): MeshAdjustmentConfig {
       const adjustments = foundry.utils.deepClone(DEFAULT_MESH_ADJUSTMENT);
       foundry.utils.mergeObject(adjustments, this.getAnimationFlags()?.meshAdjustments ?? {});
       return adjustments;
@@ -215,8 +222,30 @@ export function AnimatedPlaceableMixin<t extends PlaceableConstructor>(base: t):
       return animations as AnimationConfig[];
     }
 
-    protected applyMeshAdjustments() {
-      // TODO
+    protected getAnimationMeshAdjustmentMultipliers(): { x: number, y: number, width: number, height: number } {
+      return {
+        x: 1,
+        y: 1,
+        width: 1,
+        height: 1
+      }
+    }
+
+    // eslint-disable-next-line @typescript-eslint/no-unused-vars
+    public applyAnimationMeshAdjustments(adjustments: MeshAdjustmentConfig, force?: boolean) {
+      this.resetAnimationMeshSize();
+      if (!adjustments.enable) return;
+      const mesh = this.getMesh();
+      if (!mesh) return;
+      mesh.position = this.center;
+
+
+      const multipliers = this.getAnimationMeshAdjustmentMultipliers();
+
+      mesh.x += adjustments.x * multipliers.x;
+      mesh.y += adjustments.y * multipliers.y;
+      mesh.width += adjustments.width * multipliers.width;
+      mesh.height += adjustments.height * multipliers.height;
     }
 
     /**
@@ -276,15 +305,28 @@ export function AnimatedPlaceableMixin<t extends PlaceableConstructor>(base: t):
     }
 
     protected _refreshMesh() {
+      console.log("Refresh mesh")
       // eslint-disable-next-line @typescript-eslint/no-unsafe-call
       super._refreshMesh();
-      this.applyMeshAdjustments();
+      // if (!this.sheet?.rendered && !this.isPreview)
+      this.applyAnimationMeshAdjustments(this.previewAnimationAdjustments ?? this.animationMeshAdjustments);
     }
 
     protected _refreshSize() {
+      console.log("Refresh size");
+
       // eslint-disable-next-line @typescript-eslint/no-unsafe-call
       super._refreshSize();
-      this.applyMeshAdjustments();
+      // if (!this.sheet?.rendered && !this.isPreview)
+      this.applyAnimationMeshAdjustments(this.previewAnimationAdjustments ?? this.animationMeshAdjustments);
+    }
+
+    protected _refreshPosition() {
+      console.log("Refresh position");
+      // eslint-disable-next-line @typescript-eslint/no-unsafe-call
+      super._refreshPosition();
+      // if (!this.sheet?.rendered && !this.isPreview)
+      this.applyAnimationMeshAdjustments(this.previewAnimationAdjustments ?? this.animationMeshAdjustments);
     }
   }
 

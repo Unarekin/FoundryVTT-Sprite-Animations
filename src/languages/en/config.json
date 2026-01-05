@@ -40,6 +40,12 @@
           "HINT": "If enabled, will outline the underlying sprite mesh on which this object's texture is drawn.",
           "LABEL": "Show Mesh Outline"
         },
+        "X": {
+          "LABEL": "X"
+        },
+        "Y": {
+          "LABEL": "Y"
+        },
         "WIDTH": {
           "LABEL": "W"
         }
