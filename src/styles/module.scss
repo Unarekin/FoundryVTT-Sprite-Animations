@@ -1,32 +1,24 @@
-.animation-player {
-  .disabled {
-    opacity: 50%;
-    pointer-events: none;
-  }
-
-  .animation-list {
-    overflow-y: auto;
-    display: flex;
-    flex-direction: row;
-    flex-wrap: wrap;
-    max-height: 256px;
-  }
-
-  .animation-player-row {
-    width: 256px;
-  }
-}
-
-.animation-config {
+.sprite-animations-list {
+  max-height: 256px;
   overflow-y: auto;
-  // .animation-list {
-  //   // display: flex;
-  //   // flex-wrap: wrap;
-  //   // flex-direction: row;
-  //   // max-height: 256px;
-  // }
 
-  .animation-row {
-    width: 512px;
+  display: grid;
+  grid-template-columns: 1fr 1fr 24px 24px;
+
+  &__animation {
+    padding: 4px 6px;
+    position: relative;
+
+    &--vertical-center {
+      position: absolute;
+      top: 50%;
+      left: 50%;
+      margin-top: -12px;
+      margin-left: -12px;
+    }
+
+    &--alt-row {
+      background-color: var(--table-row-color-even);
+    }
   }
 }

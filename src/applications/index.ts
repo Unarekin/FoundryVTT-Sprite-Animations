@@ -1,2 +1,2 @@
-export * from "./SpriteAnimationsConfig";
-export * from "./SpriteAnimationPlayer";
+export * from './ConfigMixin';
+export * from './TokenConfigMixin';

@@ -4,43 +4,20 @@
       "PLAY": "Sprite Animation Player"
     },
     "PLAYER": {
-      "TITLE": "Sprite Animation Player",
+      "CLEAR": "Clear queue",
+      "CLEARCONFIRM": "Are you sure you wish to clear the animation queue?",
       "DESCRIPTION": "Use the buttons below to either play an animation right away, or build a queue of animations to play in sequence.",
+      "NONE": "Nothing queued",
       "PLAY": "Play Animation",
+      "PLAYQUEUE": "Play animation queue",
       "QUEUE": "Queue Animation",
       "QUEUELIST": "Queue",
-      "NONE": "Nothing queued",
       "REMOVE": "Remove from queue",
-      "PLAYQUEUE": "Play animation queue",
-      "CLEAR": "Clear queue",
-      "CLEARCONFIRM": "Are you sure you wish to clear the animation queue?"
+      "TITLE": "Sprite Animation Player"
     },
-    "CONFIG": {
-      "HEADER": "Sprite Animations",
-      "DESCRIPTION": "Use the following options to add, remove, and update pre-configured animations for this token.",
-      "LOOP": "Loop",
-      "NAME": "Name",
-      "PLAY": "Play Animation",
-      "ADD": "Add Animation",
-      "CONFIRMREMOVE": "Are you sure you wish to remove this animation?",
-      "MESH": {
-        "DESCRIPTION": "The following options can be used to adjust the display of the underlying SpriteMesh used for this token or tile, should you need to adjust the scale or positioning relative to the actual placeable object's selectable area, in order to fit larger animations.",
-        "ENABLE": "Enable Mesh Adjustments",
-        "WIDTH": {
-          "LABEL": "W"
-        },
-        "HEIGHT": {
-          "LABEL": "H"
-        },
-        "SHOWOUTLINE": {
-          "LABEL": "Show Mesh Outline",
-          "HINT": "If enabled, will outline the underlying sprite mesh on which this object's texture is drawn."
-        }
-      },
-      "TABS": {
-        "ANIMATIONS": "Animations",
-        "MESH": "Sprite Mesh"
-      }
+    "TABS": {
+      "ANIMATIONS": "Animations",
+      "MESH": "Mesh"
     }
   }
 }

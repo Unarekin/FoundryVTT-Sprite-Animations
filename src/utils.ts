@@ -1,3 +1,4 @@
+import { AnimationConfig } from "interfaces";
 import mimeJSON from "./mime.json";
 const mimeDB = mimeJSON as Record<string, string>;
 
@@ -64,4 +65,70 @@ export function isVideo(path: string): boolean {
 
 export function isImage(path: string): boolean {
   return mimeType(path).split("/")[0] === "image";
+}
+
+export function generatePreviewTooltip(animation: AnimationConfig): HTMLElement {
+  const elem = document.createElement("div");
+  const title = document.createElement("h4");
+  title.innerText = animation.name;
+  elem.appendChild(title);
+
+  if (isVideo(animation.src)) {
+    const vid = document.createElement("video");
+    vid.width = 256;
+    vid.autoplay = true;
+    vid.loop = true;
+
+    const src = document.createElement("source");
+    src.src = animation.src;
+    vid.appendChild(src);
+    elem.appendChild(vid);
+  } else {
+    const img = document.createElement("img");
+    img.src = animation.src;
+    img.style.maxWidth = "256px";
+    img.style.maxHeight = "256px";
+    elem.appendChild(img);
+  }
+  return elem;
+}
+
+export function downloadJSON(json: object, name: string) {
+  const blob = new Blob([JSON.stringify(json, null, 2)], { type: "application/json" });
+  const objUrl = URL.createObjectURL(blob);
+  const link = document.createElement("a");
+  link.href = objUrl;
+  link.download = name.endsWith(".json") ? name : `${name}.json`;
+  link.click();
+  URL.revokeObjectURL(objUrl);
+}
+
+export function uploadJSON<t = any>(): Promise<t> {
+  return new Promise<t>((resolve, reject) => {
+    const file = document.createElement("input");
+    file.setAttribute("type", "file");
+    file.setAttribute("accept", "application/json");
+    file.onchange = e => {
+      const file = (e.currentTarget as HTMLInputElement).files?.[0];
+      if (!file) {
+        reject(new Error());
+        return;
+      }
+
+      const reader = new FileReader();
+      reader.onload = e => {
+        if (!e.target?.result) throw new Error();
+        if (typeof e.target.result === "string") resolve(JSON.parse(e.target.result) as t);
+      }
+
+      reader.readAsText(file);
+    }
+
+    file.onerror = (event, source, line, col, error) => {
+      if (error) reject(error);
+      else reject(new Error(typeof event === "string" ? event : typeof undefined));
+    }
+
+    file.click();
+  })
 }

@@ -1,0 +1,58 @@
+{
+  "SPRITE-ANIMATIONS": {
+    "CONFIG": {
+      "ADD": {
+        "HINT": "Click to add a new animatin",
+        "LABEL": "Add Animation"
+      },
+      "CLEAR": {
+        "HINT": "Click to remove all currently configured animations",
+        "LABEL": "Clear Animations",
+        "MESSAGE": "Are you sure you want to do this?"
+      },
+      "CONFIRMREMOVE": "Are you sure you wish to remove this animation?",
+      "DESCRIPTION": "Use the following options to add, remove, and update pre-configured animations for this token.",
+      "EXPORT": {
+        "CLIPBOARD": "Export to Clipboard",
+        "COPIED": "Configuration copied to clipboard",
+        "DOWNLOAD": "Download JSON",
+        "HINT": "Export current animations as JSON",
+        "LABEL": "Export Animations"
+      },
+      "HEADER": "Sprite Animations",
+      "IMPORT": {
+        "CLIPBOARD": "Import from Clipboard",
+        "HINT": "Import JSON configuration",
+        "LABEL": "Import Animations",
+        "PASTED": "Configuration read from clipboard",
+        "UPLOAD": "Upload JSON",
+        "BULK": "Import From Directory",
+        "BULKWARNING": "This will overwrite existing animations.  Are you sure?"
+      },
+      "LOOP": "Loop",
+      "MESH": {
+        "DESCRIPTION": "The following options can be used to adjust the display of the underlying SpriteMesh used for this token or tile, should you need to adjust the scale or positioning relative to the actual placeable object's selectable area, in order to fit larger animations.",
+        "ENABLE": "Enable Mesh Adjustments",
+        "HEIGHT": {
+          "LABEL": "H"
+        },
+        "SHOWOUTLINE": {
+          "HINT": "If enabled, will outline the underlying sprite mesh on which this object's texture is drawn.",
+          "LABEL": "Show Mesh Outline"
+        },
+        "WIDTH": {
+          "LABEL": "W"
+        }
+      },
+      "NAME": "Name",
+      "PATH": "Path",
+      "PLAY": "Play Animation",
+      "TOOLTIPS": {
+        "EXPORT": "Export the current animations as JSON",
+        "IMPORT": "Import a JSON configuration",
+        "LOOP": "This animation should loop",
+        "REMOVE": "Remove animation"
+      }
+    }
+  }
+}

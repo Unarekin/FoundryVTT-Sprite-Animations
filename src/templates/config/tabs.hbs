@@ -1,0 +1,7 @@
+<div class="tab{{#if tab.active}} active{{/if}} sprite-animations-config scrollable" {{#unless omitGroup}}data-group="{{#if v1}}main{{else}}sheet{{/if}}"{{/unless}} data-tab="animations" data-application-part="animations">
+  {{#with animations}}
+    {{> "templates/generic/tab-navigation.hbs" }}
+    {{> "modules/sprite-animations/templates/config/animations.hbs" tab=(lookup tabs 0) }}
+    {{> "modules/sprite-animations/templates/config/mesh.hbs" tab=(lookup tabs 1) }}
+  {{/with}}
+</div>

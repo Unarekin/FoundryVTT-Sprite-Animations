@@ -1,0 +1,79 @@
+<div class="tab{{#if tab.active}} active{{/if}} sprite-animations-config scrollable" {{#unless omitGroup}}data-group="animations" {{/unless}} data-tab="animations" data-application-part="animations">
+  <p>{{localize "SPRITE-ANIMATIONS.CONFIG.DESCRIPTION"}}</p>
+  <div class="form-group">
+    <div class="flexrow">
+      <div class="flex1">
+        <label for="{{idPrefix}}.animations.import">{{localize "SPRITE-ANIMATIONS.CONFIG.IMPORT.LABEL"}}</label>
+      </div>
+      <div class="flex0">
+        <a data-action="" data-role="import-animations">
+          <i class="fa-solid fa-upload"></i>
+        </a>
+      </div>
+    </div>
+  </div>
+
+  <div class="form-group">
+    <div class="flexrow">
+      <div class="flex1">
+        <label for="{{idPrefix}}.animations.export">{{localize "SPRITE-ANIMATIONS.CONFIG.EXPORT.LABEL"}}</label>
+      </div>
+      <div class="flex0">
+        <a data-action="" data-role="export-animations">
+          <i class="fa-solid fa-download"></i>
+        </a>
+      </div>
+    </div>
+  </div>
+
+  <div class="form-group">
+    <div class="flexrow">
+      <div class="flex1">
+        <label for="{{idPrefix}}.animations.clear">{{localize "SPRITE-ANIMATIONS.CONFIG.CLEAR.LABEL"}}</label>
+      </div>
+      <div class="flex0">
+        <a data-action="clearAnimations">
+          <i class="fa-solid fa-trash"></i>
+        </a>
+      </div>
+    </div>
+  </div>
+
+  <div class="form-group">
+    <div class="flexrow">
+      <div class="flex1">
+        <label for="{{idPrefix}}.animations.clear">{{localize "SPRITE-ANIMATIONS.CONFIG.ADD.LABEL"}}</label>
+      </div>
+      <div class="flex0">
+        <a data-action="addAnimation">
+          <i class="fa-solid fa-plus"></i>
+        </a>
+      </div>
+    </div>
+  </div>
+
+  <div class="sprite-animations-list">
+    <div class="sprite-animations-list--header">{{localize "SPRITE-ANIMATIONS.CONFIG.NAME"}}</div>
+    <div class="sprite-animations-list--header">{{localize "SPRITE-ANIMATIONS.CONFIG.PATH"}}</div>
+    <div class="sprite-animations-list--header">{{localize "SPRITE-ANIMATIONS.CONFIG.LOOP"}}</div>
+    <div class="sprite-animations-list--header"></div>
+  </div>
+  <div class="sprite-animations-list">
+    {{#each animations as |animation|}}
+      <div class="sprite-animations-list__animation{{#if (isOdd @index)}} sprite-animations-list__animation--alt-row{{/if}}">
+        <input type="text" value="{{animation.name}}" name="animations.animation.{{animation.name}}.name">
+      </div>
+      <div class="sprite-animations-list__animation{{#if (isOdd @index)}} sprite-animations-list__animation--alt-row{{/if}}">
+        <file-picker value="{{animation.src}}" name="animations.animation.{{animation.name}}.src" data-role="preview-tooltip" data-animation-name="{{animation.name}}" data-tooltip-direction="UP"></file-picker>
+      </div>
+      <div class="sprite-animations-list__animation{{#if (isOdd @index)}} sprite-animations-list__animation--alt-row{{/if}}">
+        <input type="checkbox" name="animations.animation.{{animation.name}}.loop" {{checked animation.loop}} class="sprite-animations-list__animation--vertical-center" data-tooltip="{{localize "SPRITE-ANIMATIONS.CONFIG.TOOLTIPS.LOOP"}}">
+      </div>
+      <div class="sprite-animations-list__animation{{#if (isOdd @index)}} sprite-animations-list__animation--alt-row{{/if}}">
+        <a data-action="removeAnimation" data-animation="{{animation.name}}" class="sprite-animations-list__animation--vertical-center" data-tooltip="{{localize "SPRITE-ANIMATIONS.CONFIG.TOOLTIPS.REMOVE"}}">
+          <i class="fa-solid fa-trash"></i>
+        </a>
+      </div>
+    {{/each}}
+  </div>
+</div>
