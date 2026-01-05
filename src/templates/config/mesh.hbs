@@ -38,4 +38,28 @@
       </button>
     </div>
   </div>
+
+  <div class="form-group slim">
+    <label>{{localize "Anchor"}}</label>
+    <div class="form-fields">
+      <label for="{{idPrefix}}-meshAdjustments.anchor.x">{{localize "SPRITE-ANIMATIONS.CONFIG.MESH.X.LABEL"}}</label>
+      <input type="number" min="0" max="1" step="any" value="{{meshAdjustments.anchor.x}}" id="{{idPrefix}}-meshAdjustments.anchor.x" name="flags.sprite-animations.meshAdjustments.anchor.x">
+
+      <label for="{{idPrefix}}-meshAdjustments.anchor.y">{{localize "SPRITE-ANIMATIONS.CONFIG.MESH.Y.LABEL"}}</label>
+      <input type="number" min="0" max="1" step="any" value="{{meshAdjustments.anchor.y}}" id="{{idPrefix}}-meshAdjustments.anchor.y" name="flags.sprite-animations.meshAdjustments.anchor.y">
+    </div>
+  </div>
+
+  <div class="form-group">
+    <label>{{localize "SPRITE-ANIMATIONS.CONFIG.AUTOFIT.LABEL"}}</label>
+    <div class="flexrow">
+      <div class="flex1"></div>
+      <div class="flex0">
+        <button type="button" data-action="autoFit">
+          <i class="fa-solid fa-fw fa-maximize"></i>
+        </button>
+      </div>
+    </div>
+    <p class="hint">{{localize "SPRITE-ANIMATIONS.CONFIG.AUTOFIT.HINT"}}</p>
+  </div>
 </div>

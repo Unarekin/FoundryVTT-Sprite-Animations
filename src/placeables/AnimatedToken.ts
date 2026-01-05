@@ -11,7 +11,7 @@ export function AnimatedTokenMixin(base: TokenConstructor) {
 
     public getMesh() { return this.mesh; }
 
-    protected getDocumentSize() { return this.getSize(); }
+    protected getDocumentSize() { return this.document.getSize(); }
     protected resetAnimationMeshSize() {
       const mesh = this.getMesh();
       if (!mesh) return;

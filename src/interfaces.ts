@@ -14,6 +14,10 @@ export interface MeshAdjustmentConfig {
   width: number;
   x: number;
   y: number;
+  anchor: {
+    x: number;
+    y: number;
+  }
 }
 
 export const MESSAGE_TYPES = ["play", "queue"] as const;
@@ -53,6 +57,7 @@ export interface AnimatedPlaceable {
   canAnimate: boolean;
   canUserAnimate(user: User): boolean;
   animationMeshAdjustments: MeshAdjustmentConfig;
+  getFittedMeshSize(): { x: number, y: number, width: number, height: number } | undefined;
   previewAnimationAdjustments: MeshAdjustmentConfig | undefined;
   applyAnimationMeshAdjustments(adjustments: MeshAdjustmentConfig, force?: boolean): void;
   getAnimation(name: string): AnimationConfig | undefined;

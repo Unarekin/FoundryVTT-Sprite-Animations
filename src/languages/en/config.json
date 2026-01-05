@@ -19,6 +19,10 @@
         "HINT": "Export current animations as JSON",
         "LABEL": "Export Animations"
       },
+      "AUTOFIT": {
+        "LABEL": "Auto-Fit",
+        "HINT": "Will attempt to automatically fit the visible parts of the sprite within the token's area."
+      },
       "HEADER": "Sprite Animations",
       "IMPORT": {
         "CLIPBOARD": "Import from Clipboard",

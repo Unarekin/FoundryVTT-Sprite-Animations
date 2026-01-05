@@ -132,3 +132,23 @@ export function uploadJSON<t = any>(): Promise<t> {
     file.click();
   })
 }
+
+export function logImage(url: string, width = 256, height = 256) {
+  const image = new Image();
+
+  image.onload = function () {
+    const style = [
+      `font-size: 1px`,
+      `padding-left: ${width}px`,
+      `padding-bottom: ${height}px`,
+      // `padding: ${this.height / 100 * size}px ${this.width / 100 * size}px`,
+      `background: url(${url}) no-repeat`,
+      `background-size:contain`,
+      `border:1px solid black`,
+      `max-width: 512px`
+    ].join(";")
+    console.log('%c ', style);
+  }
+
+  image.src = url;
+}

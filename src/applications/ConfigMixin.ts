@@ -21,7 +21,9 @@ export function ConfigMixin<Document extends foundry.abstract.Document.Any, Cont
         // eslint-disable-next-line @typescript-eslint/unbound-method
         clearAnimations: AnimatedConfig.ClearAnimations,
         // eslint-disable-next-line @typescript-eslint/unbound-method
-        lockAdjustmentDimensions: AnimatedConfig.LockAdjustmentDimensions
+        lockAdjustmentDimensions: AnimatedConfig.LockAdjustmentDimensions,
+        // eslint-disable-next-line @typescript-eslint/unbound-method
+        autoFit: AnimatedConfig.AutoFit
       }
     }
 
@@ -66,6 +68,107 @@ export function ConfigMixin<Document extends foundry.abstract.Document.Any, Cont
     // #endregion
 
     // #region Action Handlers
+
+    static AutoFit(this: AnimatedConfig) {
+      const start = performance.now();
+      try {
+        const mesh = this.getPreviewMesh();
+        if (!mesh?.texture) return
+        if (!canvas?.app?.renderer) return;
+
+
+
+        const texture = mesh.texture.clone();
+        const fittedDimensions = (mesh.object as unknown as AnimatedPlaceable).getFittedMeshSize();
+        if (!fittedDimensions) return;
+
+
+        const rt = PIXI.RenderTexture.create({ width: fittedDimensions.width, height: fittedDimensions.height });
+
+        const sprite = new PIXI.Sprite(texture);
+        sprite.width = fittedDimensions.width
+        sprite.height = fittedDimensions.height
+        canvas.app.renderer.render(sprite, { renderTexture: rt, clear: false });
+
+        const pixels = Uint8ClampedArray.from(canvas.app.renderer.extract.pixels(rt));
+        const imageData = new ImageData(pixels, rt.width, rt.height);
+
+        let left = rt.width;
+        let top = rt.height;
+        let right = 0;
+        let bottom = 0;
+
+        for (let y = 0; y < rt.height; y++) {
+          for (let x = 0; x < rt.width; x++) {
+            const index = (y * rt.width + x) * 4;
+            const alpha = imageData.data[index + 3];
+            if (alpha > 0) {
+              if (x < left) left = x;
+              if (x > right) right = x;
+              if (y < top) top = y;
+              if (y > bottom) bottom = y;
+            }
+          }
+        }
+
+        const visualWidth = right - left;
+        const visualHeight = bottom - top;
+
+        const ratio = visualWidth < visualHeight ? fittedDimensions.width / visualWidth : fittedDimensions.height / visualHeight;
+
+        // TODO: Move the anchor
+
+        const newDimensions = {
+          x: 0,
+          y: 0,
+          width: Math.floor(texture.width / ratio),
+          height: Math.floor(texture.height / ratio)
+        }
+
+        this.setElementValue(`[name="flags.sprite-animations.meshAdjustments.width"]`, newDimensions.width.toString());
+        this.setElementValue(`[name="flags.sprite-animations.meshAdjustments.height"]`, newDimensions.height.toString());
+        this.setElementValue(`[name="flags.sprite-animations.meshAdjustments.x"]`, newDimensions.x.toString());
+        this.setElementValue(`[name="flags.sprite-animations.meshAdjustments.y"]`, newDimensions.y.toString());
+
+        const anchor = {
+          x: (left + (visualWidth / 2)) / rt.width,
+          y: (top + (visualHeight / 2)) / rt.height
+        }
+
+        this.setElementValue(`[name="flags.sprite-animations.meshAdjustments.anchor.x"]`, anchor.x.toString());
+        this.setElementValue(`[name="flags.sprite-animations.meshAdjustments.anchor.y"]`, anchor.y.toString());
+
+        this.form?.dispatchEvent(new Event("change", { bubbles: true }));
+        // const previewCanvas = document.createElement("canvas");
+        // const ctx = previewCanvas.getContext("2d");
+        // if (!ctx) return;
+        // previewCanvas.width = rt.width;
+        // previewCanvas.height = rt.height;
+        // ctx.putImageData(imageData, 0, 0);
+        // ctx.beginPath();
+        // ctx.moveTo(left, top);
+        // ctx.lineTo(right, top);
+        // ctx.moveTo(left, top);
+        // ctx.lineTo(left, bottom);
+        // ctx.moveTo(right, top);
+        // ctx.lineTo(right, bottom);
+        // ctx.moveTo(left, bottom);
+        // ctx.lineTo(right, bottom);
+        // ctx.strokeStyle = "red";
+        // ctx.stroke();
+        // logImage(previewCanvas.toDataURL(), rt.width, rt.height);
+      } catch (err) {
+        console.error(err);
+        if (err instanceof Error) ui.notifications?.error(err.message, { console: false, localize: true });
+      } finally {
+        console.log(`Visible dimensions determined in ${performance.now() - start}ms`);
+      }
+    }
+
+    protected setElementValue(selector: string, value: string) {
+      const elem = this.element.querySelector(selector);
+      if (elem instanceof HTMLInputElement) elem.value = value;
+    }
 
     protected lockAdjustmentDimensions = true;
     static LockAdjustmentDimensions(this: AnimatedConfig) {

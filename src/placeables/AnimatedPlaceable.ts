@@ -17,12 +17,28 @@ export function AnimatedPlaceableMixin<t extends PlaceableConstructor>(base: t):
     protected abstract getAnimationFlags(): DeepPartial<AnimationFlags> | undefined;
     public abstract getMesh(): foundry.canvas.primary.PrimarySpriteMesh | undefined;
     protected abstract getDocumentSize(): { width: number, height: number };
-    protected abstract resetAnimationMeshSize();
+    protected abstract resetAnimationMeshSize(): void;
     // #endregion
 
     public getDocument(): foundry.abstract.Document.Any | undefined { return this.document; }
 
     protected previewAnimationAdjustments: MeshAdjustmentConfig | undefined = undefined;
+
+    protected getFittedMeshSize(): { x: number, y: number, width: number, height: number } | undefined {
+      const mesh = this.getMesh();
+      if (!mesh) return;
+
+      const { width, height, x, y } = mesh;
+      this.resetAnimationMeshSize();
+      mesh.position = this.center;
+
+      const retVal = { x: mesh.x, y: mesh.y, width: mesh.width, height: mesh.height };
+      mesh.width = width;
+      mesh.height = height;
+      mesh.x = x;
+      mesh.y = y;
+      return retVal;
+    }
 
     protected applyPixelCorrection() {
       // TODO: Handle Pixel Perfect module
@@ -246,6 +262,9 @@ export function AnimatedPlaceableMixin<t extends PlaceableConstructor>(base: t):
       mesh.y += adjustments.y * multipliers.y;
       mesh.width += adjustments.width * multipliers.width;
       mesh.height += adjustments.height * multipliers.height;
+
+      mesh.anchor.x = adjustments.anchor.x;
+      mesh.anchor.y = adjustments.anchor.y;
     }
 
     /**
@@ -305,7 +324,6 @@ export function AnimatedPlaceableMixin<t extends PlaceableConstructor>(base: t):
     }
 
     protected _refreshMesh() {
-      console.log("Refresh mesh")
       // eslint-disable-next-line @typescript-eslint/no-unsafe-call
       super._refreshMesh();
       // if (!this.sheet?.rendered && !this.isPreview)
@@ -313,8 +331,6 @@ export function AnimatedPlaceableMixin<t extends PlaceableConstructor>(base: t):
     }
 
     protected _refreshSize() {
-      console.log("Refresh size");
-
       // eslint-disable-next-line @typescript-eslint/no-unsafe-call
       super._refreshSize();
       // if (!this.sheet?.rendered && !this.isPreview)
@@ -322,7 +338,6 @@ export function AnimatedPlaceableMixin<t extends PlaceableConstructor>(base: t):
     }
 
     protected _refreshPosition() {
-      console.log("Refresh position");
       // eslint-disable-next-line @typescript-eslint/no-unsafe-call
       super._refreshPosition();
       // if (!this.sheet?.rendered && !this.isPreview)
