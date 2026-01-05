@@ -19,7 +19,9 @@ export function ConfigMixin<Document extends foundry.abstract.Document.Any, Cont
         // eslint-disable-next-line @typescript-eslint/unbound-method
         addAnimation: AnimatedConfig.AddAnimation,
         // eslint-disable-next-line @typescript-eslint/unbound-method
-        clearAnimations: AnimatedConfig.ClearAnimations
+        clearAnimations: AnimatedConfig.ClearAnimations,
+        // eslint-disable-next-line @typescript-eslint/unbound-method
+        lockAdjustmentDimensions: AnimatedConfig.LockAdjustmentDimensions
       }
     }
 
@@ -64,6 +66,27 @@ export function ConfigMixin<Document extends foundry.abstract.Document.Any, Cont
     // #endregion
 
     // #region Action Handlers
+
+    protected lockAdjustmentDimensions = true;
+    static LockAdjustmentDimensions(this: AnimatedConfig) {
+      try {
+        console.log("Lock adjustment dimensinos");
+        this.lockAdjustmentDimensions = !this.lockAdjustmentDimensions;
+        const button = this.element.querySelector(`[data-action="lockAdjustmentDimensions"] i`);
+        console.log(button);
+        if (!(button instanceof HTMLElement)) return;
+        if (!this.lockAdjustmentDimensions) {
+          button.classList.remove("fa-link");
+          button.classList.add("fa-link-slash");
+        } else {
+          button.classList.add("fa-link");
+          button.classList.remove("fa-link-slash");
+        }
+      } catch (err) {
+        console.error(err);
+        if (err instanceof Error) ui.notifications?.error(err.message, { console: false, localize: true });
+      }
+    }
 
     static async AddAnimation(this: AnimatedConfig) {
       try {
@@ -240,8 +263,26 @@ export function ConfigMixin<Document extends foundry.abstract.Document.Any, Cont
     protected _dragAdjustMouseMove = ((e: MouseEvent) => {
       if (this.dragAdjustments.x) this.applyDragAdjustment(this.dragAdjustments.x, e.movementX);
       if (this.dragAdjustments.y) this.applyDragAdjustment(this.dragAdjustments.y, e.movementY);
-      if (this.dragAdjustments.width) this.applyDragAdjustment(this.dragAdjustments.width, e.movementX);
-      if (this.dragAdjustments.height) this.applyDragAdjustment(this.dragAdjustments.height, e.movementY);
+
+      if (this.dragAdjustments.width || this.dragAdjustments.height) {
+        if (this.lockAdjustmentDimensions) {
+          if (this.dragAdjustments.width && this.dragAdjustments.height) {
+            if (Math.abs(e.movementX) > Math.abs(e.movementY)) {
+              this.applyDragAdjustment(this.dragAdjustments.width, e.movementX);
+              this.applyDragAdjustment(this.dragAdjustments.height, e.movementX);
+            } else {
+              this.applyDragAdjustment(this.dragAdjustments.width, e.movementY);
+              this.applyDragAdjustment(this.dragAdjustments.height, e.movementY);
+            }
+          } else {
+            if (this.dragAdjustments.width) this.applyDragAdjustment(this.dragAdjustments.width, e.movementX);
+            if (this.dragAdjustments.height) this.applyDragAdjustment(this.dragAdjustments.height, e.movementY);
+          }
+        } else {
+          if (this.dragAdjustments.width) this.applyDragAdjustment(this.dragAdjustments.width, e.movementX);
+          if (this.dragAdjustments.height) this.applyDragAdjustment(this.dragAdjustments.height, e.movementY);
+        }
+      }
 
       // TODO: Preserve aspect ratio
     }).bind(this); // pre-bind it so we can attach/detach the listener more readily
