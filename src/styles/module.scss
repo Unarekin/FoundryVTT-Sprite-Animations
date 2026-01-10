@@ -1,3 +1,40 @@
+.sprite-player-queue {
+  .__animation {
+    display: inline-block;
+
+    &:not(:nth-last-child) {
+      margin-right: 1em;
+    }
+  }
+}
+
+.sprite-player-list {
+  overflow-y: auto;
+  container-type: inline-size;
+  container-name: spritePlayerList;
+
+  display: grid;
+  grid-template-columns: 1fr repeat(3, 24px);
+
+  &__animation {
+    padding: 4px 6px;
+    position: relative;
+
+    &--vertical-center {
+      position: absolute;
+      top: 50%;
+      left: 50%;
+      margin-top: -12px;
+      margin-left: -12px;
+    }
+
+    &--alt-row {
+      background-color: var(--table-row-color-even);
+    }
+  }
+}
+
+
 .sprite-animations-list {
   max-height: 256px;
   overflow-y: auto;

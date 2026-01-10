@@ -18,3 +18,14 @@ export type Configuration<t extends foundry.abstract.Document.Any = foundry.abst
 export type TokenRenderContext = RenderContext<foundry.documents.TokenDocument>;
 export type TokenRenderOptions = RenderOptions;
 export type TokenConfiguration = Configuration<foundry.documents.TokenDocument>;
+
+export interface PlayerRenderContext extends foundry.applications.api.ApplicationV2.RenderContext {
+  animations: AnimationConfig[];
+  queue: AnimationConfig[];
+  idPrefix: string;
+  buttons: foundry.applications.api.ApplicationV2.FormFooterButton[];
+}
+
+
+export type PlayerRenderOptions = foundry.applications.api.ApplicationV2.RenderOptions;
+export type PlayerConfiguration = foundry.applications.api.ApplicationV2.Configuration;

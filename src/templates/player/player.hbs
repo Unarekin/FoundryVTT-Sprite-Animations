@@ -1,0 +1,22 @@
+<div class="flex1 sprite-player-list">
+  {{#each animations as |animation|}}
+    <div class="sprite-player-list__animation{{#if (isOdd @index)}} sprite-player-list__animation--alt-row{{/if}}">
+      {{animation.name}}
+    </div>
+    <div class="sprite-player-list__animation{{#if (isOdd @index)}} sprite-player-list__animation--alt-row{{/if}}">
+      <a data-action="addToQueue" data-animation="{{animation.id}}" data-tooltip="{{localize "SPRITE-ANIMATIONS.PLAYER.TOOLTIPS.ADD" name=animation.name}}">
+        <i class="fa-solid fa-plus"></i>
+      </a>
+    </div>
+    <div class="sprite-player-list__animation{{#if (isOdd @index)}} sprite-player-list__animation--alt-row{{/if}}">
+      <a data-action="queueAnimation" data-animation="{{animation.id}}" data-tooltip="{{localize "SPRITE-ANIMATIONS.PLAYER.TOOLTIPS.QUEUE" name=animation.name}}">
+        <i class="fa-solid fa-forward"></i>
+      </a>
+    </div>
+    <div class="sprite-player-list__animation{{#if (isOdd @index)}} sprite-player-list__animation--alt-row{{/if}}">
+      <a data-action="playAnimation" data-animation="{{animation.id}}" data-tooltip="{{localize "SPRITE-ANIMATIONS.PLAYER.TOOLTIPS.PLAY" name=animation.name}}">
+        <i class="fa-solid fa-play"></i>
+      </a>
+    </div>
+  {{/each}}
+</div>

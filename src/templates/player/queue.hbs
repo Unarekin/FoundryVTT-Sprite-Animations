@@ -1,0 +1,37 @@
+<div class="flex0">
+  <label>{{localize "SPRITE-ANIMATIONS.PLAYER.QUEUELIST"}}</label>
+  <div class="flexrow">
+    <div class="flex1" data-role="queue-list" class="sprite-player-queue">
+      {{#if (eq queue.length 0)}}
+        {{localize "SPRITE-ANIMATIONS.PLAYER.NONE"}}
+      {{else}}
+        {{#each queue as |animation|}}
+          <span class="sprite-player-queue__animation">
+            <a data-action="removeFromQueue" data-tooltip="{{localize "SPRITE-ANIMATIONS.PLAYER.TOOLTIPS.REMOVE" name=animation.name}}" data-animation="{{animation.id}}">
+              {{animation.name}}
+            </a>
+          </span>
+          {{#unless @last}}
+            <i class="fa-solid fa-fw fa-chevron-right" style="font-size:.5em"></i>
+          {{/unless}}
+        {{/each}}
+      {{/if}}
+    </div>
+    <div class="flex0" style="margin-right:1em">
+      <a data-action="clearQueue"{{#if (eq queue.length 0)}} class="disabled" {{/if}}data-tooltip="SPRITE-ANIMATIONS.PLAYER.CLEAR">
+        <i class="fa-solid fa-trash"></i>
+      </a>
+    </div>
+    <div class="flex0" style="margin-right:1em">
+      <a data-action="queueQueue"{{#if (eq queue.length 0)}} class="disabled" {{/if}}data-tooltip="SPRITE-ANIMATIONS.PLAYER.QUEUEQUEUE">
+        <i class="fa-solid fa-forward"></i>
+      </a>
+    </div>
+    <div class="flex0">
+      <a data-action="playQueue"{{#if (eq queue.length 0)}} class="disabled" {{/if}}data-tooltip="SPRITE-ANIMATIONS.PLAYER.PLAYQUEUE">
+        <i class="fa-solid fa-play"></i>
+      </a>
+    </div>
+  </div>
+  <hr>
+</div>

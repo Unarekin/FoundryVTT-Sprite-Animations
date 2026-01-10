@@ -1,0 +1,24 @@
+{
+  "SPRITE-ANIMATIONS": {
+    "PLAYER": {
+      "CLEAR": "Clear queue",
+      "CLEARCONFIRM": "Are you sure you wish to clear the animation queue?",
+      "DESCRIPTION": "Use the buttons below to either play an animation right away, or build a queue of animations to play in sequence.",
+      "NONE": "Nothing queued",
+      "PLAY": "Play Animation",
+      "PLAYQUEUE": "Play animation queue immediately",
+      "QUEUEQUEUE": "Play animation queue after current animation finishes",
+      "QUEUE": "Queue Animation",
+      "QUEUELIST": "Queue",
+      "REMOVE": "Remove from queue",
+      "TITLE": "Sprite Animation Player",
+      "CONFIG": "Configuration",
+      "TOOLTIPS": {
+        "PLAY": "Play {name} animation immediately",
+        "QUEUE": "Play {name} animation after current one ends",
+        "ADD": "Add {name} animation to list to play",
+        "REMOVE": "Click to remove {name} from queue"
+      }
+    }
+  }
+}

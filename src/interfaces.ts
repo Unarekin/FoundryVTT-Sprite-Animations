@@ -1,4 +1,4 @@
-import { AnimationArgument } from "types";
+import { AnimationArgument, DeepPartial } from "types";
 
 export type Animatable = Actor | Tile | TileDocument;
 
@@ -62,6 +62,7 @@ export interface AnimatedPlaceable {
   previewAnimationAdjustments: MeshAdjustmentConfig | undefined;
   applyAnimationMeshAdjustments(adjustments: MeshAdjustmentConfig, force?: boolean): void;
   getAnimation(name: string): AnimationConfig | undefined;
+  getAnimationFlags(): DeepPartial<AnimationFlags> | undefined;
 
   playAnimations(...animations: AnimationArgument[]): Promise<void>;
   playAnimation(animation: AnimationArgument): Promise<void>;

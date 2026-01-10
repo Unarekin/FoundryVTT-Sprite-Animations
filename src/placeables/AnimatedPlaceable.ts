@@ -14,7 +14,7 @@ export function AnimatedPlaceableMixin<t extends PlaceableConstructor>(base: t):
   abstract class AnimatedPlaceable extends base implements AnimatedPlaceableInterface {
 
     // #region Abstract Methods
-    protected abstract getAnimationFlags(): DeepPartial<AnimationFlags> | undefined;
+    public abstract getAnimationFlags(): DeepPartial<AnimationFlags> | undefined;
     public abstract getMesh(): foundry.canvas.primary.PrimarySpriteMesh | undefined;
     protected abstract getDocumentSize(): { width: number, height: number };
     protected abstract resetAnimationMeshSize(): void;
@@ -22,9 +22,9 @@ export function AnimatedPlaceableMixin<t extends PlaceableConstructor>(base: t):
 
     public getDocument(): foundry.abstract.Document.Any | undefined { return this.document; }
 
-    protected previewAnimationAdjustments: MeshAdjustmentConfig | undefined = undefined;
+    public previewAnimationAdjustments: MeshAdjustmentConfig | undefined = undefined;
 
-    protected getFittedMeshSize(): { x: number, y: number, width: number, height: number } | undefined {
+    public getFittedMeshSize(): { x: number, y: number, width: number, height: number } | undefined {
       const mesh = this.getMesh();
       if (!mesh) return;
 
