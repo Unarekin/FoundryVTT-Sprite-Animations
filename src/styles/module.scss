@@ -8,11 +8,11 @@
   }
 }
 
-.sprite-player-list {
+.sprite-player-container {
   overflow-y: auto;
-  container-type: inline-size;
-  container-name: spritePlayerList;
+}
 
+.sprite-player-list {
   display: grid;
   grid-template-columns: 1fr repeat(3, 24px);
 

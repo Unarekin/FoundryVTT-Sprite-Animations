@@ -16,7 +16,7 @@ export class AnimationPlayer extends foundry.applications.api.HandlebarsApplicat
     },
     main: {
       template: `modules/${__MODULE_ID__}/templates/player/player.hbs`,
-      scrollable: ['.animation-list']
+      scrollable: ['.sprite-player-container']
     },
     footer: {
       template: `templates/generic/form-footer.hbs`
