@@ -1,6 +1,6 @@
 import { getSectionManager } from "./sequencer";
 import { AnimatedTileMixin, AnimatedTokenMixin } from "./placeables";
-import { TokenConfigMixin } from "./applications"
+import { TokenConfigMixin, TileConfigMixin } from "./applications"
 
 Hooks.on("canvasReady", () => {
   if (__DEV__) {
@@ -37,6 +37,7 @@ Hooks.once("ready", () => {
   try {
     if (game.release?.isNewer("13")) {
       applyMixin(CONFIG.Token.sheetClasses.base, TokenConfigMixin)
+      applyMixin(CONFIG.Tile.sheetClasses.base, TileConfigMixin);
     }
   } catch (err) {
     console.error(err);

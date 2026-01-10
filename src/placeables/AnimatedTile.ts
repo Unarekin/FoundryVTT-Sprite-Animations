@@ -11,6 +11,18 @@ export function AnimatedTileMixin(base: TileConstructor) {
     // eslint-disable-next-line @typescript-eslint/no-unsafe-member-access
     protected getAnimationFlags(): DeepPartial<AnimationFlags> | undefined { return (this.document?.flags as any)[__MODULE_ID__] as DeepPartial<AnimationFlags>; }
 
+    protected getDocumentSize() {
+      return {
+        width: this.document.width,
+        height: this.document.height
+      }
+    }
+    protected resetAnimationMeshSize() {
+      const mesh = this.getMesh();
+      if (!mesh) return;
+      const { width, height } = this.getDocumentSize();
+      mesh.resize(width, height, { fit: this.document.texture.fit, scaleX: this.document.texture.scaleX, scaleY: this.document.texture.scaleY });
+    }
 
     // These are implemented here entirely so that the linter doesn't complain because our direct parent is abstract
     get bounds() { return super.bounds; }

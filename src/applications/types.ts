@@ -19,6 +19,10 @@ export type TokenRenderContext = RenderContext<foundry.documents.TokenDocument>;
 export type TokenRenderOptions = RenderOptions;
 export type TokenConfiguration = Configuration<foundry.documents.TokenDocument>;
 
+export type TileRenderContext = RenderContext<foundry.documents.TileDocument>;
+export type TileRenderOptions = RenderOptions;
+export type TileConfiguration = Configuration<foundry.documents.TileDocument>;
+
 export interface PlayerRenderContext extends foundry.applications.api.ApplicationV2.RenderContext {
   animations: AnimationConfig[];
   queue: AnimationConfig[];
