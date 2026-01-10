@@ -5,6 +5,7 @@ import "./tokenConfig";
 import "./tokenHUD";
 import "./hooks";
 import "./sequencer";
+import "./helpers";
 
 export { SpriteAnimator }
 

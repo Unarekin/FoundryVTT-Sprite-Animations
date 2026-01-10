@@ -3,6 +3,7 @@ import { AnimationArgument } from "types";
 export type Animatable = Actor | Tile | TileDocument;
 
 export interface AnimationConfig {
+  id: string;
   name: string;
   src: string;
   loop?: boolean;
@@ -14,6 +15,10 @@ export interface MeshAdjustmentConfig {
   width: number;
   x: number;
   y: number;
+  anchor: {
+    x: number;
+    y: number;
+  }
 }
 
 export const MESSAGE_TYPES = ["play", "queue"] as const;
@@ -52,7 +57,10 @@ export interface AnimatedPlaceable {
   getDocument(): foundry.abstract.Document.Any | undefined;
   canAnimate: boolean;
   canUserAnimate(user: User): boolean;
-  meshAdjustments: MeshAdjustmentConfig;
+  animationMeshAdjustments: MeshAdjustmentConfig;
+  getFittedMeshSize(): { x: number, y: number, width: number, height: number } | undefined;
+  previewAnimationAdjustments: MeshAdjustmentConfig | undefined;
+  applyAnimationMeshAdjustments(adjustments: MeshAdjustmentConfig, force?: boolean): void;
   getAnimation(name: string): AnimationConfig | undefined;
 
   playAnimations(...animations: AnimationArgument[]): Promise<void>;
