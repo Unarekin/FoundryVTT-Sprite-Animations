@@ -24,6 +24,10 @@
         "HINT": "Will attempt to automatically fit the visible parts of the sprite within the token's area."
       },
       "HEADER": "Sprite Animations",
+      "REMOVE": {
+        "TITLE": "Remove Animation",
+        "MESSAGE": "Are you sure you wish to remove {name}?"
+      },
       "IMPORT": {
         "CLIPBOARD": "Import from Clipboard",
         "HINT": "Import JSON configuration",

@@ -3,6 +3,7 @@ import { AnimationArgument } from "types";
 export type Animatable = Actor | Tile | TileDocument;
 
 export interface AnimationConfig {
+  id: string;
   name: string;
   src: string;
   loop?: boolean;

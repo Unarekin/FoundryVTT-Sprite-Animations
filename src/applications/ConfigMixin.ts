@@ -21,6 +21,8 @@ export function ConfigMixin<Document extends foundry.abstract.Document.Any, Cont
         // eslint-disable-next-line @typescript-eslint/unbound-method
         clearAnimations: AnimatedConfig.ClearAnimations,
         // eslint-disable-next-line @typescript-eslint/unbound-method
+        removeAnimation: AnimatedConfig.RemoveAnimation,
+        // eslint-disable-next-line @typescript-eslint/unbound-method
         lockAdjustmentDimensions: AnimatedConfig.LockAdjustmentDimensions,
         // eslint-disable-next-line @typescript-eslint/unbound-method
         autoFit: AnimatedConfig.AutoFit
@@ -32,7 +34,7 @@ export function ConfigMixin<Document extends foundry.abstract.Document.Any, Cont
       ...((Base as any).PARTS as Record<string, foundry.applications.api.HandlebarsApplicationMixin.HandlebarsTemplatePart>),
       animations: {
         template: `modules/${__MODULE_ID__}/templates/config/tabs.hbs`,
-        scrollable: ["sprite-animations-list"],
+        scrollable: [".sprite-animations-list"],
         templates: [
           `modules/${__MODULE_ID__}/templates/config/animations.hbs`,
           `modules/${__MODULE_ID__}/templates/config/mesh.hbs`
@@ -69,6 +71,27 @@ export function ConfigMixin<Document extends foundry.abstract.Document.Any, Cont
 
     // #region Action Handlers
 
+    static async RemoveAnimation(this: AnimatedConfig, event: Event, element: HTMLElement) {
+      try {
+        const id = element.dataset.animation;
+        if (!id) return;
+        const animation = this.animationFlagCache?.animations.find(animation => animation.id === id);
+        if (!animation) return;
+        const confirmed = (await foundry.applications.api.DialogV2.confirm({
+          window: { title: game?.i18n?.localize("SPRITE-ANIMATIONS.CONFIG.REMOVE.TITLE") ?? "" },
+          content: game?.i18n?.format("SPRITE-ANIMATIONS.CONFIG.REMOVE.MESSAGE", { name: animation.name })
+        })) as boolean;
+        if (!confirmed) return;
+
+        const index = this.animationFlagCache?.animations.findIndex(animation => animation.id === id) ?? -1;
+        if (index > -1) this.animationFlagCache?.animations.splice(index, 1);
+        await this.render();
+      } catch (err) {
+        console.error(err);
+        if (err instanceof Error) ui.notifications?.error(err.message, { console: false, localize: true });
+      }
+    }
+
     static AutoFit(this: AnimatedConfig) {
       const start = performance.now();
       try {
@@ -84,10 +107,11 @@ export function ConfigMixin<Document extends foundry.abstract.Document.Any, Cont
 
 
         const rt = PIXI.RenderTexture.create({ width: fittedDimensions.width, height: fittedDimensions.height });
+        // const rt = PIXI.RenderTexture.create({ width: texture.width, height: texture.height })
 
         const sprite = new PIXI.Sprite(texture);
-        sprite.width = fittedDimensions.width
-        sprite.height = fittedDimensions.height
+        sprite.width = rt.width;
+        sprite.height = rt.height;
         canvas.app.renderer.render(sprite, { renderTexture: rt, clear: false });
 
         const pixels = Uint8ClampedArray.from(canvas.app.renderer.extract.pixels(rt));
@@ -156,6 +180,7 @@ export function ConfigMixin<Document extends foundry.abstract.Document.Any, Cont
         // ctx.lineTo(right, bottom);
         // ctx.strokeStyle = "red";
         // ctx.stroke();
+
         // logImage(previewCanvas.toDataURL(), rt.width, rt.height);
       } catch (err) {
         console.error(err);
@@ -197,6 +222,7 @@ export function ConfigMixin<Document extends foundry.abstract.Document.Any, Cont
         this.animationFlagCache ??= foundry.utils.deepClone(this.getAnimationFlags());
 
         this.animationFlagCache.animations.unshift({
+          id: foundry.utils.randomID(),
           name: "",
           src: "",
           loop: false
@@ -304,7 +330,8 @@ export function ConfigMixin<Document extends foundry.abstract.Document.Any, Cont
         this.animationFlagCache.animations = files.map(file => {
           const split = file.split("/");
           return {
-            name: split[split.length - 1].split(".")[0],
+            id: foundry.utils.randomID(),
+            name: decodeURI(split[split.length - 1].split(".")[0]),
             src: file,
             loop: false
           }
@@ -409,7 +436,10 @@ export function ConfigMixin<Document extends foundry.abstract.Document.Any, Cont
         const pathElement = pathElements[i];
         const loopElement = loopElements[i];
 
+        const id = nameElement.dataset.animation ?? foundry.utils.randomID();
+
         const animation: AnimationConfig = {
+          id,
           name: nameElement.value ?? "",
           src: pathElement.value ?? "",
           loop: loopElement.checked ?? false
@@ -603,6 +633,10 @@ export function ConfigMixin<Document extends foundry.abstract.Document.Any, Cont
         const flags = this.getAnimationFlags();
         this.animationFlagCache = foundry.utils.deepClone(flags);
       }
+
+      for (const anim of this.animationFlagCache.animations)
+        if (!anim.id) anim.id = foundry.utils.randomID();
+
       context.animations = {
         idPrefix: foundry.utils.randomID(),
         ...(foundry.utils.deepClone(this.animationFlagCache)),
