@@ -57,6 +57,7 @@ export interface AnimatedPlaceable {
   getDocument(): foundry.abstract.Document.Any | undefined;
   canAnimate: boolean;
   canUserAnimate(user: User): boolean;
+  spriteAnimations: AnimationConfig[];
   animationMeshAdjustments: MeshAdjustmentConfig;
   getFittedMeshSize(): { x: number, y: number, width: number, height: number } | undefined;
   previewAnimationAdjustments: MeshAdjustmentConfig | undefined;
