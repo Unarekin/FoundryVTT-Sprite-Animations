@@ -23,7 +23,7 @@ function applyMixin(collection: Record<string, any>, mixin: any) {
   }
 }
 
-Hooks.once("init", () => {
+Hooks.once("canvasReady", () => {
   try {
     CONFIG.Token.objectClass = AnimatedTokenMixin(CONFIG.Token.objectClass) as unknown as typeof foundry.canvas.placeables.Token;
     CONFIG.Tile.objectClass = AnimatedTileMixin(CONFIG.Tile.objectClass) as unknown as typeof foundry.canvas.placeables.Tile;
