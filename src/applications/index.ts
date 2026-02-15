@@ -1,3 +1,4 @@
+export * from './AnimationConfig';
 export * from './AnimationPlayer';
 export * from './ConfigMixin';
 export * from './TileConfigMixin';

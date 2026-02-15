@@ -2,15 +2,16 @@ import { DeepPartial } from "fvtt-types/utils";
 import { RenderContext, RenderOptions, Configuration } from "./types";
 import { AnimatedPlaceable, AnimationConfig, AnimationFlags } from "interfaces";
 import { downloadJSON, generatePreviewTooltip, isImage, isVideo, uploadJSON } from "utils";
-import { DEFAULT_ANIMATION_FLAGS, DEFAULT_MESH_ADJUSTMENT } from "../constants";
+import { DEFAULT_ANIMATION, DEFAULT_ANIMATION_FLAGS, DEFAULT_MESH_ADJUSTMENT } from "../constants";
 import { LocalizedError } from "errors";
+import { AnimationConfiguration } from "./AnimationConfig";
 
 
 export function ConfigMixin<Document extends foundry.abstract.Document.Any, Context extends RenderContext, Config extends Configuration<Document>, Options extends RenderOptions>(Base: typeof foundry.applications.api.DocumentSheetV2<Document, Context, Config, Options>) {
 
   abstract class AnimatedConfig extends Base {
 
-    static DEFAULT_OPTIONS: DeepPartial<Configuration> = {
+    static DEFAULT_OPTIONS: Configuration = {
       // eslint-disable-next-line @typescript-eslint/no-unsafe-member-access
       ...((Base as any).DEFAULT_OPTIONS as DeepPartial<Configuration>),
       actions: {
@@ -18,6 +19,8 @@ export function ConfigMixin<Document extends foundry.abstract.Document.Any, Cont
         ...(((Base as any).DEFAULT_OPTIONS as DeepPartial<Configuration>).actions),
         // eslint-disable-next-line @typescript-eslint/unbound-method
         addAnimation: AnimatedConfig.AddAnimation,
+        // eslint-disable-next-line @typescript-eslint/unbound-method,
+        editAnimation: AnimatedConfig.EditAnimation,
         // eslint-disable-next-line @typescript-eslint/unbound-method
         clearAnimations: AnimatedConfig.ClearAnimations,
         // eslint-disable-next-line @typescript-eslint/unbound-method
@@ -28,6 +31,7 @@ export function ConfigMixin<Document extends foundry.abstract.Document.Any, Cont
         autoFit: AnimatedConfig.AutoFit
       }
     }
+
 
     static PARTS: Record<string, foundry.applications.api.HandlebarsApplicationMixin.HandlebarsTemplatePart> = {
       // eslint-disable-next-line @typescript-eslint/no-unsafe-member-access
@@ -70,6 +74,26 @@ export function ConfigMixin<Document extends foundry.abstract.Document.Any, Cont
     // #endregion
 
     // #region Action Handlers
+
+    static async EditAnimation(this: AnimatedConfig, event: Event, element: HTMLElement) {
+      try {
+        if (!this.animationFlagCache) return;
+        const id = element.dataset.animation;
+        if (!id) return;
+        const animation = this.animationFlagCache.animations.find(animation => animation.id === id);
+        if (!animation) return;
+        const edited = await AnimationConfiguration.edit(animation);
+        if (!edited) return;
+        const index = this.animationFlagCache.animations.findIndex(anim => anim.id === id);
+        if (index !== -1) {
+          this.animationFlagCache.animations[index] = edited;
+          await this.render();
+        }
+      } catch (err) {
+        console.error(err);
+        if (err instanceof Error) ui.notifications?.error(err.message, { console: false, localize: true });
+      }
+    }
 
     static async RemoveAnimation(this: AnimatedConfig, event: Event, element: HTMLElement) {
       try {
@@ -163,25 +187,6 @@ export function ConfigMixin<Document extends foundry.abstract.Document.Any, Cont
         this.setElementValue(`[name="flags.sprite-animations.meshAdjustments.anchor.y"]`, anchor.y.toString());
 
         this.form?.dispatchEvent(new Event("change", { bubbles: true }));
-        // const previewCanvas = document.createElement("canvas");
-        // const ctx = previewCanvas.getContext("2d");
-        // if (!ctx) return;
-        // previewCanvas.width = rt.width;
-        // previewCanvas.height = rt.height;
-        // ctx.putImageData(imageData, 0, 0);
-        // ctx.beginPath();
-        // ctx.moveTo(left, top);
-        // ctx.lineTo(right, top);
-        // ctx.moveTo(left, top);
-        // ctx.lineTo(left, bottom);
-        // ctx.moveTo(right, top);
-        // ctx.lineTo(right, bottom);
-        // ctx.moveTo(left, bottom);
-        // ctx.lineTo(right, bottom);
-        // ctx.strokeStyle = "red";
-        // ctx.stroke();
-
-        // logImage(previewCanvas.toDataURL(), rt.width, rt.height);
       } catch (err) {
         console.error(err);
         if (err instanceof Error) ui.notifications?.error(err.message, { console: false, localize: true });
@@ -221,15 +226,13 @@ export function ConfigMixin<Document extends foundry.abstract.Document.Any, Cont
         if (this.animationFlagCache?.animations.some(anim => !anim.name)) return;
         this.animationFlagCache ??= foundry.utils.deepClone(this.getAnimationFlags());
 
-        this.animationFlagCache.animations.unshift({
-          id: foundry.utils.randomID(),
-          name: "",
-          src: "",
-          loop: false
-        });
+        const anim = foundry.utils.deepClone(DEFAULT_ANIMATION);
+        anim.id = foundry.utils.randomID();
+        const edited = await AnimationConfiguration.edit(anim);
+
+        if (!edited) return;
+        this.animationFlagCache.animations.unshift(edited);
         await this.render();
-        const inputElem = this.element.querySelector(`.sprite-animations-list input[type="text"]`);
-        if (inputElem instanceof HTMLInputElement) inputElem.focus();
       } catch (err) {
         console.error(err);
         if (err instanceof Error) ui.notifications?.error(err.message, { console: false, localize: true });
@@ -330,10 +333,10 @@ export function ConfigMixin<Document extends foundry.abstract.Document.Any, Cont
         this.animationFlagCache.animations = files.map(file => {
           const split = file.split("/");
           return {
+            ...DEFAULT_ANIMATION,
             id: foundry.utils.randomID(),
             name: decodeURI(split[split.length - 1].split(".")[0]),
-            src: file,
-            loop: false
+            src: file
           }
         });
         await this.render();
@@ -439,11 +442,12 @@ export function ConfigMixin<Document extends foundry.abstract.Document.Any, Cont
         const id = nameElement.dataset.animation ?? foundry.utils.randomID();
 
         const animation: AnimationConfig = {
+          ...DEFAULT_ANIMATION,
           id,
           name: nameElement.value ?? "",
           src: pathElement.value ?? "",
           loop: loopElement.checked ?? false
-        };
+        }
         currentAnimations.push(animation);
       }
 
@@ -497,7 +501,11 @@ export function ConfigMixin<Document extends foundry.abstract.Document.Any, Cont
 
       if (flags) {
         foundry.utils.deleteProperty(formData as any, `flags.${__MODULE_ID__}`);
-        await this.setAnimationFlags(flags);
+        await this.setAnimationFlags({
+          ...flags,
+          animations: this.animationFlagCache?.animations ?? []
+        });
+
       }
 
       await super._processSubmitData(event, form, formData, options);
@@ -637,9 +645,13 @@ export function ConfigMixin<Document extends foundry.abstract.Document.Any, Cont
       for (const anim of this.animationFlagCache.animations)
         if (!anim.id) anim.id = foundry.utils.randomID();
 
+      const animationFlags = foundry.utils.deepClone(this.animationFlagCache);
+      // eslint-disable-next-line @typescript-eslint/no-unsafe-member-access
+      animationFlags.animations.forEach(anim => { (anim as any).tooltip = generatePreviewTooltip(anim).outerHTML });
+
       context.animations = {
         idPrefix: foundry.utils.randomID(),
-        ...(foundry.utils.deepClone(this.animationFlagCache)),
+        ...animationFlags,
         adjustPosTooltip: "",
         adjustSizeTooltip: "",
         tabs: [

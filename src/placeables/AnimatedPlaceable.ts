@@ -74,6 +74,25 @@ export function AnimatedPlaceableMixin<t extends PlaceableConstructor>(base: t):
     }
 
     /**
+     * Ensures that any sounds associated with a set of animations are preloaded for smoother play
+     * @param {AnimationConfig[]} anims - List of {@link AnimationConfig}[]
+     */
+    protected async preloadSounds(anims: AnimationConfig[]): Promise<void> {
+      try {
+        if (!game.audio) return;
+
+        const sounds = anims.filter(anim => anim.sound && anim.volume).map(anim => anim.sound);
+        await Promise.all(
+          sounds.map(sound => game.audio?.preload(sound))
+        )
+
+      } catch (err) {
+        console.error(err);
+        if (err instanceof Error) ui.notifications?.error(err.message, { console: false, localize: true });
+      }
+    }
+
+    /**
      * Ensures textures for animations are preloaded for smoother transition between them
      * @param {AnimationConfig[]} anims - List of {@link AnimationConfig}[]
      */
@@ -88,6 +107,18 @@ export function AnimatedPlaceableMixin<t extends PlaceableConstructor>(base: t):
             texture.baseTexture.once("loaded", () => { resolve(); });
           });
         }));
+      } catch (err) {
+        console.error(err);
+        if (err instanceof Error) ui.notifications?.error(err.message, { console: false, localize: true });
+      }
+    }
+
+    protected async playSound(animation: AnimationConfig) {
+      try {
+        if (!(animation.sound && animation.volume)) return;
+        if (!game.audio) return;
+
+        return game.audio.play(animation.sound, { volume: animation.volume ?? 1, context: game.audio.environment });
       } catch (err) {
         console.error(err);
         if (err instanceof Error) ui.notifications?.error(err.message, { console: false, localize: true });
@@ -142,11 +173,15 @@ export function AnimatedPlaceableMixin<t extends PlaceableConstructor>(base: t):
     /** Simple wrapper to handle executing animations */
     protected async doPlayAnimations(animations: AnimationConfig[]): Promise<void> {
       try {
+        if (!animations.length) return console.warn("No animations to play");
         const mesh = this.getMesh();
         if (!mesh) throw new InvalidSpriteError(this);
 
         void socketPlayAnimations(this.document.uuid, animations);
-        await this.preloadTextures(animations);
+        await Promise.all([
+          this.preloadTextures(animations),
+          this.preloadSounds(animations)
+        ]);
 
         const filters = [...mesh.filters ?? []];
 
@@ -174,10 +209,17 @@ export function AnimatedPlaceableMixin<t extends PlaceableConstructor>(base: t):
             vid.style.display = "none";
 
             const texture = PIXI.Texture.from(config.src);
-            await this.applyTexture(texture);
+
+            await Promise.all([
+              this.applyTexture(texture),
+              this.playSound(config)
+            ]);
           } else {
             const texture = PIXI.Texture.from(config.src);
-            await this.applyTexture(texture);
+            await Promise.all([
+              this.applyTexture(texture),
+              this.playSound(config)
+            ]);
           }
           if (mesh.filters) mesh.filters.splice(0, mesh.filters.length, ...filters);
           else mesh.filters = [...filters];
@@ -209,7 +251,10 @@ export function AnimatedPlaceableMixin<t extends PlaceableConstructor>(base: t):
         if (!mesh) throw new InvalidSpriteError(this);
 
         void socketQueueAnimations(this.document.uuid, animations);
-        await this.preloadTextures(animations);
+        await Promise.all([
+          this.preloadTextures(animations),
+          this.preloadSounds(animations)
+        ]);
         if (mesh.texture?.baseTexture.resource instanceof PIXI.VideoResource) {
           const { source } = mesh.texture.baseTexture.resource;
           if ((source.currentTime > 0 && !source.paused && !source.ended && source.readyState > 2)) {

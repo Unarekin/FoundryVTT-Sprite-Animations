@@ -51,26 +51,29 @@
       </div>
     </div>
   </div>
-
+  <hr>
   <div class="sprite-animations-list">
     <div class="sprite-animations-list--header">{{localize "SPRITE-ANIMATIONS.CONFIG.NAME"}}</div>
-    <div class="sprite-animations-list--header">{{localize "SPRITE-ANIMATIONS.CONFIG.PATH"}}</div>
-    <div class="sprite-animations-list--header">{{localize "SPRITE-ANIMATIONS.CONFIG.LOOP"}}</div>
+    <div class="sprite-animations-list--header"></div>
     <div class="sprite-animations-list--header"></div>
   </div>
   <div class="sprite-animations-list" data-role="animation-list">
     {{#each animations as |animation|}}
-      <div class="sprite-animations-list__animation{{#if (isOdd @index)}} sprite-animations-list__animation--alt-row{{/if}}">
-        <input type="text" value="{{animation.name}}" name="animations.animation.{{animation.name}}.name" data-animation="{{animation.id}}" data-role="animation-name">
+      <div class="sprite-animations-list__animation{{#if (isOdd @index)}} sprite-animations-list__animation--alt-row{{/if}}" data-tooltip="{{animation.tooltip}}" data-tooltip-direction="UP">
+        {{animation.name}}
+        {{!-- <input type="text" value="{{animation.name}}" name="animations.animation.{{animation.name}}.name" data-animation="{{animation.id}}" data-role="animation-name"> --}}
       </div>
       <div class="sprite-animations-list__animation{{#if (isOdd @index)}} sprite-animations-list__animation--alt-row{{/if}}">
-        <file-picker value="{{animation.src}}" name="animations.animation.{{animation.name}}.src" data-role="preview-tooltip" data-animation="{{animation.id}}" data-tooltip-direction="UP"></file-picker>
+        {{!-- <file-picker value="{{animation.src}}" name="animations.animation.{{animation.name}}.src" data-role="preview-tooltip" data-animation="{{animation.id}}" data-tooltip-direction="UP"></file-picker> --}}
       </div>
       <div class="sprite-animations-list__animation{{#if (isOdd @index)}} sprite-animations-list__animation--alt-row{{/if}}">
-        <input type="checkbox" name="animations.animation.{{animation.name}}.loop" {{checked animation.loop}} class="sprite-animations-list__animation--vertical-center" data-tooltip="{{localize "SPRITE-ANIMATIONS.CONFIG.TOOLTIPS.LOOP"}}" data-animation="{{animation.id}}" data-role="animation-loop">
+        {{!-- <input type="checkbox" name="animations.animation.{{animation.name}}.loop" {{checked animation.loop}} class="sprite-animations-list__animation--vertical-center" data-tooltip="{{localize "SPRITE-ANIMATIONS.CONFIG.TOOLTIPS.LOOP"}}" data-animation="{{animation.id}}" data-role="animation-loop"> --}}
+        <a data-action="editAnimation" data-animation="{{animation.id}}" class="sprite-animations-list__animation--vertical-center" data-tooltip="{{localize "SPRITE-ANIMATIONS.CONFIG.TOOLTIPS.EDIT" animation=animation.name}}">
+          <i class="fa-solid fa-cogs"></i>
+        </a>
       </div>
       <div class="sprite-animations-list__animation{{#if (isOdd @index)}} sprite-animations-list__animation--alt-row{{/if}}">
-        <a data-action="removeAnimation" data-animation="{{animation.id}}" class="sprite-animations-list__animation--vertical-center" data-tooltip="{{localize "SPRITE-ANIMATIONS.CONFIG.TOOLTIPS.REMOVE"}}">
+        <a data-action="removeAnimation" data-animation="{{animation.id}}" class="sprite-animations-list__animation--vertical-center" data-tooltip="{{localize "SPRITE-ANIMATIONS.CONFIG.TOOLTIPS.REMOVE" animation=animation.name}}">
           <i class="fa-solid fa-trash"></i>
         </a>
       </div>

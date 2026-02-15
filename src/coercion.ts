@@ -44,7 +44,7 @@ export function coerceTile(arg: unknown): Tile | undefined {
 export function coerceSprite(arg: unknown): AnimatedPlaceable | undefined {
   if (arg instanceof Tile || arg instanceof Token) return arg as unknown as AnimatedPlaceable;
   if (arg instanceof TileDocument || arg instanceof TokenDocument) {
-    if (arg.object instanceof Tile || arg.object instanceof Token) return arg.object as unknown as  AnimatedPlaceable;
+    if (arg.object instanceof Tile || arg.object instanceof Token) return arg.object as unknown as AnimatedPlaceable;
     if (arg instanceof TileDocument) return canvas?.scene?.tiles.get(arg.id ?? "")?.object as unknown as AnimatedPlaceable ?? undefined;
     if (arg instanceof TokenDocument) return canvas?.scene?.tokens.get(arg.id ?? "")?.object as unknown as AnimatedPlaceable ?? undefined;
   }
@@ -61,7 +61,7 @@ export function coerceAnimation(anim: string | AnimationConfig, target?: unknown
 
   if (typeof anim === "string") {
     const sprite = coerceSprite(target);
-    if (!sprite) return;
+    if (!sprite) return console.warn("Unable to locate sprite", target) ?? undefined;
     if (sprite instanceof Token && sprite.actor instanceof Actor) return getAnimation(sprite.actor, anim);
     else if (sprite instanceof Actor || sprite instanceof Tile || sprite instanceof TileDocument) return getAnimation(sprite, anim);
   }

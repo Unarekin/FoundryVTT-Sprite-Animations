@@ -33,3 +33,15 @@ export interface PlayerRenderContext extends foundry.applications.api.Applicatio
 
 export type PlayerRenderOptions = foundry.applications.api.ApplicationV2.RenderOptions;
 export type PlayerConfiguration = foundry.applications.api.ApplicationV2.Configuration;
+
+export interface AnimationConfigRenderContext extends foundry.applications.api.ApplicationV2.RenderContext {
+  idPrefix: string;
+  animation: AnimationConfig;
+  buttons: foundry.applications.api.ApplicationV2.FormFooterButton[];
+}
+
+export type AnimationConfigRenderOptions = foundry.applications.api.ApplicationV2.RenderOptions;
+
+export interface AnimationConfigConfiguration extends foundry.applications.api.ApplicationV2.Configuration {
+  animation: AnimationConfig;
+}

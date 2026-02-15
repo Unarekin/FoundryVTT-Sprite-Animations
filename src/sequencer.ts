@@ -43,9 +43,8 @@ export function getSectionManager(): Class {
        * @param animations 
        */
       add(...animations: (string | AnimationConfig)[]): this {
-        const coerced = this._animations.map(anim => coerceAnimation(anim, this._target)) as AnimationConfig[];
+        const coerced = animations.map(anim => coerceAnimation(anim, this._target)) as AnimationConfig[];
         if (coerced.some(anim => !anim)) throw new InvalidAnimationError(animations.find(anim => !anim));
-
         this._animations.push(...animations);
         return this;
       }
@@ -103,9 +102,9 @@ export function getSectionManager(): Class {
         if (!playFunc) return;
 
         // eslint-disable-next-line @typescript-eslint/no-unsafe-member-access, @typescript-eslint/no-unsafe-call
-        if ((this as any)._waitUntilFinished) await playFunc();
+        if ((this as any)._waitUntilFinished) await playFunc(...animations);
         // eslint-disable-next-line @typescript-eslint/no-unsafe-call
-        else void playFunc();
+        else void playFunc(...animations);
 
         // eslint-disable-next-line @typescript-eslint/no-unsafe-argument, @typescript-eslint/no-unsafe-member-access
         await new Promise(resolve => { setTimeout(resolve, (this as any)._currentWaitTime) });

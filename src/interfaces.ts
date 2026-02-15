@@ -7,6 +7,9 @@ export interface AnimationConfig {
   name: string;
   src: string;
   loop?: boolean;
+  sound: string;
+  volume: number;
+  enableSound: boolean;
 }
 
 export interface MeshAdjustmentConfig {
