@@ -496,6 +496,7 @@ export function ConfigMixin<Document extends foundry.abstract.Document.Any, Cont
     }
 
     protected async _processSubmitData(event: SubmitEvent, form: HTMLFormElement, formData: foundry.applications.ux.FormDataExtended, options?: unknown): Promise<void> {
+      await super._processSubmitData(event, form, formData, options);
 
       const flags = foundry.utils.getProperty(formData instanceof foundry.applications.ux.FormDataExtended ? foundry.utils.expandObject(formData.object) : formData, `flags.${__MODULE_ID__}`) as AnimationFlags | undefined;
 
@@ -508,7 +509,7 @@ export function ConfigMixin<Document extends foundry.abstract.Document.Any, Cont
 
       }
 
-      await super._processSubmitData(event, form, formData, options);
+
     }
 
     _processFormData(event: SubmitEvent | null, html: HTMLFormElement, data: foundry.applications.ux.FormDataExtended) {
