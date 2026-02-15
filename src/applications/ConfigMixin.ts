@@ -203,7 +203,6 @@ export function ConfigMixin<Document extends foundry.abstract.Document.Any, Cont
     protected lockAdjustmentDimensions = true;
     static LockAdjustmentDimensions(this: AnimatedConfig) {
       try {
-        console.log("Lock adjustment dimensinos");
         this.lockAdjustmentDimensions = !this.lockAdjustmentDimensions;
         const button = this.element.querySelector(`[data-action="lockAdjustmentDimensions"] i`);
         console.log(button);
@@ -457,11 +456,11 @@ export function ConfigMixin<Document extends foundry.abstract.Document.Any, Cont
     _onChangeForm(formConfig: foundry.applications.api.ApplicationV2.FormConfiguration, event: Event) {
       super._onChangeForm(formConfig, event);
 
-      const animations = this.parseAnimationList();
-      if (!animations) return;
+      // const animations = this.parseAnimationList();
+      // if (!animations) return;
 
-      this.animationFlagCache ??= foundry.utils.deepClone(DEFAULT_ANIMATION_FLAGS);
-      this.animationFlagCache.animations = animations;
+      // this.animationFlagCache ??= foundry.utils.deepClone(DEFAULT_ANIMATION_FLAGS);
+      // this.animationFlagCache.animations = animations;
 
       // TODO: Update mesh adjustment cache
 
