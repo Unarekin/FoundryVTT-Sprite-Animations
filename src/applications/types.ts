@@ -45,3 +45,13 @@ export type AnimationConfigRenderOptions = foundry.applications.api.ApplicationV
 export interface AnimationConfigConfiguration extends foundry.applications.api.ApplicationV2.Configuration {
   animation: AnimationConfig;
 }
+export interface AutoFitDimensions {
+  x: number;
+  y: number;
+  width: number;
+  height: number;
+  anchor: {
+    x: number;
+    y: number;
+  }
+}

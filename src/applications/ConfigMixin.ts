@@ -1,5 +1,5 @@
 import { DeepPartial } from "fvtt-types/utils";
-import { RenderContext, RenderOptions, Configuration } from "./types";
+import { RenderContext, RenderOptions, Configuration, AutoFitDimensions } from "./types";
 import { AnimatedPlaceable, AnimationConfig, AnimationFlags } from "interfaces";
 import { downloadJSON, generatePreviewTooltip, isImage, isVideo, uploadJSON } from "utils";
 import { DEFAULT_ANIMATION, DEFAULT_ANIMATION_FLAGS, DEFAULT_MESH_ADJUSTMENT } from "../constants";
@@ -116,75 +116,92 @@ export function ConfigMixin<Document extends foundry.abstract.Document.Any, Cont
       }
     }
 
+    protected getAutofitDimensionsFromTexture(texture: PIXI.Texture): AutoFitDimensions | undefined {
+      if (!canvas?.app?.renderer) return;
+      const fittedDimensions = { width: 100, height: 100, x: 0, y: 0 };
+      const rt = PIXI.RenderTexture.create({ width: fittedDimensions.width, height: fittedDimensions.height });
+
+      const sprite = new PIXI.Sprite(texture);
+      sprite.width = rt.width;
+      sprite.height = rt.height;
+      canvas.app.renderer.render(sprite, { renderTexture: rt, clear: false });
+
+      const pixels = Uint8ClampedArray.from(canvas.app.renderer.extract.pixels(rt));
+      const imageData = new ImageData(pixels, rt.width, rt.height);
+
+      let left = rt.width;
+      let top = rt.height;
+      let right = 0;
+      let bottom = 0;
+
+      for (let y = 0; y < rt.height; y++) {
+        for (let x = 0; x < rt.width; x++) {
+          const index = (y * rt.width + x) * 4;
+          const alpha = imageData.data[index + 3];
+          if (alpha > 0) {
+            if (x < left) left = x;
+            if (x > right) right = x;
+            if (y < top) top = y;
+            if (y > bottom) bottom = y;
+          }
+        }
+      }
+
+      const visualWidth = right - left;
+      const visualHeight = bottom - top;
+
+      const ratio = visualWidth < visualHeight ? fittedDimensions.width / visualWidth : fittedDimensions.height / visualHeight;
+
+      // TODO: Move the anchor
+
+      const newDimensions = {
+        x: 0,
+        y: 0,
+        width: Math.floor(texture.width / ratio),
+        height: Math.floor(texture.height / ratio),
+        anchor: {
+          x: (left + (visualWidth / 2)) / rt.width,
+          y: (top + (visualHeight / 2)) / rt.height
+        }
+      };
+
+      return newDimensions;
+    }
+
+    protected getPreviewMeshTexture(): PIXI.Texture | undefined {
+      const mesh = this.getPreviewMesh();
+      if (!mesh?.texture) return;
+      return mesh.texture.clone();
+    }
+
+    protected getFittedMeshSize() {
+      const mesh = this.getPreviewMesh();
+      if (!mesh?.texture) return
+      const fittedDimensions = (mesh.object as unknown as AnimatedPlaceable).getFittedMeshSize();
+      return fittedDimensions;
+    }
+
     static AutoFit(this: AnimatedConfig) {
       const start = performance.now();
       try {
-        const mesh = this.getPreviewMesh();
-        if (!mesh?.texture) return
+
         if (!canvas?.app?.renderer) return;
+        const texture = this.getPreviewMeshTexture();
+        if (!texture) return;
 
+        const newDimensions = this.getAutofitDimensionsFromTexture(texture);
+        if (!newDimensions) return;
 
-
-        const texture = mesh.texture.clone();
-        const fittedDimensions = (mesh.object as unknown as AnimatedPlaceable).getFittedMeshSize();
-        if (!fittedDimensions) return;
-
-
-        const rt = PIXI.RenderTexture.create({ width: fittedDimensions.width, height: fittedDimensions.height });
-        // const rt = PIXI.RenderTexture.create({ width: texture.width, height: texture.height })
-
-        const sprite = new PIXI.Sprite(texture);
-        sprite.width = rt.width;
-        sprite.height = rt.height;
-        canvas.app.renderer.render(sprite, { renderTexture: rt, clear: false });
-
-        const pixels = Uint8ClampedArray.from(canvas.app.renderer.extract.pixels(rt));
-        const imageData = new ImageData(pixels, rt.width, rt.height);
-
-        let left = rt.width;
-        let top = rt.height;
-        let right = 0;
-        let bottom = 0;
-
-        for (let y = 0; y < rt.height; y++) {
-          for (let x = 0; x < rt.width; x++) {
-            const index = (y * rt.width + x) * 4;
-            const alpha = imageData.data[index + 3];
-            if (alpha > 0) {
-              if (x < left) left = x;
-              if (x > right) right = x;
-              if (y < top) top = y;
-              if (y > bottom) bottom = y;
-            }
-          }
-        }
-
-        const visualWidth = right - left;
-        const visualHeight = bottom - top;
-
-        const ratio = visualWidth < visualHeight ? fittedDimensions.width / visualWidth : fittedDimensions.height / visualHeight;
-
-        // TODO: Move the anchor
-
-        const newDimensions = {
-          x: 0,
-          y: 0,
-          width: Math.floor(texture.width / ratio),
-          height: Math.floor(texture.height / ratio)
-        }
 
         this.setElementValue(`[name="flags.sprite-animations.meshAdjustments.width"]`, newDimensions.width.toString());
         this.setElementValue(`[name="flags.sprite-animations.meshAdjustments.height"]`, newDimensions.height.toString());
         this.setElementValue(`[name="flags.sprite-animations.meshAdjustments.x"]`, newDimensions.x.toString());
         this.setElementValue(`[name="flags.sprite-animations.meshAdjustments.y"]`, newDimensions.y.toString());
 
-        const anchor = {
-          x: (left + (visualWidth / 2)) / rt.width,
-          y: (top + (visualHeight / 2)) / rt.height
-        }
 
-        this.setElementValue(`[name="flags.sprite-animations.meshAdjustments.anchor.x"]`, anchor.x.toString());
-        this.setElementValue(`[name="flags.sprite-animations.meshAdjustments.anchor.y"]`, anchor.y.toString());
+
+        this.setElementValue(`[name="flags.sprite-animations.meshAdjustments.anchor.x"]`, newDimensions.anchor.x.toString());
+        this.setElementValue(`[name="flags.sprite-animations.meshAdjustments.anchor.y"]`, newDimensions.anchor.y.toString());
 
         this.form?.dispatchEvent(new Event("change", { bubbles: true }));
       } catch (err) {
@@ -498,7 +515,6 @@ export function ConfigMixin<Document extends foundry.abstract.Document.Any, Cont
       await super._processSubmitData(event, form, formData, options);
 
       const flags = foundry.utils.getProperty(formData instanceof foundry.applications.ux.FormDataExtended ? foundry.utils.expandObject(formData.object) : formData, `flags.${__MODULE_ID__}`) as AnimationFlags | undefined;
-
       if (flags) {
         foundry.utils.deleteProperty(formData as any, `flags.${__MODULE_ID__}`);
         await this.setAnimationFlags({
@@ -507,8 +523,6 @@ export function ConfigMixin<Document extends foundry.abstract.Document.Any, Cont
         });
 
       }
-
-
     }
 
     _processFormData(event: SubmitEvent | null, html: HTMLFormElement, data: foundry.applications.ux.FormDataExtended) {
@@ -524,11 +538,13 @@ export function ConfigMixin<Document extends foundry.abstract.Document.Any, Cont
     // #endregion
 
     _onClose(options: DeepPartial<Options>) {
-      this.animationFlagCache = undefined;
       window.removeEventListener("mousemove", this._dragAdjustMouseMove);
       window.removeEventListener("mouseup", this._dragAdjustMouseUp);
       super._onClose(options);
+
+      setTimeout(() => { this.animationFlagCache = undefined; }, 500);
     }
+
 
     protected animationFlagCache: AnimationFlags | undefined = undefined;
 
@@ -640,6 +656,7 @@ export function ConfigMixin<Document extends foundry.abstract.Document.Any, Cont
       if (!this.animationFlagCache) {
         const flags = this.getAnimationFlags();
         this.animationFlagCache = foundry.utils.deepClone(flags);
+        console.log("Set animationFlagCache:", this.animationFlagCache);
       }
 
       for (const anim of this.animationFlagCache.animations)

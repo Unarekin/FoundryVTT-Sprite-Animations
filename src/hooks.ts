@@ -1,6 +1,6 @@
 import { getSectionManager } from "./sequencer";
 import { AnimatedTileMixin, AnimatedTokenMixin } from "./placeables";
-import { TokenConfigMixin, TileConfigMixin } from "./applications"
+import { TokenConfigMixin, TileConfigMixin, PrototypeTokenConfigMixin } from "./applications"
 
 Hooks.on("canvasReady", () => {
   if (__DEV__) {
@@ -38,6 +38,9 @@ Hooks.once("ready", () => {
     if (game.release?.isNewer("13")) {
       applyMixin(CONFIG.Token.sheetClasses.base, TokenConfigMixin)
       applyMixin(CONFIG.Tile.sheetClasses.base, TileConfigMixin);
+
+      // eslint-disable-next-line @typescript-eslint/no-unsafe-assignment
+      CONFIG.Token.prototypeSheetClass = PrototypeTokenConfigMixin(CONFIG.Token.prototypeSheetClass as any) as any;
     }
   } catch (err) {
     console.error(err);
