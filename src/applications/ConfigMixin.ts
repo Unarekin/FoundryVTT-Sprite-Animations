@@ -150,21 +150,38 @@ export function ConfigMixin<Document extends foundry.abstract.Document.Any, Cont
       const visualWidth = right - left;
       const visualHeight = bottom - top;
 
-      const ratio = visualWidth < visualHeight ? fittedDimensions.width / visualWidth : fittedDimensions.height / visualHeight;
-
-      // TODO: Move the anchor
 
       const newDimensions = {
         x: 0,
         y: 0,
-        width: Math.floor(texture.width / ratio),
-        height: Math.floor(texture.height / ratio),
+        width: 0, height: 0,
         anchor: {
           x: (left + (visualWidth / 2)) / rt.width,
           y: (top + (visualHeight / 2)) / rt.height
         }
       };
 
+      if (texture.width > texture.height) {
+        const ratio = texture.height / texture.width;
+        newDimensions.width = texture.width - visualWidth;
+        newDimensions.height = newDimensions.width * ratio;
+
+        // Now scale to 100px
+        const gridRatio = 100 / texture.height;
+        newDimensions.width = Math.floor(newDimensions.width * gridRatio);
+        newDimensions.height = Math.floor(newDimensions.height * gridRatio);
+      } else {
+        const ratio = texture.width / texture.height;
+        newDimensions.height = texture.height - visualHeight;
+        newDimensions.width = newDimensions.height * ratio;
+
+        const gridRatio = 100 / texture.width;
+        newDimensions.width = Math.floor(newDimensions.width * gridRatio);
+        newDimensions.height = Math.floor(newDimensions.height * gridRatio);
+      }
+
+      sprite.destroy();
+      rt.destroy();
       return newDimensions;
     }
 
