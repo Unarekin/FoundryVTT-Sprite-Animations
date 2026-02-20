@@ -431,26 +431,22 @@ export function ConfigMixin<Document extends foundry.abstract.Document.Any, Cont
       if (this.dragAdjustments.y) this.applyDragAdjustment(this.dragAdjustments.y, e.movementY);
 
       if (this.dragAdjustments.width || this.dragAdjustments.height) {
-        if (this.lockAdjustmentDimensions) {
-          if (this.dragAdjustments.width && this.dragAdjustments.height) {
-            if (Math.abs(e.movementX) > Math.abs(e.movementY)) {
-              this.applyDragAdjustment(this.dragAdjustments.width, e.movementX);
-              this.applyDragAdjustment(this.dragAdjustments.height, e.movementX);
-            } else {
-              this.applyDragAdjustment(this.dragAdjustments.width, e.movementY);
-              this.applyDragAdjustment(this.dragAdjustments.height, e.movementY);
-            }
+        const mesh = this.getMesh();
+        if (this.lockAdjustmentDimensions && mesh) {
+          if (Math.abs(e.movementX) > Math.abs(e.movementY)) {
+            const ratio = mesh.height / mesh.width;
+            this.applyDragAdjustment(this.dragAdjustments.width, e.movementX);
+            this.applyDragAdjustment(this.dragAdjustments.height, e.movementX * ratio);
           } else {
-            if (this.dragAdjustments.width) this.applyDragAdjustment(this.dragAdjustments.width, e.movementX);
-            if (this.dragAdjustments.height) this.applyDragAdjustment(this.dragAdjustments.height, e.movementY);
+            const ratio = mesh.width / mesh.height;
+            this.applyDragAdjustment(this.dragAdjustments.width, e.movementY * ratio);
+            this.applyDragAdjustment(this.dragAdjustments.height, e.movementY);
           }
         } else {
           if (this.dragAdjustments.width) this.applyDragAdjustment(this.dragAdjustments.width, e.movementX);
           if (this.dragAdjustments.height) this.applyDragAdjustment(this.dragAdjustments.height, e.movementY);
         }
       }
-
-      // TODO: Preserve aspect ratio
     }).bind(this); // pre-bind it so we can attach/detach the listener more readily
 
     // #endregion
