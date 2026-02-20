@@ -30,6 +30,14 @@ export function TileConfigMixin<t extends typeof foundry.applications.sheets.Til
     }
     protected getAnimatedPlaceable(): AnimatedPlaceable | undefined { return this.document.object as unknown as AnimatedPlaceable ?? undefined; }
 
+    async _prepareContext(options: TileRenderOptions) {
+      const context = await super._prepareContext(options);
+
+      if (!this.document?.id && context.tabs?.animations)
+        delete context.tabs.animations;
+      return context;
+    }
+
   }
   return AnimatedTileConfig
 }
