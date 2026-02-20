@@ -73,6 +73,7 @@ export function ConfigMixin<Document extends foundry.abstract.Document.Any, Cont
     protected abstract getAnimatedPlaceable(): AnimatedPlaceable | undefined;
     // #endregion
 
+
     // #region Action Handlers
 
     static async EditAnimation(this: AnimatedConfig, event: Event, element: HTMLElement) {
@@ -665,6 +666,9 @@ export function ConfigMixin<Document extends foundry.abstract.Document.Any, Cont
 
     protected async _prepareContext(options: DeepPartial<Options> & { isFirstRender: boolean; }): Promise<Context> {
       const context = await super._prepareContext(options);
+
+      if (!this.document?.id && context.tabs?.animations)
+        delete context.tabs.animations;
 
       if (!this.animationFlagCache) {
         const flags = this.getAnimationFlags();
