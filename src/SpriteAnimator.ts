@@ -70,7 +70,7 @@ export class SpriteAnimator {
    * @param {AnimatedPlaceable} target - {@link AnimatedPlaceable}
    * @param {AnimationArgument} anims - {@link AnimationArgument}[]
    */
-  public static async queueAnimations(target: AnimatedPlaceable, anims:AnimationArgument[]): Promise<void> {
+  public static async queueAnimations(target: AnimatedPlaceable, ...anims: AnimationArgument[]): Promise<void> {
     try {
       if (!game.user) throw new PermissionDeniedError();
       const sprite = coerceSprite(target);
@@ -106,7 +106,7 @@ export class SpriteAnimator {
    * @param {AnimationArgument} anims - {@link AnimationArgument}[]
    * @returns 
    */
-  public static async playAnimations(target: AnimatableArgument, anims: AnimationArgument[]): Promise<void> {
+  public static async playAnimations(target: AnimatableArgument, ...anims: AnimationArgument[]): Promise<void> {
     try {
       if (!game.user) throw new PermissionDeniedError();
       const sprite = coerceSprite(target);
@@ -160,9 +160,20 @@ export class SpriteAnimator {
    * @param {AnimationArgument} animations - {@link AnimationArgument}[]
    * @returns 
    */
-  public async playAnimations(animations: AnimationArgument[]): Promise<void> {
-    if (this.object) return SpriteAnimator.playAnimations(this.object, animations);
-    else if (this.document?.object) return SpriteAnimator.playAnimations(this.document.object, animations);
+  public async playAnimations(...animations: AnimationArgument[]): Promise<void> {
+    if (this.object) return SpriteAnimator.playAnimations(this.object, ...animations);
+    else if (this.document?.object) return SpriteAnimator.playAnimations(this.document.object, ...animations);
+    throw new InvalidSpriteError(this.object ?? this.document);
+  }
+
+  /**
+   * Plays a series of animations after the current one finishes
+   * @param {AnimationArgument} animations - {@link AnimationArgument}
+   * @returns 
+   */
+  public async queueAnimations(...animations: AnimationArgument[]): Promise<void> {
+    if (this.object) return SpriteAnimator.playAnimations(this.object, ...animations);
+    else if (this.document?.object) return SpriteAnimator.playAnimations(this.document.object, ...animations);
     throw new InvalidSpriteError(this.object ?? this.document);
   }
 
