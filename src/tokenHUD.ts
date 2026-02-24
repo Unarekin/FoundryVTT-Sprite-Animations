@@ -2,7 +2,7 @@ import { AnimationPlayer } from "applications";
 import { InvalidSpriteError } from "errors";
 
 function insertHUD(app: foundry.applications.hud.BasePlaceableHUD) {
-  if (!(app.object instanceof Tile || app.object instanceof Token)) throw new InvalidSpriteError(app.object);
+  if (!(app.object instanceof Tile || app.object instanceof foundry.canvas.placeables.Token)) throw new InvalidSpriteError(app.object);
   const col = app.element instanceof HTMLElement ? app.element.querySelector(`.col.left`) : (app.element as JQuery<HTMLElement>).find(`.col.left`)[0];
   if (!(col instanceof HTMLElement)) return;
 

@@ -186,6 +186,6 @@ export class SpriteAnimator {
     this.object = sprite as any;
     // eslint-disable-next-line @typescript-eslint/no-unsafe-assignment, @typescript-eslint/no-unsafe-member-access
     this.document = (sprite as any).document;
-    if (sprite instanceof Token) this.actor = sprite.actor;
+    if (sprite instanceof foundry.canvas.placeables.Token) this.actor = sprite.actor;
   }
 }
