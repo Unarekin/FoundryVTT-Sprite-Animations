@@ -1,28 +1,7 @@
 import { AnimationConfig, MeshAdjustmentConfig } from "./interfaces";
 import { Animatable } from "./interfaces";
-declare global {
-    interface SettingsConfig {
-        "sprite-animations": {
-            animateOtherTokens: boolean;
-        };
-    }
-    interface FlagConfig {
-        Actor: {
-            "sprite-animations": {
-                animations: AnimationConfig[];
-                meshAdjustments: MeshAdjustmentConfig;
-            };
-        };
-        TileDocument: {
-            "sprite-animations": {
-                animations: AnimationConfig[];
-                meshAdjustments: MeshAdjustmentConfig;
-            };
-        };
-    }
-}
 export declare function canAnimatePlaceable(user: User, target: Token | TokenDocument | Tile | TileDocument | Actor): boolean;
-export declare function applyMeshAdjustments(target: Token | TokenDocument | Tile | TileDocument): void;
+export declare function applyMeshAdjustments(target: Token | TokenDocument | Tile | TileDocument, adjustments?: MeshAdjustmentConfig): void;
 export declare function getMeshAdjustments(target: Animatable): MeshAdjustmentConfig | undefined;
 export declare function setMeshAdjustments(target: Animatable, adjustments: Partial<MeshAdjustmentConfig>): Promise<void>;
 /**
