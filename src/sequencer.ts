@@ -1,13 +1,10 @@
 import { InvalidAnimationError, InvalidSpriteError, LocalizedError } from "errors";
-import { Animatable, AnimationConfig } from "./interfaces";
+import { Animatable, AnimatedPlaceable, AnimationConfig } from "./interfaces";
 import { coerceAnimation, coerceSprite } from "coercion";
-import { playAnimations, queueAnimations } from "utils";
-import { SpriteAnimator } from "SpriteAnimator";
-
 
 let sectionManagerClass: Class;
 
-type TokenLike = Tile | Token;
+type TokenLike = AnimatedPlaceable;
 
 export function getSectionManager(): Class {
   if (sectionManagerClass) {
@@ -46,9 +43,8 @@ export function getSectionManager(): Class {
        * @param animations 
        */
       add(...animations: (string | AnimationConfig)[]): this {
-        const coerced = this._animations.map(anim => coerceAnimation(anim, this._target)) as AnimationConfig[];
+        const coerced = animations.map(anim => coerceAnimation(anim, this._target)) as AnimationConfig[];
         if (coerced.some(anim => !anim)) throw new InvalidAnimationError(animations.find(anim => !anim));
-
         this._animations.push(...animations);
         return this;
       }
@@ -77,7 +73,9 @@ export function getSectionManager(): Class {
         // eslint-disable-next-line @typescript-eslint/no-unsafe-member-access
         if (!(this as any)._playIf) return;
 
-        if (!this._target?.mesh) throw new InvalidSpriteError(this._target);
+        if (!this._target) throw new InvalidSpriteError(this._target);
+        const mesh = this._target?.getMesh();
+        if (!mesh) throw new InvalidSpriteError(this._target);
 
 
         const animations = this._animations.map(anim => coerceAnimation(anim, this._target)) as AnimationConfig[];
@@ -89,17 +87,24 @@ export function getSectionManager(): Class {
         let playFunc: Function | undefined = undefined;
 
 
-        if (this._remote && this._immediate) playFunc = playAnimations.bind(undefined, this._target.mesh, animations);
-        else if (this._remote && !this._immediate) playFunc = queueAnimations.bind(undefined, this._target.mesh, animations);
-        else if (!this._remote && this._immediate) playFunc = SpriteAnimator.playAnimations.bind(undefined, this._target, ...animations);
-        else if (!this._remote && !this._immediate) playFunc = SpriteAnimator.queueAnimations.bind(undefined, this._target, ...animations);
+        if (this._immediate) playFunc = this._target.playAnimations.bind(this._target);
+        else playFunc = this._target.queueAnimations.bind(this._target);
+
+        // if (this._remote && this._immediate) playFunc = this._target.playAnimations.bind(this._target);
+        // else if (this._remote && !this._immediate) playFunc = this._target.queueAnimations.bind(this._target);
+        // else if (!this._remote && this._immediate) playFunc = this._target.playAnimations.bind()
+
+        // if (this._remote && this._immediate) playFunc = playAnimations.bind(undefined, this._target.mesh, animations);
+        // else if (this._remote && !this._immediate) playFunc = queueAnimations.bind(undefined, this._target.mesh, animations);
+        // else if (!this._remote && this._immediate) playFunc = SpriteAnimator.playAnimations.bind(undefined, this._target, ...animations);
+        // else if (!this._remote && !this._immediate) playFunc = SpriteAnimator.queueAnimations.bind(undefined, this._target, ...animations);
 
         if (!playFunc) return;
 
         // eslint-disable-next-line @typescript-eslint/no-unsafe-member-access, @typescript-eslint/no-unsafe-call
-        if ((this as any)._waitUntilFinished) await playFunc();
+        if ((this as any)._waitUntilFinished) await playFunc(...animations);
         // eslint-disable-next-line @typescript-eslint/no-unsafe-call
-        else void playFunc();
+        else void playFunc(...animations);
 
         // eslint-disable-next-line @typescript-eslint/no-unsafe-argument, @typescript-eslint/no-unsafe-member-access
         await new Promise(resolve => { setTimeout(resolve, (this as any)._currentWaitTime) });
@@ -113,7 +118,7 @@ export function getSectionManager(): Class {
           ...data,
           type: "spriteAnimation",
           sectionData: {
-            target: this._target?.document.uuid,
+            target: this._target?.getDocument()?.uuid,
             animations: this._animations,
             loop: this._loop,
             immediate: this._immediate

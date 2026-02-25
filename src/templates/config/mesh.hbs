@@ -1,0 +1,65 @@
+<div class="tab{{#if tab.active}} active{{/if}} sprite-animations-config scrollable" {{#unless omitGroup}}data-group="animations"{{/unless}} data-tab="mesh" data-application-part="mesh">
+  <p>{{localize "SPRITE-ANIMATIONS.CONFIG.MESH.DESCRIPTION"}}</p>
+  <div class="form-group">
+    <label for="{{idPrefix}}-meshAdjustments.enable">{{localize "SPRITE-ANIMATIONS.CONFIG.MESH.ENABLE"}}</label>
+    <input type="checkbox" id="{{idPrefix}}-meshAdjustments.enable" name="flags.sprite-animations.meshAdjustments.enable" {{checked meshAdjustments.enable}}>
+  </div>
+
+  <div class="form-group slim">
+    <label>{{localize "Position"}}</label>
+    <div class="form-fields">
+      <label for="{{idPrefix}}-meshAdjustments.x">{{localize "SPRITE-ANIMATIONS.CONFIG.MESH.X.LABEL"}}</label>
+      <input type="number" step="1" id="{{idPrefix}}-meshAdjustments.x" name="flags.sprite-animations.meshAdjustments.x" value="{{meshAdjustments.x}}">
+
+      <label for="{{idPrefix}}-meshAdjustments.y">{{localize "SPRITE-ANIMATIONS.CONFIG.MESH.Y.LABEL"}}</label>
+      <input type="number" step="1" id="{{idPrefix}}-meshAdjustments.y" name="flags.sprite-animations.meshAdjustments.y" value="{{meshAdjustments.y}}">
+
+      <button type="button" data-role="drag-pos" data-tooltip-direction="UP" data-tooltip="{{adjustPosTooltip}}">
+        <i class="fa-solid fa-up-down-left-right"></i>
+      </button>
+    </div>
+  </div>
+
+  <div class="form-group slim">
+    <label>{{localize "TOKEN.Dimensions"}}</label>
+    <div class="form-fields">
+      <label for="{{idPrefix}}-meshAdjustments.width">{{localize "SPRITE-ANIMATIONS.CONFIG.MESH.WIDTH.LABEL"}}</label>
+      <input type="number" step="1" value="{{meshAdjustments.width}}" id="{{idPrefix}}-meshAdjustments.width" name="flags.sprite-animations.meshAdjustments.width">
+
+      <button type="button" data-action="lockAdjustmentDimensions">
+        <i class="fa-solid fa-fw fa-link" inert></i>
+      </button>
+
+      <label for="{{idPrefix}}-meshAdjustments.height">{{localize "SPRITE-ANIMATIONS.CONFIG.MESH.HEIGHT.LABEL"}}</label>
+      <input type="number" step="1" value="{{meshAdjustments.height}}" id="{{idPrefix}}-meshAdjustments.height" name="flags.sprite-animations.meshAdjustments.height">
+
+      <button type="button" data-role="drag-size" data-tooltip-direction="UP" data-tooltip="{{adjustSizeTooltip}}">
+        <i class="fa-solid fa-up-down-left-right"></i>
+      </button>
+    </div>
+  </div>
+
+  <div class="form-group slim">
+    <label>{{localize "Anchor"}}</label>
+    <div class="form-fields">
+      <label for="{{idPrefix}}-meshAdjustments.anchor.x">{{localize "SPRITE-ANIMATIONS.CONFIG.MESH.X.LABEL"}}</label>
+      <input type="number" min="0" max="1" step="any" value="{{meshAdjustments.anchor.x}}" id="{{idPrefix}}-meshAdjustments.anchor.x" name="flags.sprite-animations.meshAdjustments.anchor.x">
+
+      <label for="{{idPrefix}}-meshAdjustments.anchor.y">{{localize "SPRITE-ANIMATIONS.CONFIG.MESH.Y.LABEL"}}</label>
+      <input type="number" min="0" max="1" step="any" value="{{meshAdjustments.anchor.y}}" id="{{idPrefix}}-meshAdjustments.anchor.y" name="flags.sprite-animations.meshAdjustments.anchor.y">
+    </div>
+  </div>
+
+  <div class="form-group">
+    <label>{{localize "SPRITE-ANIMATIONS.CONFIG.AUTOFIT.LABEL"}}</label>
+    <div class="flexrow">
+      <div class="flex1"></div>
+      <div class="flex0">
+        <button type="button" data-action="autoFit">
+          <i class="fa-solid fa-fw fa-maximize"></i>
+        </button>
+      </div>
+    </div>
+    <p class="hint">{{localize "SPRITE-ANIMATIONS.CONFIG.AUTOFIT.HINT"}}</p>
+  </div>
+</div>

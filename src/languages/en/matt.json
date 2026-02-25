@@ -1,0 +1,10 @@
+{
+  "SPRITE-ANIMATIONS": {
+    "MATT": {
+      "PLAY": "Play Animation",
+      "IMMEDIATE": "Play Animation Immediately",
+      "ANIMATION": "Animation",
+      "PLAYLABEL": "Play Animation: {name}"
+    }
+  }
+}

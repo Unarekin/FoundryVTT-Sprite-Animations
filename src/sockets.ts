@@ -1,7 +1,7 @@
-import { InvalidAnimationError, InvalidSpriteError, LocalizedError } from "errors";
+import { InvalidSpriteError, LocalizedError } from "errors";
 import { AnimationConfig, PlaySocketMessage, QueueSocketMessage, SocketMessage } from "interfaces";
-import { playAnimations as utilPlayAnimations, queueAnimations as utilQueueAnimations } from "./utils";
-import { coerceAnimation, coerceSprite } from "coercion";
+import { coerceSprite } from "coercion";
+import { AnimationArgument } from "types";
 
 
 // let socket: any;
@@ -69,24 +69,16 @@ export function queueAnimations(spriteId: string, animations: (AnimationConfig |
 
 }
 
-async function doQueueAnimations(uuid: string, animations: (AnimationConfig | string)[]) {
+async function doQueueAnimations(uuid: string, animations: AnimationArgument[]) {
   const sprite = coerceSprite(uuid);
-  if (!sprite?.mesh) throw new InvalidSpriteError(uuid);
-
-  const configs = animations.map(anim => coerceAnimation(anim, sprite));
-  const hasInvalid = configs.find(anim => !anim);
-  if (hasInvalid) throw new InvalidAnimationError(hasInvalid);
-
-  await utilQueueAnimations(sprite, animations as AnimationConfig[]);
+  if (!sprite) throw new InvalidSpriteError(uuid)
+    
+  await sprite.queueAnimations(...animations);
 }
 
-async function doPlayAnimations(uuid: string, animations: (AnimationConfig | string)[]) {
+async function doPlayAnimations(uuid: string, animations: AnimationArgument[]) {
   const sprite = coerceSprite(uuid);
-  if (!sprite?.mesh) throw new InvalidSpriteError(uuid);
+  if (!sprite) throw new InvalidSpriteError(uuid);
 
-  const configs = animations.map(anim => coerceAnimation(anim, sprite));
-  const hasInvalid = configs.find(anim => !anim);
-  if (hasInvalid) throw new InvalidAnimationError(hasInvalid);
-
-  await utilPlayAnimations(sprite, animations as AnimationConfig[]);
+  await sprite.playAnimations(...animations);
 }

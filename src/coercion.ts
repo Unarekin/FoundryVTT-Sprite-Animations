@@ -1,9 +1,9 @@
-import { AnimationConfig } from "interfaces";
+import { AnimatedPlaceable, AnimationConfig } from "interfaces";
 import { getAnimation } from "settings";
 
 export function coerceActor(arg: unknown): Actor | undefined {
   if (arg instanceof Actor) return arg;
-  if (arg instanceof TokenDocument || arg instanceof Token) return arg.actor ?? undefined;
+  if (arg instanceof TokenDocument || arg instanceof foundry.canvas.placeables.Token) return arg.actor ?? undefined;
   if (typeof arg === "string") {
     const obj = fromUuidSync<any>(arg);
     if (obj instanceof Actor) return obj;
@@ -15,44 +15,44 @@ export function coerceActor(arg: unknown): Actor | undefined {
 }
 
 export function coerceToken(arg: unknown): Token | undefined {
-  if (arg instanceof Token) return arg;
+  if (arg instanceof foundry.canvas.placeables.Token) return arg;
   if (arg instanceof TokenDocument) {
-    if (arg.object instanceof Token) return arg.object;
+    if (arg.object instanceof foundry.canvas.placeables.Token) return arg.object;
     return canvas?.scene?.tokens.get(arg.id ?? "")?.object ?? undefined;
   }
   if (typeof arg === "string") {
     const obj = fromUuidSync<any>(arg);
-    if (obj instanceof Token) return obj;
+    if (obj instanceof foundry.canvas.placeables.Token) return obj;
     if (obj instanceof TokenDocument) return obj.object ?? undefined;
   }
 }
 
 export function coerceTile(arg: unknown): Tile | undefined {
-  if (arg instanceof Tile) return arg;
+  if (arg instanceof foundry.canvas.placeables.Tile) return arg;
   if (arg instanceof TileDocument) {
-    if (arg.object instanceof Tile) return arg.object;
+    if (arg.object instanceof foundry.canvas.placeables.Tile) return arg.object;
     return canvas?.scene?.tiles.get(arg.id ?? "")?.object ?? undefined;
   }
 
   if (typeof arg === "string") {
     const obj = fromUuidSync<any>(arg);
-    if (obj instanceof Tile) return obj;
+    if (obj instanceof foundry.canvas.placeables.Tile) return obj;
     if (obj instanceof TileDocument) return obj.object ?? undefined;
   }
 }
 
-export function coerceSprite(arg: unknown): Tile | Token | undefined {
-  if (arg instanceof Tile || arg instanceof Token) return arg;
+export function coerceSprite(arg: unknown): AnimatedPlaceable | undefined {
+  if (arg instanceof foundry.canvas.placeables.Tile || arg instanceof foundry.canvas.placeables.Token) return arg as unknown as AnimatedPlaceable;
   if (arg instanceof TileDocument || arg instanceof TokenDocument) {
-    if (arg.object instanceof Tile || arg.object instanceof Token) return arg.object;
-    if (arg instanceof TileDocument) return canvas?.scene?.tiles.get(arg.id ?? "")?.object ?? undefined;
-    if (arg instanceof TokenDocument) return canvas?.scene?.tokens.get(arg.id ?? "")?.object ?? undefined;
+    if (arg.object instanceof Tile || arg.object instanceof foundry.canvas.placeables.Token) return arg.object as unknown as AnimatedPlaceable;
+    if (arg instanceof TileDocument) return canvas?.scene?.tiles.get(arg.id ?? "")?.object as unknown as AnimatedPlaceable ?? undefined;
+    if (arg instanceof TokenDocument) return canvas?.scene?.tokens.get(arg.id ?? "")?.object as unknown as AnimatedPlaceable ?? undefined;
   }
 
   if (typeof arg === "string") {
     const obj = fromUuidSync<any>(arg);
-    if (obj instanceof Tile || obj instanceof Token) return obj;
-    if (obj instanceof TileDocument || obj instanceof TokenDocument) return obj.object ?? undefined;
+    if (obj instanceof foundry.canvas.placeables.Tile || obj instanceof foundry.canvas.placeables.Token) return obj as unknown as AnimatedPlaceable;
+    if (obj instanceof TileDocument || obj instanceof TokenDocument) return obj.object as unknown as AnimatedPlaceable ?? undefined;
   }
 }
 
@@ -61,18 +61,18 @@ export function coerceAnimation(anim: string | AnimationConfig, target?: unknown
 
   if (typeof anim === "string") {
     const sprite = coerceSprite(target);
-    if (!sprite) return;
+    if (!sprite) return console.warn("Unable to locate sprite", target) ?? undefined;
     if (sprite instanceof Token && sprite.actor instanceof Actor) return getAnimation(sprite.actor, anim);
     else if (sprite instanceof Actor || sprite instanceof Tile || sprite instanceof TileDocument) return getAnimation(sprite, anim);
   }
 }
 
 export function coerceAnimatable(arg: unknown): Actor | Tile | TileDocument | undefined {
-  if (arg instanceof Actor || arg instanceof Tile || arg instanceof TileDocument) return arg;
+  if (arg instanceof Actor || arg instanceof foundry.canvas.placeables.Tile || arg instanceof TileDocument) return arg;
 
   const actor = coerceActor(arg);
   if (actor instanceof Actor) return actor;
 
   const tile = coerceTile(arg);
-  if (tile instanceof Tile) return tile;
+  if (tile instanceof foundry.canvas.placeables.Tile) return tile;
 }

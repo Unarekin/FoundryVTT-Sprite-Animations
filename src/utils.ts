@@ -1,9 +1,6 @@
-import { AnimationConfig } from "./interfaces";
-
+import { AnimationConfig } from "interfaces";
 import mimeJSON from "./mime.json";
 const mimeDB = mimeJSON as Record<string, string>;
-
-const lastVideoElement: { mesh: foundry.canvas.primary.PrimarySpriteMesh, elem: HTMLVideoElement }[] = [];
 
 function applyProperPixels(mesh: foundry.canvas.primary.PrimarySpriteMesh) {
   if (game.modules?.get("proper-pixels")?.active) {
@@ -22,37 +19,13 @@ function applyProperPixels(mesh: foundry.canvas.primary.PrimarySpriteMesh) {
 //   }
 // }
 
-function applyPixelCompatibility(mesh: foundry.canvas.primary.PrimarySpriteMesh) {
+export function applyPixelCompatibility(mesh: foundry.canvas.primary.PrimarySpriteMesh) {
   applyProperPixels(mesh);
   // applyPixelPerfect(mesh);
 }
 
-/**
- * Preloads animation textures for smoother transitioning between multiple.
- * @param {AnimationConfig[]} animations = {@link AnimationConfig}[]
- */
-export async function preloadTextures(...animations: AnimationConfig[]): Promise<void> {
-  try {
-    const textures = animations.map(anim => anim.src);
-    const assets = await PIXI.Assets.load(textures);
-    await Promise.all(Object.values(assets).map((texture: PIXI.Texture) => {
-      if (texture.valid) return Promise.resolve();
-      return new Promise<void>(resolve => {
-        texture.baseTexture.once("loaded", () => { resolve(); });
-      });
-    }))
 
-  } catch (err) {
-    console.error(err);
-    if (err instanceof Error) ui.notifications?.error(err.message, { console: false, localize: true });
-  }
-}
-
-export async function playAnimation(obj: foundry.canvas.placeables.Token | foundry.canvas.placeables.Tile, config: AnimationConfig): Promise<void> {
-  await playAnimations(obj, [config]);
-}
-
-async function awaitTextureLoaded(texture: PIXI.Texture): Promise<void> {
+export async function awaitTextureLoaded(texture: PIXI.Texture): Promise<void> {
   return new Promise<void>(resolve => {
     if (!texture.baseTexture.valid) {
       texture.baseTexture.once("loaded", () => {
@@ -64,116 +37,6 @@ async function awaitTextureLoaded(texture: PIXI.Texture): Promise<void> {
   })
 }
 
-// async function applyTexture(mesh: foundry.canvas.primary.PrimarySpriteMesh, texture: PIXI.Texture): Promise<void> {
-async function applyTexture(obj: foundry.canvas.placeables.Token | foundry.canvas.placeables.Tile, texture: PIXI.Texture): Promise<void> {
-  await awaitTextureLoaded(texture);
-  return new Promise<void>(resolve => {
-    if (!canvas?.app) {
-      resolve();
-    } else {
-      canvas.app.ticker.addOnce(() => {
-        if (obj.mesh) {
-          obj.mesh.texture = texture;
-          // eslint-disable-next-line @typescript-eslint/no-unsafe-call, @typescript-eslint/no-unsafe-member-access
-          if ((obj as any).refreshShadow) (obj as any).refreshShadow(true);
-        }
-        resolve();
-      })
-    }
-
-  })
-}
-
-export async function playAnimations(obj: foundry.canvas.placeables.Token | foundry.canvas.placeables.Tile, configs: AnimationConfig[]): Promise<void> {
-  await preloadTextures(...configs);
-  if (!obj.mesh) return;
-  const mesh = obj.mesh;
-
-  const filters = [...mesh.filters ?? []];
-
-  const vidElements: HTMLVideoElement[] = [];
-
-  const lastIndex = lastVideoElement.findIndex(elem => elem.mesh === mesh);
-  if (lastIndex !== -1) {
-    const lastElem = lastVideoElement[lastIndex]
-    lastVideoElement.splice(lastIndex, 1);
-    lastElem.elem.remove();
-  }
-
-  for (let i = 0; i < configs.length; i++) {
-    const config = configs[i];
-
-    const loop = (i < configs.length - 1 ? false : typeof config.loop == "boolean" ? config.loop : true);
-
-    if (isVideo(config.src)) {
-      const vid = document.createElement("video");
-      vidElements.push(vid);
-      vid.src = config.src;
-      vid.crossOrigin = "anonymous";
-      vid.loop = loop;
-      vid.autoplay = true;
-      vid.playsInline = true;
-      vid.style.display = "none";
-      document.body.appendChild(vid);
-      await vid.play();
-
-      const index = lastVideoElement.findIndex(elem => elem.mesh === mesh);
-      if (index !== -1) lastVideoElement[index].elem = vid;
-      else lastVideoElement.push({ mesh, elem: vid });
-
-      const texture = PIXI.Texture.from(vid);
-      await applyTexture(obj, texture);
-    } else {
-      const texture = PIXI.Texture.from(config.src);
-      await applyTexture(obj, texture);
-    }
-
-    // Re-apply filters
-    if (mesh.filters) mesh.filters.splice(0, mesh.filters.length, ...filters);
-
-    applyPixelCompatibility(mesh);
-
-
-    // eslint-disable-next-line @typescript-eslint/no-unsafe-assignment
-    const { resource } = (mesh.texture?.baseTexture as any);
-    if (resource instanceof PIXI.VideoResource) {
-      const { source } = resource;
-      // Duplicate?
-      source.currentTime = 0;
-      await source.play();
-      source.loop = loop;
-      console.log("Awaiting animation end");
-      if (!loop) await animationEnd(resource);
-    }
-  }
-  if (vidElements.length > 1) {
-    for (let i = 0; i < vidElements.length - 2; i++) {
-      const elem = vidElements[i];
-      elem.remove();
-    }
-  }
-}
-
-export async function queueAnimation(obj: foundry.canvas.placeables.Token | foundry.canvas.placeables.Tile, config: AnimationConfig): Promise<void> {
-  await queueAnimations(obj, [config]);
-}
-
-export async function queueAnimations(obj: foundry.canvas.placeables.Token | foundry.canvas.placeables.Tile, configs: AnimationConfig[]): Promise<void> {
-  await preloadTextures(...configs);
-  if (!obj.mesh) return;
-  const mesh = obj.mesh;
-
-  if (mesh.texture?.baseTexture.resource instanceof PIXI.VideoResource) {
-    const source = mesh.texture.baseTexture.resource.source;
-    // Ensure the video is actually playing and not already paused, ended, or just hasn't loaded yet
-    if ((source.currentTime > 0 && !source.paused && !source.ended && source.readyState > 2)) {
-      mesh.texture.baseTexture.resource.source.loop = false;
-      await animationEnd(mesh.texture.baseTexture.resource);
-    }
-  }
-
-  await playAnimations(obj, configs);
-}
 
 export async function animationEnd(resource: PIXI.VideoResource): Promise<void> {
   return new Promise(resolve => {
@@ -202,4 +65,90 @@ export function isVideo(path: string): boolean {
 
 export function isImage(path: string): boolean {
   return mimeType(path).split("/")[0] === "image";
+}
+
+export function generatePreviewTooltip(animation: AnimationConfig): HTMLElement {
+  const elem = document.createElement("div");
+  const title = document.createElement("h4");
+  title.innerText = animation.name;
+  elem.appendChild(title);
+
+  if (isVideo(animation.src)) {
+    const vid = document.createElement("video");
+    vid.width = 256;
+    vid.autoplay = true;
+    vid.loop = true;
+
+    const src = document.createElement("source");
+    src.src = animation.src;
+    vid.appendChild(src);
+    elem.appendChild(vid);
+  } else {
+    const img = document.createElement("img");
+    img.src = animation.src;
+    img.style.maxWidth = "256px";
+    img.style.maxHeight = "256px";
+    elem.appendChild(img);
+  }
+  return elem;
+}
+
+export function downloadJSON(json: object, name: string) {
+  const blob = new Blob([JSON.stringify(json, null, 2)], { type: "application/json" });
+  const objUrl = URL.createObjectURL(blob);
+  const link = document.createElement("a");
+  link.href = objUrl;
+  link.download = name.endsWith(".json") ? name : `${name}.json`;
+  link.click();
+  URL.revokeObjectURL(objUrl);
+}
+
+export function uploadJSON<t = any>(): Promise<t> {
+  return new Promise<t>((resolve, reject) => {
+    const file = document.createElement("input");
+    file.setAttribute("type", "file");
+    file.setAttribute("accept", "application/json");
+    file.onchange = e => {
+      const file = (e.currentTarget as HTMLInputElement).files?.[0];
+      if (!file) {
+        reject(new Error());
+        return;
+      }
+
+      const reader = new FileReader();
+      reader.onload = e => {
+        if (!e.target?.result) throw new Error();
+        if (typeof e.target.result === "string") resolve(JSON.parse(e.target.result) as t);
+      }
+
+      reader.readAsText(file);
+    }
+
+    file.onerror = (event, source, line, col, error) => {
+      if (error) reject(error);
+      else reject(new Error(typeof event === "string" ? event : typeof undefined));
+    }
+
+    file.click();
+  })
+}
+
+export function logImage(url: string, width = 256, height = 256) {
+  const image = new Image();
+
+  image.onload = function () {
+    const style = [
+      `font-size: 1px`,
+      `padding-left: ${width}px`,
+      `padding-bottom: ${height}px`,
+      // `padding: ${this.height / 100 * size}px ${this.width / 100 * size}px`,
+      `background: url(${url}) no-repeat`,
+      `background-size:contain`,
+      `border:1px solid black`,
+      `max-width: 512px`
+    ].join(";")
+    console.log('%c ', style);
+  }
+
+  image.src = url;
 }

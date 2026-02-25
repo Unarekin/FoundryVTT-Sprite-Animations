@@ -3,32 +3,6 @@ import { Animatable } from "./interfaces";
 import { DEFAULT_MESH_ADJUSTMENT } from "./constants";
 import { coerceAnimatable } from "coercion";
 
-
-
-declare global {
-
-  interface SettingsConfig {
-    "sprite-animations": {
-      animateOtherTokens: boolean;
-    }
-  }
-
-  interface FlagConfig {
-    Actor: {
-      "sprite-animations": {
-        animations: AnimationConfig[];
-        meshAdjustments: MeshAdjustmentConfig;
-      }
-    },
-    TileDocument: {
-      "sprite-animations": {
-        animations: AnimationConfig[];
-        meshAdjustments: MeshAdjustmentConfig;
-      }
-    }
-  }
-}
-
 Hooks.on("ready", () => {
   // eslint-disable-next-line @typescript-eslint/no-unsafe-call, @typescript-eslint/no-unsafe-member-access
   (game.settings as any)?.register(__MODULE_ID__, "animateOtherTokens", {
@@ -54,7 +28,7 @@ Hooks.on("ready", () => {
 export function canAnimatePlaceable(user: User, target: Token | TokenDocument | Tile | TileDocument | Actor): boolean {
   // eslint-disable-next-line @typescript-eslint/no-unsafe-call, @typescript-eslint/no-unsafe-member-access
   if ((game?.settings as any)?.get(__MODULE_ID__, "animateOtherTokens")) return true;
-  if (target instanceof Tile || target instanceof Token) {
+  if (target instanceof Tile || target instanceof foundry.canvas.placeables.Token) {
     if (target.can(user, "update")) return true;
   } else {
     if (target.canUserModify(user, "update")) return true;
@@ -65,18 +39,18 @@ export function canAnimatePlaceable(user: User, target: Token | TokenDocument | 
   return false;
 }
 
-export function applyMeshAdjustments(target: Token | TokenDocument | Tile | TileDocument) {
+export function applyMeshAdjustments(target: Token | TokenDocument | Tile | TileDocument, adjustments?: MeshAdjustmentConfig) {
   try {
     if (!canvas?.scene) return;
     const animatable = coerceAnimatable(target);
     if (!animatable) return;
-    const adjustments = getMeshAdjustments(animatable);
+    const actualAdjustments = adjustments ?? getMeshAdjustments(animatable);
 
     const mesh = animatable instanceof Tile ? animatable.mesh : animatable instanceof TileDocument ? animatable.object?.mesh : target instanceof Token ? target.mesh : target instanceof TokenDocument ? target.object?.mesh : undefined;
     if (!mesh) return;
 
 
-    const doc = (target instanceof Token || target instanceof Tile) ? target.document : target;
+    const doc = (target instanceof Token || target instanceof foundry.canvas.placeables.Tile) ? target.document : target;
     if (!doc) return;
 
     // Determine base height of mesh, before applying scale.
@@ -113,21 +87,21 @@ export function applyMeshAdjustments(target: Token | TokenDocument | Tile | Tile
     sy *= doc.texture.scaleY;
 
     mesh.scale.set(sx, sy);
-    if (adjustments?.enable) {
+    if (actualAdjustments?.enable) {
 
       const adjustWidth = doc instanceof TileDocument ? doc.width / canvas.scene.dimensions.size : doc.width;
       const adjustHeight = doc instanceof TileDocument ? doc.height / canvas.scene.dimensions.size : doc.height;
 
-      mesh.width += (adjustments.width * adjustWidth);
-      mesh.height += (adjustments.height * adjustHeight);
+      mesh.width += (actualAdjustments.width * adjustWidth);
+      mesh.height += (actualAdjustments.height * adjustHeight);
       mesh.x = doc.x + (baseWidth * mesh.anchor.x);
       mesh.y = doc.y + (baseHeight * mesh.anchor.y);
 
-      if (doc.texture.scaleX < 0) mesh.x -= (adjustments.x * adjustWidth);
-      else if (doc.texture.scaleX > 0) mesh.x += (adjustments.x * adjustWidth);
+      if (doc.texture.scaleX < 0) mesh.x -= (actualAdjustments.x * adjustWidth);
+      else if (doc.texture.scaleX > 0) mesh.x += (actualAdjustments.x * adjustWidth);
 
-      if (doc.texture.scaleY < 0) mesh.y -= (adjustments.y * adjustHeight);
-      else if (doc.texture.scaleY > 0) mesh.y += (adjustments.y * adjustHeight);
+      if (doc.texture.scaleY < 0) mesh.y -= (actualAdjustments.y * adjustHeight);
+      else if (doc.texture.scaleY > 0) mesh.y += (actualAdjustments.y * adjustHeight);
 
     } else {
       // Ensure mesh position is where it ought to be when unadjusted
@@ -149,20 +123,22 @@ function ensureDefaultAdjustments(adjustments: Partial<MeshAdjustmentConfig>): M
 
 export function getMeshAdjustments(target: Animatable): MeshAdjustmentConfig | undefined {
 
-  if (target instanceof Actor) return ensureDefaultAdjustments(target.getFlag("sprite-animations", "meshAdjustments"));
+  // eslint-disable-next-line @typescript-eslint/no-unsafe-argument, @typescript-eslint/no-unsafe-call, @typescript-eslint/no-unsafe-member-access
+  if (target instanceof Actor) return ensureDefaultAdjustments((target as any).getFlag(__MODULE_ID__, "meshAdjustments") ?? {});
   // eslint-disable-next-line @typescript-eslint/no-unsafe-call, @typescript-eslint/no-unsafe-member-access
-  else if (target instanceof Tile) return ensureDefaultAdjustments((target.document as any).getFlag("sprite-animations", "meshAdjustments") as MeshAdjustmentConfig);
+  else if (target instanceof foundry.canvas.placeables.Tile) return ensureDefaultAdjustments((target.document as any).getFlag(__MODULE_ID__, "meshAdjustments") as MeshAdjustmentConfig);
   // eslint-disable-next-line @typescript-eslint/no-unsafe-call, @typescript-eslint/no-unsafe-member-access
-  else if (target instanceof TileDocument) return ensureDefaultAdjustments((target as any).getFlag("sprite-animations", "meshAdjustments") as MeshAdjustmentConfig);
+  else if (target instanceof TileDocument) return ensureDefaultAdjustments((target as any).getFlag(__MODULE_ID__, "meshAdjustments") as MeshAdjustmentConfig);
 
 }
 
 export async function setMeshAdjustments(target: Animatable, adjustments: Partial<MeshAdjustmentConfig>): Promise<void> {
-  if (target instanceof Actor) await target.setFlag("sprite-animations", "meshAdjustments", ensureDefaultAdjustments(adjustments));
   // eslint-disable-next-line @typescript-eslint/no-unsafe-call, @typescript-eslint/no-unsafe-member-access
-  else if (target instanceof Tile) await (target.document as any).setFlag("sprite-animations", "meshAdjustments", ensureDefaultAdjustments(adjustments));
+  if (target instanceof Actor) await (target as any).setFlag(__MODULE_ID__, "meshAdjustments", ensureDefaultAdjustments(adjustments));
   // eslint-disable-next-line @typescript-eslint/no-unsafe-call, @typescript-eslint/no-unsafe-member-access
-  else if (target instanceof TileDocument) await (target as any).setFlag("sprite-animations", "meshAdjustments", ensureDefaultAdjustments(adjustments));
+  else if (target instanceof foundry.canvas.placeables.Tile) await (target.document as any).setFlag(__MODULE_ID__, "meshAdjustments", ensureDefaultAdjustments(adjustments));
+  // eslint-disable-next-line @typescript-eslint/no-unsafe-call, @typescript-eslint/no-unsafe-member-access
+  else if (target instanceof TileDocument) await (target as any).setFlag(__MODULE_ID__, "meshAdjustments", ensureDefaultAdjustments(adjustments));
 }
 
 /**
@@ -171,11 +147,11 @@ export async function setMeshAdjustments(target: Animatable, adjustments: Partia
  * @returns {AnimationConfig[]}
  */
 export function getAnimations(target: Animatable): AnimationConfig[] {
-  if (target instanceof Actor) return target.getFlag("sprite-animations", "animations") ?? [];
+  if (target instanceof Actor) return target.getFlag(__MODULE_ID__, "animations") ?? [];
   // eslint-disable-next-line @typescript-eslint/no-unsafe-call, @typescript-eslint/no-unsafe-member-access
-  else if (target instanceof Tile) return (target.document as any).getFlag("sprite-animations", "animations") as AnimationConfig[] ?? [];
+  else if (target instanceof foundry.canvas.placeables.Tile) return (target.document as any).getFlag(__MODULE_ID__, "animations") as AnimationConfig[] ?? [];
   // eslint-disable-next-line @typescript-eslint/no-unsafe-call, @typescript-eslint/no-unsafe-member-access
-  else if (target instanceof TileDocument) return (target as any).getFlag("sprite-animations", "animations") as AnimationConfig[] ?? [];
+  else if (target instanceof TileDocument) return (target as any).getFlag(__MODULE_ID__, "animations") as AnimationConfig[] ?? [];
   else return [];
 }
 
@@ -245,12 +221,12 @@ export async function removeAnimation(target: Animatable, name: string): Promise
  * @param {AnimationConfig[]} animations - {@link AnimationConfig}[]
  */
 export async function setAnimations(target: Animatable, animations: AnimationConfig[]): Promise<void> {
-  // await target.setFlag("sprite-animations", "animations", animations);
-  if (target instanceof Actor) await target.setFlag("sprite-animations", "animations", animations);
+  // await target.setFlag(__MODULE_ID__, "animations", animations);
+  if (target instanceof Actor) await target.setFlag(__MODULE_ID__, "animations", animations);
   // eslint-disable-next-line @typescript-eslint/no-unsafe-call, @typescript-eslint/no-unsafe-member-access
-  else if (target instanceof Tile) await (target.document as any).setFlag("sprite-animations", "animations", animations);
+  else if (target instanceof foundry.canvas.placeables.Tile) await (target.document as any).setFlag(__MODULE_ID__, "animations", animations);
   // eslint-disable-next-line @typescript-eslint/no-unsafe-call, @typescript-eslint/no-unsafe-member-access
-  else if (target instanceof TileDocument) await (target as any).setFlag("sprite-animations", "animations", animations);
+  else if (target instanceof TileDocument) await (target as any).setFlag(__MODULE_ID__, "animations", animations);
 }
 
 /**

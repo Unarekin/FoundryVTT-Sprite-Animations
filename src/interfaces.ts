@@ -1,10 +1,15 @@
+import { AnimationArgument, DeepPartial } from "types";
 
 export type Animatable = Actor | Tile | TileDocument;
 
 export interface AnimationConfig {
+  id: string;
   name: string;
   src: string;
   loop?: boolean;
+  sound: string;
+  volume: number;
+  enableSound: boolean;
 }
 
 export interface MeshAdjustmentConfig {
@@ -13,6 +18,10 @@ export interface MeshAdjustmentConfig {
   width: number;
   x: number;
   y: number;
+  anchor: {
+    x: number;
+    y: number;
+  }
 }
 
 export const MESSAGE_TYPES = ["play", "queue"] as const;
@@ -38,3 +47,29 @@ export interface QueueSocketMessage extends SocketMessage {
   animations: (string | AnimationConfig)[];
   target: string;
 }
+
+
+
+export interface AnimationFlags {
+  animations: AnimationConfig[];
+  meshAdjustments: MeshAdjustmentConfig;
+}
+
+export interface AnimatedPlaceable {
+  getMesh(): foundry.canvas.primary.PrimarySpriteMesh | undefined;
+  getDocument(): foundry.abstract.Document.Any | undefined;
+  canAnimate: boolean;
+  canUserAnimate(user: User): boolean;
+  spriteAnimations: AnimationConfig[];
+  animationMeshAdjustments: MeshAdjustmentConfig;
+  getFittedMeshSize(): { x: number, y: number, width: number, height: number } | undefined;
+  previewAnimationAdjustments: MeshAdjustmentConfig | undefined;
+  applyAnimationMeshAdjustments(adjustments: MeshAdjustmentConfig, force?: boolean): void;
+  getAnimation(name: string): AnimationConfig | undefined;
+  getAnimationFlags(): DeepPartial<AnimationFlags> | undefined;
+
+  playAnimations(...animations: AnimationArgument[]): Promise<void>;
+  playAnimation(animation: AnimationArgument): Promise<void>;
+  queueAnimation(animation: AnimationArgument): Promise<void>;
+  queueAnimations(...animations: AnimationArgument[]): Promise<void>;
+};

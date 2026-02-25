@@ -7,7 +7,8 @@
       "SOCKETNOTINITIALIZED": "Websocket not initialized",
       "PERMISSIONDENIED": "Permission denied",
       "INVALIDSPRITE": "Invalid sprite: {sprite}",
-      "TARGETALREADYSET": "A target for this sprite animation sequence has already been set."
+      "TARGETALREADYSET": "A target for this sprite animation sequence has already been set.",
+      "INVALIDJSON": "Invalid JSON"
     }
   }
 }

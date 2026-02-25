@@ -1,0 +1,90 @@
+<div class="scrollable">
+  <div class="form-group">
+    <label for="{{idPrefix}}-name">{{localize
+        "SPRITE-ANIMATIONS.CONFIG.NAME"
+      }}</label>
+    <input
+      type="text"
+      name="name"
+      id="{{idPrefix}}-name"
+      value="{{animation.name}}"
+      required
+    />
+    <p class="hint"></p>
+  </div>
+
+  <div class="form-group">
+    <label for="{{idPrefix}}-src">{{localize
+        "SPRITE-ANIMATIONS.CONFIG.PATH"
+      }}</label>
+    <file-picker
+      name="src"
+      id="{{idPrefix}}-src"
+      value="{{animation.src}}"
+      type="image/video"
+      required
+    ></file-picker>
+    <p class="hint"></p>
+  </div>
+
+  <div class="form-group">
+    <label for="{{idPrefix}}-loop">{{localize
+        "SPRITE-ANIMATIONS.CONFIG.LOOP"
+      }}</label>
+    <input
+      type="checkbox"
+      name="loop"
+      id="{{idPrefix}}-loop"
+      {{checked animation.loop}}
+    />
+    <p class="hint"></p>
+  </div>
+
+  <div class="form-group">
+    <label for="{{idPrefix}}-enableSound">{{localize
+        "SPRITE-ANIMATIONS.CONFIG.ENABLESOUND"
+      }}</label>
+    <input
+      type="checkbox"
+      name="enableSound"
+      id="{{idPrefix}}-enableSound"
+      {{checked animation.enableSound}}
+    />
+    <p class="hint"></p>
+  </div>
+
+  <div class="form-group">
+    <label for="{{idPrefix}}-sound">{{localize
+        "SPRITE-ANIMATIONS.CONFIG.SOUND"
+      }}</label>
+    <file-picker
+      name="sound"
+      id="{{idPrefix}}-sound"
+      type="audio"
+      value="{{animation.sound}}"
+    ></file-picker>
+    <p class="hint"></p>
+  </div>
+
+  <div class="form-group">
+    <label for="{{idPrefix}}-volume">{{localize
+        "SPRITE-ANIMATIONS.CONFIG.VOLUME"
+      }}</label>
+    <range-picker
+      id="{{idPrefix}}-volume"
+      name="volume"
+      min="0"
+      max="100"
+      step="1"
+      value="{{animation.volume}}"
+    ></range-picker>
+    <p class="hint"></p>
+  </div>
+
+  <audio
+    controls
+    src="{{animation.sound}}"
+    data-role="audio-preview"
+    style="width:100%"
+  ></audio>
+</div>
