@@ -664,13 +664,24 @@ export function ConfigMixin<Document extends foundry.abstract.Document.Any, Cont
 
     }
 
+    protected async _preparePartContext(partId: string, context: Context, options: Options): Promise<Context> {
+      // eslint-disable-next-line @typescript-eslint/no-unsafe-call
+      const ctx = await super._preparePartContext(partId, context, options) as Context;
+
+
+      if (ctx.tabs && partId in (context.tabs ?? [])) {
+        ctx.tab = ctx.tabs[partId];
+      }
+
+      return ctx;
+    }
+
     protected async _prepareContext(options: DeepPartial<Options> & { isFirstRender: boolean; }): Promise<Context> {
       const context = await super._prepareContext(options);
 
       if (!this.animationFlagCache) {
         const flags = this.getAnimationFlags();
         this.animationFlagCache = foundry.utils.deepClone(flags);
-        console.log("Set animationFlagCache:", this.animationFlagCache);
       }
 
       for (const anim of this.animationFlagCache.animations)
@@ -679,15 +690,15 @@ export function ConfigMixin<Document extends foundry.abstract.Document.Any, Cont
       const animationFlags = foundry.utils.deepClone(this.animationFlagCache);
       // eslint-disable-next-line @typescript-eslint/no-unsafe-member-access
       animationFlags.animations.forEach(anim => { (anim as any).tooltip = generatePreviewTooltip(anim).outerHTML });
-
+      console.log("Preparing tabs:", foundry.utils.deepClone(this.tabGroups));
       context.animations = {
         idPrefix: foundry.utils.randomID(),
         ...animationFlags,
         adjustPosTooltip: "",
         adjustSizeTooltip: "",
         tabs: [
-          { id: "animations", group: "animations", active: true, cssClass: "", icon: "fa-solid fa-cog", label: "SPRITE-ANIMATIONS.TABS.ANIMATIONS" },
-          { id: "mesh", group: "animations", active: false, cssClass: "", icon: "fa-solid fa-cube", label: "SPRITE-ANIMATIONS.TABS.MESH" }
+          { id: "animations", group: "animations", active: this.tabGroups.animations === "animations" || !this.tabGroups.animations, cssClass: "", icon: "fa-solid fa-cog", label: "SPRITE-ANIMATIONS.TABS.ANIMATIONS" },
+          { id: "mesh", group: "animations", active: this.tabGroups.animations === "mesh", cssClass: "", icon: "fa-solid fa-cube", label: "SPRITE-ANIMATIONS.TABS.MESH" }
         ]
       };
 

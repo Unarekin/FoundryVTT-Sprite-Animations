@@ -1,6 +1,7 @@
 import { getSectionManager } from "./sequencer";
 import { AnimatedTileMixin, AnimatedTokenMixin } from "./placeables";
 import { TokenConfigMixin, TileConfigMixin, PrototypeTokenConfigMixin } from "./applications"
+import { AnimatedPlaceable } from "interfaces";
 
 Hooks.on("canvasReady", () => {
   if (__DEV__) {
@@ -53,3 +54,24 @@ Hooks.once("ready", () => {
   const sectionClass = getSectionManager();
   Sequencer.SectionManager.registerSection(__MODULE_ID__, "spriteAnimation", sectionClass);
 })
+
+Hooks.on("updateToken", (doc: TokenDocument) => {
+  if (doc.object) {
+    const placeable = doc.object as unknown as AnimatedPlaceable;
+    placeable.applyAnimationMeshAdjustments(placeable.animationMeshAdjustments, true);
+  }
+});
+
+Hooks.on("updateActor", (doc: Actor) => {
+  const tokens = doc.getActiveTokens() as unknown[] as AnimatedPlaceable[];
+  for (const token of tokens) {
+    token.applyAnimationMeshAdjustments(token.animationMeshAdjustments, true);
+  }
+});
+
+Hooks.on("updateTile", (doc: TileDocument) => {
+  if (doc.object) {
+    const placeable = doc.object as unknown as AnimatedPlaceable;
+    placeable.applyAnimationMeshAdjustments(placeable.animationMeshAdjustments, true);
+  }
+});
