@@ -8,6 +8,7 @@ export interface RenderContext<t extends foundry.abstract.Document.Any = foundry
         adjustSizeTooltip: string;
         tabs: foundry.applications.api.ApplicationV2.Tab[];
     };
+    tab?: foundry.applications.api.ApplicationV2.Tab;
 }
 export type RenderOptions = foundry.applications.api.DocumentSheetV2.RenderOptions;
 export type Configuration<t extends foundry.abstract.Document.Any = foundry.abstract.Document.Any> = foundry.applications.api.DocumentSheetV2.Configuration<t>;
