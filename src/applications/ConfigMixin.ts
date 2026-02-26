@@ -690,7 +690,6 @@ export function ConfigMixin<Document extends foundry.abstract.Document.Any, Cont
       const animationFlags = foundry.utils.deepClone(this.animationFlagCache);
       // eslint-disable-next-line @typescript-eslint/no-unsafe-member-access
       animationFlags.animations.forEach(anim => { (anim as any).tooltip = generatePreviewTooltip(anim).outerHTML });
-      console.log("Preparing tabs:", foundry.utils.deepClone(this.tabGroups));
       context.animations = {
         idPrefix: foundry.utils.randomID(),
         ...animationFlags,
