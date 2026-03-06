@@ -113,8 +113,9 @@ export function AnimatedPlaceableMixin<t extends PlaceableConstructor>(base: t):
       }
     }
 
-    protected async playSound(animation: AnimationConfig) {
+    protected async playSound(animation: AnimationConfig, force = false) {
       try {
+        if (!animation.enableSound && !force) return;
         if (!(animation.sound && animation.volume)) return;
         if (!game.audio) return;
 
