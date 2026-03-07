@@ -113,8 +113,9 @@ export function AnimatedPlaceableMixin<t extends PlaceableConstructor>(base: t):
       }
     }
 
-    protected async playSound(animation: AnimationConfig) {
+    protected async playSound(animation: AnimationConfig, force = false) {
       try {
+        if (!animation.enableSound && !force) return;
         if (!(animation.sound && animation.volume)) return;
         if (!game.audio) return;
 
@@ -171,13 +172,14 @@ export function AnimatedPlaceableMixin<t extends PlaceableConstructor>(base: t):
     public getAnimation(name: string): AnimationConfig | undefined { return this.spriteAnimations.find(item => item.name === name); }
 
     /** Simple wrapper to handle executing animations */
-    protected async doPlayAnimations(animations: AnimationConfig[]): Promise<void> {
+    protected async doPlayAnimations(animations: AnimationConfig[], localOnly = false): Promise<void> {
       try {
         if (!animations.length) return console.warn("No animations to play");
         const mesh = this.getMesh();
         if (!mesh) throw new InvalidSpriteError(this);
 
-        void socketPlayAnimations(this.document.uuid, animations);
+        if (!localOnly)
+          void socketPlayAnimations(this.document.uuid, animations);
         await Promise.all([
           this.preloadTextures(animations),
           this.preloadSounds(animations)
@@ -245,12 +247,13 @@ export function AnimatedPlaceableMixin<t extends PlaceableConstructor>(base: t):
     }
 
     /** Simple wrapper to handle queueing animations */
-    protected async doQueueAnimations(animations: AnimationConfig[]): Promise<void> {
+    protected async doQueueAnimations(animations: AnimationConfig[], localOnly = false): Promise<void> {
       try {
         const mesh = this.getMesh();
         if (!mesh) throw new InvalidSpriteError(this);
 
-        void socketQueueAnimations(this.document.uuid, animations);
+        if (!localOnly)
+          void socketQueueAnimations(this.document.uuid, animations);
         await Promise.all([
           this.preloadTextures(animations),
           this.preloadSounds(animations)
@@ -313,6 +316,20 @@ export function AnimatedPlaceableMixin<t extends PlaceableConstructor>(base: t):
     }
 
     /**
+     * Plays a series of animations WITHOUT notifying remote clients
+     * @param {AnimationArgument} args - Array of names or {@link AnimationConfig}
+     */
+    public async playLocalAnimations(...args: AnimationArgument[]): Promise<void> {
+      try {
+        const animations = this.validateAnimationArguments(args);
+        await this.doPlayAnimations(animations, true);
+      } catch (err) {
+        console.error(err);
+        if (err instanceof Error) ui.notifications?.error(err.message, { console: false, localize: true });
+      }
+    }
+
+    /**
      * Plays a series of animations
      * @param {AnimationArgument} args - Array of names or {@link AnimationConfig}
      */
@@ -320,6 +337,20 @@ export function AnimatedPlaceableMixin<t extends PlaceableConstructor>(base: t):
       try {
         const animations = this.validateAnimationArguments(args);
         await this.doPlayAnimations(animations);
+      } catch (err) {
+        console.error(err);
+        if (err instanceof Error) ui.notifications?.error(err.message, { console: false, localize: true });
+      }
+    }
+
+    /**
+     * Plays a single animation
+     * @param {AnimationArgument} anim - Name or {@link AnimationConfig}
+     */
+    public async playLocalAnimation(anim: AnimationArgument): Promise<void> {
+      try {
+        const animation = this.validateAnimationArguments([anim]);
+        await this.doPlayAnimations(animation, true);
       } catch (err) {
         console.error(err);
         if (err instanceof Error) ui.notifications?.error(err.message, { console: false, localize: true });
@@ -341,6 +372,20 @@ export function AnimatedPlaceableMixin<t extends PlaceableConstructor>(base: t):
     }
 
     /**
+     * Queues up an animation to play after any current ones playing WITHOUT notifying remote clients
+     * @param {AnimationArgument} anim - Name or {@link AnimationConfig}
+     */
+    public async queueLocalAnimation(anim: AnimationArgument): Promise<void> {
+      try {
+        const animations = this.validateAnimationArguments([anim]);
+        await this.doQueueAnimations(animations, true);
+      } catch (err) {
+        console.error(err);
+        if (err instanceof Error) ui.notifications?.error(err.message, { console: false, localize: true });
+      }
+    }
+
+    /**
      * Queues up an animation to play after any current ones playing
      * @param {AnimationArgument} anim - Name or {@link AnimationConfig}
      */
@@ -348,6 +393,20 @@ export function AnimatedPlaceableMixin<t extends PlaceableConstructor>(base: t):
       try {
         const animations = this.validateAnimationArguments([anim]);
         await this.doQueueAnimations(animations);
+      } catch (err) {
+        console.error(err);
+        if (err instanceof Error) ui.notifications?.error(err.message, { console: false, localize: true });
+      }
+    }
+
+    /**
+     * Queues up a set of animations to play after any current ones WITHOUT notifying remote clients
+     * @param {AnimationArgument} args - List of string or {@link AnimationConfig}
+     */
+    public async queueLocalAnimations(...args: AnimationArgument[]): Promise<void> {
+      try {
+        const animations = this.validateAnimationArguments(args);
+        await this.doQueueAnimations(animations, true);
       } catch (err) {
         console.error(err);
         if (err instanceof Error) ui.notifications?.error(err.message, { console: false, localize: true });

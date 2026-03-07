@@ -222,6 +222,8 @@ export function ConfigMixin<Document extends foundry.abstract.Document.Any, Cont
         this.setElementValue(`[name="flags.sprite-animations.meshAdjustments.anchor.y"]`, newDimensions.anchor.y.toString());
 
         this.form?.dispatchEvent(new Event("change", { bubbles: true }));
+
+        texture.destroy();
       } catch (err) {
         console.error(err);
         if (err instanceof Error) ui.notifications?.error(err.message, { console: false, localize: true });
@@ -408,14 +410,14 @@ export function ConfigMixin<Document extends foundry.abstract.Document.Any, Cont
 
     // #region Drag adjustments
 
-    protected dragAdjustments = {
+    protected animationDragAdjustments = {
       x: "",
       y: "",
       width: "",
       height: ""
     }
 
-    protected applyDragAdjustment(selector: string, amount: number) {
+    protected applyAnimationDragAdjustment(selector: string, amount: number) {
       const elem = this.element.querySelector(selector);
       if (elem instanceof HTMLInputElement) {
         elem.value = Math.floor(parseFloat(elem.value) + amount).toString();
@@ -423,29 +425,29 @@ export function ConfigMixin<Document extends foundry.abstract.Document.Any, Cont
       }
     }
 
-    protected _dragAdjustMouseUp = (() => {
-      this.dragAdjustments.x = this.dragAdjustments.y = this.dragAdjustments.width = this.dragAdjustments.height = "";
+    protected _animationDragAdjustMouseUp = (() => {
+      this.animationDragAdjustments.x = this.animationDragAdjustments.y = this.animationDragAdjustments.width = this.animationDragAdjustments.height = "";
     }).bind(this); // pre-bind it so we can attach/detach the listener more readily
 
-    protected _dragAdjustMouseMove = ((e: MouseEvent) => {
-      if (this.dragAdjustments.x) this.applyDragAdjustment(this.dragAdjustments.x, e.movementX);
-      if (this.dragAdjustments.y) this.applyDragAdjustment(this.dragAdjustments.y, e.movementY);
+    protected _animationDragAdjustMouseMove = ((e: MouseEvent) => {
+      if (this.animationDragAdjustments.x) this.applyAnimationDragAdjustment(this.animationDragAdjustments.x, e.movementX);
+      if (this.animationDragAdjustments.y) this.applyAnimationDragAdjustment(this.animationDragAdjustments.y, e.movementY);
 
-      if (this.dragAdjustments.width || this.dragAdjustments.height) {
+      if (this.animationDragAdjustments.width || this.animationDragAdjustments.height) {
         const mesh = this.getMesh();
         if (this.lockAdjustmentDimensions && mesh) {
           if (Math.abs(e.movementX) > Math.abs(e.movementY)) {
             const ratio = mesh.height / mesh.width;
-            this.applyDragAdjustment(this.dragAdjustments.width, e.movementX);
-            this.applyDragAdjustment(this.dragAdjustments.height, e.movementX * ratio);
+            this.applyAnimationDragAdjustment(this.animationDragAdjustments.width, e.movementX);
+            this.applyAnimationDragAdjustment(this.animationDragAdjustments.height, e.movementX * ratio);
           } else {
             const ratio = mesh.width / mesh.height;
-            this.applyDragAdjustment(this.dragAdjustments.width, e.movementY * ratio);
-            this.applyDragAdjustment(this.dragAdjustments.height, e.movementY);
+            this.applyAnimationDragAdjustment(this.animationDragAdjustments.width, e.movementY * ratio);
+            this.applyAnimationDragAdjustment(this.animationDragAdjustments.height, e.movementY);
           }
         } else {
-          if (this.dragAdjustments.width) this.applyDragAdjustment(this.dragAdjustments.width, e.movementX);
-          if (this.dragAdjustments.height) this.applyDragAdjustment(this.dragAdjustments.height, e.movementY);
+          if (this.animationDragAdjustments.width) this.applyAnimationDragAdjustment(this.animationDragAdjustments.width, e.movementX);
+          if (this.animationDragAdjustments.height) this.applyAnimationDragAdjustment(this.animationDragAdjustments.height, e.movementY);
         }
       }
     }).bind(this); // pre-bind it so we can attach/detach the listener more readily
@@ -552,8 +554,8 @@ export function ConfigMixin<Document extends foundry.abstract.Document.Any, Cont
     // #endregion
 
     _onClose(options: DeepPartial<Options>) {
-      window.removeEventListener("mousemove", this._dragAdjustMouseMove);
-      window.removeEventListener("mouseup", this._dragAdjustMouseUp);
+      window.removeEventListener("mousemove", this._animationDragAdjustMouseMove);
+      window.removeEventListener("mouseup", this._animationDragAdjustMouseUp);
       super._onClose(options);
 
       setTimeout(() => { this.animationFlagCache = undefined; }, 500);
@@ -582,8 +584,8 @@ export function ConfigMixin<Document extends foundry.abstract.Document.Any, Cont
     protected async _onFirstRender(context: DeepPartial<Context>, options: DeepPartial<Options>) {
       await super._onFirstRender(context, options);
 
-      window.addEventListener("mousemove", this._dragAdjustMouseMove);
-      window.addEventListener("mouseup", this._dragAdjustMouseUp);
+      window.addEventListener("mousemove", this._animationDragAdjustMouseMove);
+      window.addEventListener("mouseup", this._animationDragAdjustMouseUp);
     }
 
     protected async _onRender(context: DeepPartial<Context>, options: DeepPartial<Options>) {
@@ -594,18 +596,18 @@ export function ConfigMixin<Document extends foundry.abstract.Document.Any, Cont
       const dragPos = this.element.querySelector(`[data-role="drag-pos"]`);
       if (dragPos instanceof HTMLElement) {
         dragPos.addEventListener("mousedown", () => {
-          this.dragAdjustments.x = `[name="flags.sprite-animations.meshAdjustments.x"]`;
-          this.dragAdjustments.y = `[name="flags.sprite-animations.meshAdjustments.y"]`;
-          this.dragAdjustments.width = this.dragAdjustments.height = "";
+          this.animationDragAdjustments.x = `[name="flags.sprite-animations.meshAdjustments.x"]`;
+          this.animationDragAdjustments.y = `[name="flags.sprite-animations.meshAdjustments.y"]`;
+          this.animationDragAdjustments.width = this.animationDragAdjustments.height = "";
         })
       }
 
       const dragSize = this.element.querySelector(`[data-role="drag-size"]`);
       if (dragSize instanceof HTMLElement) {
         dragSize.addEventListener("mousedown", () => {
-          this.dragAdjustments.width = `[name="flags.sprite-animations.meshAdjustments.width"]`;
-          this.dragAdjustments.height = `[name="flags.sprite-animations.meshAdjustments.height"]`;
-          this.dragAdjustments.x = this.dragAdjustments.y = "";
+          this.animationDragAdjustments.width = `[name="flags.sprite-animations.meshAdjustments.width"]`;
+          this.animationDragAdjustments.height = `[name="flags.sprite-animations.meshAdjustments.height"]`;
+          this.animationDragAdjustments.x = this.animationDragAdjustments.y = "";
         })
       }
 
@@ -688,9 +690,8 @@ export function ConfigMixin<Document extends foundry.abstract.Document.Any, Cont
         if (!anim.id) anim.id = foundry.utils.randomID();
 
       const animationFlags = foundry.utils.deepClone(this.animationFlagCache);
-      // eslint-disable-next-line @typescript-eslint/no-unsafe-member-access
-      animationFlags.animations.forEach(anim => { (anim as any).tooltip = generatePreviewTooltip(anim).outerHTML });
-      console.log("Preparing tabs:", foundry.utils.deepClone(this.tabGroups));
+      // // eslint-disable-next-line @typescript-eslint/no-unsafe-member-access
+      // animationFlags.animations.forEach(anim => { (anim as any).tooltip = generatePreviewTooltip(anim).outerHTML });
       context.animations = {
         idPrefix: foundry.utils.randomID(),
         ...animationFlags,

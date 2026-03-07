@@ -72,13 +72,13 @@ export function queueAnimations(spriteId: string, animations: (AnimationConfig |
 async function doQueueAnimations(uuid: string, animations: AnimationArgument[]) {
   const sprite = coerceSprite(uuid);
   if (!sprite) throw new InvalidSpriteError(uuid)
-    
-  await sprite.queueAnimations(...animations);
+
+  await sprite.queueLocalAnimations(...animations);
 }
 
 async function doPlayAnimations(uuid: string, animations: AnimationArgument[]) {
   const sprite = coerceSprite(uuid);
   if (!sprite) throw new InvalidSpriteError(uuid);
 
-  await sprite.playAnimations(...animations);
+  await sprite.playLocalAnimations(...animations);
 }

@@ -72,4 +72,9 @@ export interface AnimatedPlaceable {
   playAnimation(animation: AnimationArgument): Promise<void>;
   queueAnimation(animation: AnimationArgument): Promise<void>;
   queueAnimations(...animations: AnimationArgument[]): Promise<void>;
+
+  playLocalAnimations(...animations: AnimationArgument[]): Promise<void>;
+  playLocalAnimation(animation: AnimationArgument): Promise<void>;
+  queueLocalAnimations(...animations: AnimationArgument[]): Promise<void>;
+  queueLocalAnimation(animation: AnimationArgument): Promise<void>;
 };
