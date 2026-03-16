@@ -105,3 +105,13 @@ try {
 # Known Issues
 
 - Currently does not support the [Pixel Perfect](https://foundryvtt.com/packages/pixel-perfect) module.  Using both side-by-side will prevent the token's texture from updating when Sprite Animations does its thing.
+
+# Support
+Do please consider throwing me a few bucks over on [Ko-Fi](https://ko-fi.com/unarekin) or [Patreon](https://www.patreon.com/BattleTransitions) if you like what you see and are feeling generous.  Every little bit helps.
+
+# Socials
+- [Linktree](https://linktr.ee/EricasCodebin)
+- [Discord](https://discord.gg/RaFYSW9Vcp)
+
+# 100% Human-made
+This module contains exactly 0% AI-generated content, whether that be code generation, code *completion*, documentation, art assets, etc.  None, never.  I don't need a torment nexus to write bad code, I can do that well enough on my own.
