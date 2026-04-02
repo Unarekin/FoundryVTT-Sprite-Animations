@@ -25,11 +25,11 @@ const TEMPLATE_PATH = path.join(SRC_PATH, "templates");
 // Import module.json for some config options
 // import moduleConfig from "./module.json" with { type: "json" };
 const moduleConfig = JSON.parse(
-  (await fs.readFile("./module.json")).toString()
+  (await fs.readFile("./module.json")).toString(),
 );
 
 const packageConfig = JSON.parse(
-  (await fs.readFile("./package.json")).toString()
+  (await fs.readFile("./package.json")).toString(),
 );
 
 // Constants to be inserted into process.env during build
@@ -57,7 +57,7 @@ if (!process.argv.slice(2).includes("--no-lint")) {
   let formatter = await linter.loadFormatter("html");
   await fs.writeFile("./lint-report.html", formatter.format(lintResults));
 
-  const hasErrors = lintResults.findIndex((result) => result.errorCount) !== -1;
+  const hasErrors = lintResults.findIndex(result => result.errorCount) !== -1;
   if (hasErrors) {
     if (spinner) spinner.error("Linting errors found!");
     formatter = await linter.loadFormatter("stylish");
@@ -66,11 +66,11 @@ if (!process.argv.slice(2).includes("--no-lint")) {
   } else {
     if (spinner)
       spinner.success(
-        `Linting passed in ${((Date.now() - start) / 1000).toFixed(2)}s`
+        `Linting passed in ${((Date.now() - start) / 1000).toFixed(2)}s`,
       );
     else
       console.log(
-        `Linting passed in ${((Date.now() - start) / 1000).toFixed(2)}s`
+        `Linting passed in ${((Date.now() - start) / 1000).toFixed(2)}s`,
       );
   }
 }
@@ -88,7 +88,7 @@ const jsonMergers = (
       jsonMerge({
         entryPoints: [path.join(LANG_PATH, curr.name, "*.json")],
         outfile: path.join("languages", `${curr.name}.json`),
-        merge: (items) => deepmerge(...items),
+        merge: items => deepmerge(...items),
       }),
     ];
   else return prev;
@@ -115,7 +115,7 @@ for (const file of STATIC_FILES) {
         dereference: true,
         errorOnExists: false,
         preserveTimestamps: true,
-      })
+      }),
     );
   } catch (err) {
     if (err.code !== "ENOENT") throw err;
@@ -128,7 +128,8 @@ const buildResults = await build({
     path.join(STYLE_PATH, "module.scss"),
   ],
   outdir: OUT_PATH,
-  sourcemap: __DEV__,
+  // sourcemap: __DEV__,
+  sourcemap: true,
   bundle: true,
   platform: "browser",
   minify: !__DEV__,
@@ -171,11 +172,11 @@ if (buildResults.errors.length) {
 } else {
   if (spinner)
     spinner.success(
-      `Build completed in ${((Date.now() - buildStart) / 1000).toFixed(2)}s`
+      `Build completed in ${((Date.now() - buildStart) / 1000).toFixed(2)}s`,
     );
   else
     console.log(
-      `Build completed in ${((Date.now() - buildStart) / 1000).toFixed(2)}s`
+      `Build completed in ${((Date.now() - buildStart) / 1000).toFixed(2)}s`,
     );
   // if (buildResults.warnings.length) console.warn(buildResults.warnings);
 }
@@ -193,7 +194,7 @@ if (!__DEV__ || (__DEV__ && !process.argv.slice(2).includes("--no-types"))) {
     const configFile = ts.findConfigFile(
       currentDir,
       ts.sys.fileExists,
-      "tsconfig.json"
+      "tsconfig.json",
     );
     if (!configFile) throw new Error("tsconfig.json not found");
     const { config } = ts.readConfigFile(configFile, ts.sys.readFile);
@@ -206,7 +207,7 @@ if (!__DEV__ || (__DEV__ && !process.argv.slice(2).includes("--no-types"))) {
     const { options, fileNames, errors } = ts.parseJsonConfigFileContent(
       config,
       ts.sys,
-      currentDir
+      currentDir,
     );
     const program = ts.createProgram({
       options,
@@ -223,14 +224,14 @@ if (!__DEV__ || (__DEV__ && !process.argv.slice(2).includes("--no-types"))) {
         `Type declarations emitted in ${(
           (Date.now() - buildStart) /
           1000
-        ).toFixed(2)}s`
+        ).toFixed(2)}s`,
       );
     else
       console.log(
         `Type declarations emitted in ${(
           (Date.now() - buildStart) /
           1000
-        ).toFixed(2)}s`
+        ).toFixed(2)}s`,
       );
   } catch (err) {
     if (spinner) spinner.error("Type declaration generation failed!");
@@ -253,16 +254,16 @@ try {
     await compilePack(
       path.join(SRC_PATH, `packs`, pack),
       path.join(OUT_PATH, "packs", pack),
-      { yaml: false }
+      { yaml: false },
     );
   }
   if (spinner)
     spinner.success(
-      `Compendia packed in ${((Date.now() - packStart) / 1000).toFixed(2)}s`
+      `Compendia packed in ${((Date.now() - packStart) / 1000).toFixed(2)}s`,
     );
   else
     console.log(
-      `Compendia packed in ${((Date.now() - packStart) / 1000).toFixed(2)}s`
+      `Compendia packed in ${((Date.now() - packStart) / 1000).toFixed(2)}s`,
     );
 } catch (err) {
   if (spinner) spinner.error("Build failed!");
