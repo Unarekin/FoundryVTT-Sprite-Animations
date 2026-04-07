@@ -1,4 +1,4 @@
-import { AnimatedPlaceable, AnimationConfig } from "interfaces";
+import { AnimationConfig } from "interfaces";
 import { AnimationArgument } from "types";
 type AnimatableArgument = Actor | foundry.canvas.placeables.Tile | foundry.canvas.placeables.Token | TileDocument | TokenDocument;
 export declare class SpriteAnimator {
@@ -20,17 +20,17 @@ export declare class SpriteAnimator {
     static getAnimations(arg: AnimatableArgument): AnimationConfig[] | undefined;
     /**
      * Queues an animation to play after the current one finishes, if any
-     * @param {AnimatedPlaceable} target - {@link AnimatedPlaceable}
+     * @param {AnimatableArgument} target - {@link AnimatableArgument}
      * @param {AnimationArgument} anim - {@link AnimationArgument}
      * @returns
      */
-    static queueAnimation(target: AnimatedPlaceable, anim: AnimationArgument): Promise<void>;
+    static queueAnimation(target: AnimatableArgument, anim: AnimationArgument): Promise<void>;
     /**
      * Queues multiple animations to play after the current one finishes
-     * @param {AnimatedPlaceable} target - {@link AnimatedPlaceable}
+     * @param {AnimatableArgument} target - {@link AnimatableArgument}
      * @param {AnimationArgument} anims - {@link AnimationArgument}[]
      */
-    static queueAnimations(target: AnimatedPlaceable, ...anims: AnimationArgument[]): Promise<void>;
+    static queueAnimations(target: AnimatableArgument, ...anims: AnimationArgument[]): Promise<void>;
     /**
      * Plays an animation immediately
      * @param {AnimatedPlaceable} target - {@link AnimatedPlaceable}
@@ -73,6 +73,11 @@ export declare class SpriteAnimator {
      * @returns
      */
     queueAnimations(...animations: AnimationArgument[]): Promise<void>;
+    /**
+     * Plays ana nimation after the current one finishes
+     * @param {AnimationArgument} animation - {@link AnimationArgument}
+     */
+    queueAnimation(animation: AnimationArgument): Promise<void>;
     constructor(arg: unknown);
 }
 export {};
