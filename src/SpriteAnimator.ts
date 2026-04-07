@@ -1,7 +1,7 @@
 import { InvalidSpriteError, PermissionDeniedError } from "./errors";
 import { coerceAnimatable, coerceSprite } from "coercion";
-import { AnimatedPlaceable, AnimationConfig } from "interfaces";
-import { getAnimations } from "settings";
+import { AnimationConfig } from "interfaces";
+import { getAnimation, getAnimations } from "settings";
 import { AnimationArgument } from "types";
 
 
@@ -24,7 +24,7 @@ export class SpriteAnimator {
     try {
       const animatable = coerceAnimatable(arg);
       if (!animatable) throw new InvalidSpriteError(arg);
-      return this.getAnimation(animatable, name);
+      return getAnimation(animatable, name)
     } catch (err) {
       console.error(err);
       if (err instanceof Error) ui.notifications?.error(err.message, { console: false, localize: true });
@@ -49,11 +49,11 @@ export class SpriteAnimator {
 
   /**
    * Queues an animation to play after the current one finishes, if any
-   * @param {AnimatedPlaceable} target - {@link AnimatedPlaceable}
+   * @param {AnimatableArgument} target - {@link AnimatableArgument}
    * @param {AnimationArgument} anim - {@link AnimationArgument}
    * @returns 
    */
-  public static async queueAnimation(target: AnimatedPlaceable, anim: AnimationArgument): Promise<void> {
+  public static async queueAnimation(target: AnimatableArgument, anim: AnimationArgument): Promise<void> {
     try {
       if (!game.user) throw new PermissionDeniedError();
       const sprite = coerceSprite(target);
@@ -67,10 +67,10 @@ export class SpriteAnimator {
 
   /**
    * Queues multiple animations to play after the current one finishes
-   * @param {AnimatedPlaceable} target - {@link AnimatedPlaceable}
+   * @param {AnimatableArgument} target - {@link AnimatableArgument}
    * @param {AnimationArgument} anims - {@link AnimationArgument}[]
    */
-  public static async queueAnimations(target: AnimatedPlaceable, ...anims: AnimationArgument[]): Promise<void> {
+  public static async queueAnimations(target: AnimatableArgument, ...anims: AnimationArgument[]): Promise<void> {
     try {
       if (!game.user) throw new PermissionDeniedError();
       const sprite = coerceSprite(target);
@@ -172,8 +172,18 @@ export class SpriteAnimator {
    * @returns 
    */
   public async queueAnimations(...animations: AnimationArgument[]): Promise<void> {
-    if (this.object) return SpriteAnimator.playAnimations(this.object, ...animations);
-    else if (this.document?.object) return SpriteAnimator.playAnimations(this.document.object, ...animations);
+    if (this.object) return SpriteAnimator.queueAnimations(this.object, ...animations);
+    else if (this.document?.object) return SpriteAnimator.queueAnimations(this.document.object, ...animations);
+    throw new InvalidSpriteError(this.object ?? this.document);
+  }
+
+  /**
+   * Plays ana nimation after the current one finishes
+   * @param {AnimationArgument} animation - {@link AnimationArgument}
+   */
+  public async queueAnimation(animation: AnimationArgument): Promise<void> {
+    if (this.object) return SpriteAnimator.queueAnimation(this.object, animation);
+    else if (this.document?.object) return SpriteAnimator.queueAnimation(this.document.object, animation);
     throw new InvalidSpriteError(this.object ?? this.document);
   }
 
