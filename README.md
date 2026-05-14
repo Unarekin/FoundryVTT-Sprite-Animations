@@ -91,8 +91,8 @@ try {
   if (!(token instanceof TokenDocument)) throw new Error("Invalid token")
 
   await SpriteAnimator.playAnimations(token,
-    { name: "idle", src: "uploads/images/sprites/Randi - Attack.webm", loop: false },
-    { name: "attack", src: "uploads/images/sprites/Randi - Idle.webm", loop: true  }
+    { name: "idle", src: "uploads/images/sprites/Randi - Idle.webm", loop: false },
+    { name: "attack", src: "uploads/images/sprites/Randi - Attack.webm", loop: true  }
   );
 } catch (err) {
   ui.notifications.error(err.message);
