@@ -265,7 +265,7 @@ export function AnimatedPlaceableMixin<t extends PlaceableConstructor>(base: t):
             await animationEnd(mesh.texture.baseTexture.resource);
           }
         }
-        await this.doPlayAnimations(animations);
+        await this.doPlayAnimations(animations, localOnly);
       } catch (err) {
         console.error(err);
         if (err instanceof Error) ui.notifications?.error(err.message, { console: false, localize: true });

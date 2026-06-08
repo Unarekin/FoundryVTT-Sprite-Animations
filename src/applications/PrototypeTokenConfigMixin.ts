@@ -19,13 +19,11 @@ export function PrototypeTokenConfigMixin<t extends typeof foundry.applications.
       if ((this as any).actor)
         // eslint-disable-next-line @typescript-eslint/no-unsafe-member-access
         foundry.utils.mergeObject(flags, ((this as any).actor.flags?.[__MODULE_ID__] as DeepPartial<AnimationFlags>) ?? {})
-      console.log("Getting flags:", flags);
       return flags;
     }
     protected async setAnimationFlags(flags: AnimationFlags): Promise<void> {
       const actualFlags = foundry.utils.mergeObject(foundry.utils.deepClone(DEFAULT_ANIMATION_FLAGS), flags);
       // eslint-disable-next-line @typescript-eslint/no-unsafe-member-access
-      console.log("Setting:", (this as any).actor);
       // eslint-disable-next-line @typescript-eslint/no-unsafe-member-access
       if ((this as any).actor) {
         // eslint-disable-next-line @typescript-eslint/no-unsafe-member-access, @typescript-eslint/no-unsafe-call
@@ -59,7 +57,6 @@ export function PrototypeTokenConfigMixin<t extends typeof foundry.applications.
       const formData = foundry.utils.expandObject(new FormDataExtended(e.target).object);
       const flags = foundry.utils.mergeObject(foundry.utils.deepClone(DEFAULT_ANIMATION_FLAGS), foundry.utils.getProperty(formData, `flags.${__MODULE_ID__}`) as object) as AnimationFlags | undefined;
 
-      console.log("Flags:", flags, this.animationFlagCache);
       if (flags) {
         await this.setAnimationFlags({
           ...flags,

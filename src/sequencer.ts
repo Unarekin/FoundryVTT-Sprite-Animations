@@ -19,6 +19,7 @@ export function getSectionManager(): Class {
       private _animations: (string | AnimationConfig)[] = [];
       private _immediate = false;
       private _loop: boolean | undefined = undefined;
+      private _local = false;
 
       private _remote = false;
 
@@ -59,6 +60,14 @@ export function getSectionManager(): Class {
       }
 
       /**
+       * If true, will only play the animation for the current client
+       */
+      local(local = true): this {
+        this._local = local;
+        return this;
+      }
+
+      /**
        * Interrupt any currently playing animations
        * @param {boolean} immediate 
        */
@@ -86,25 +95,21 @@ export function getSectionManager(): Class {
         // eslint-disable-next-line @typescript-eslint/no-unsafe-function-type
         let playFunc: Function | undefined = undefined;
 
-
-        if (this._immediate) playFunc = this._target.playAnimations.bind(this._target);
-        else playFunc = this._target.queueAnimations.bind(this._target);
-
-        // if (this._remote && this._immediate) playFunc = this._target.playAnimations.bind(this._target);
-        // else if (this._remote && !this._immediate) playFunc = this._target.queueAnimations.bind(this._target);
-        // else if (!this._remote && this._immediate) playFunc = this._target.playAnimations.bind()
-
-        // if (this._remote && this._immediate) playFunc = playAnimations.bind(undefined, this._target.mesh, animations);
-        // else if (this._remote && !this._immediate) playFunc = queueAnimations.bind(undefined, this._target.mesh, animations);
-        // else if (!this._remote && this._immediate) playFunc = SpriteAnimator.playAnimations.bind(undefined, this._target, ...animations);
-        // else if (!this._remote && !this._immediate) playFunc = SpriteAnimator.queueAnimations.bind(undefined, this._target, ...animations);
+        if (this._immediate)
+          // eslint-disable-next-line @typescript-eslint/unbound-method
+          playFunc = this._target.doPlayAnimations;
+        else
+          // eslint-disable-next-line @typescript-eslint/unbound-method
+          playFunc = this._target.doQueueAnimations;
 
         if (!playFunc) return;
 
-        // eslint-disable-next-line @typescript-eslint/no-unsafe-member-access, @typescript-eslint/no-unsafe-call
-        if ((this as any)._waitUntilFinished) await playFunc(...animations);
-        // eslint-disable-next-line @typescript-eslint/no-unsafe-call
-        else void playFunc(...animations);
+
+        const local = this._local;
+        console.log("Calling:", this._target, animations, local);
+        // eslint-disable-next-line @typescript-eslint/no-unsafe-member-access
+        if ((this as any)._waitUntilFinished) await playFunc.call(this._target, animations, local);
+        else void playFunc.call(this._target, animations, local);
 
         // eslint-disable-next-line @typescript-eslint/no-unsafe-argument, @typescript-eslint/no-unsafe-member-access
         await new Promise(resolve => { setTimeout(resolve, (this as any)._currentWaitTime) });
@@ -121,6 +126,7 @@ export function getSectionManager(): Class {
             target: this._target?.getDocument()?.uuid,
             animations: this._animations,
             loop: this._loop,
+            local: this._local,
             immediate: this._immediate
           }
         }
@@ -136,6 +142,7 @@ export function getSectionManager(): Class {
         if (typeof sectionData.target === "string") this.setTarget(sectionData.target);
         if (typeof sectionData.loop === "boolean") this._loop = sectionData.loop;
         if (typeof sectionData.immediate === "boolean") this._immediate = sectionData.immediate;
+        if (typeof sectionData.local === "boolean") this._local = sectionData.local;
 
         if (Array.isArray(sectionData.animations))
           // eslint-disable-next-line @typescript-eslint/no-unsafe-argument
