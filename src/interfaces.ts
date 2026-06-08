@@ -142,4 +142,6 @@ export interface DND5EUseActivity {
   item: foundry.documents.Item;
   actor: foundry.documents.Actor;
   getUsageToken(): foundry.documents.TokenDocument | undefined;
-}
+  doPlayAnimations(animations: AnimationConfig[], localOnly: boolean): Promise<void>;
+  doQueueAnimations(animations: AnimationConfig[], localOnly: boolean): Promise<void>;
+};
