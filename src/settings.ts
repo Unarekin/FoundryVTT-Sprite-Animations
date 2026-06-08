@@ -8,7 +8,24 @@ export const SETTINGS = Object.freeze({
   animateOtherTokens: "animateOtherTokens",
   collapseHeaderButton: "collapseHeaderButton",
   hudButtonPosition: "hudButtonPosition"
-})
+});
+
+
+function getClientSetting<t>(setting: string, defaultValue: t): t {
+  if (!game.settings) return defaultValue;
+
+  // eslint-disable-next-line @typescript-eslint/no-unsafe-member-access
+  const val = (game.settings.storage?.get('client') as any)?.[`${__MODULE_ID__}.${setting}`] as string | undefined;
+  if (val === undefined) return defaultValue;
+  try {
+    if (typeof val === "string") return JSON.parse(val) as t;
+    return defaultValue;
+  } catch {
+    console.warn(`Unable to parse client setting!  Setting:`, setting, 'Value:', val);
+    return defaultValue;
+  }
+}
+
 
 Hooks.on("ready", () => {
   if (game.settings) {
@@ -24,10 +41,10 @@ Hooks.on("ready", () => {
     game.settings.register(__MODULE_ID__, "collapseHeaderButton", {
       name: "SPRITE-ANIMATIONS.SETTINGS.COLLAPSEHEADERBUTTON.LABEL",
       hint: "SPRITE-ANIMATIONS.SETTINGS.COLLAPSEHEADERBUTTON.HINT",
-      scope: "client",
+      scope: "user",
       config: true,
       type: Boolean,
-      default: false
+      default: getClientSetting(SETTINGS.collapseHeaderButton, false)
     });
 
     game.settings.register(__MODULE_ID__, SETTINGS.hudButtonPosition, {
