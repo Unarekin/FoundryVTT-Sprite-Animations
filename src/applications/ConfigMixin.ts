@@ -26,9 +26,9 @@ export function ConfigMixin<Document extends foundry.abstract.Document.Any, Cont
         // eslint-disable-next-line @typescript-eslint/unbound-method
         removeAnimation: AnimatedConfig.RemoveAnimation,
         // eslint-disable-next-line @typescript-eslint/unbound-method
-        lockAdjustmentDimensions: AnimatedConfig.LockAdjustmentDimensions,
+        lockAnimationAdjustmentDimensions: AnimatedConfig.LockAnimationAdjustmentDimensions,
         // eslint-disable-next-line @typescript-eslint/unbound-method
-        autoFit: AnimatedConfig.AutoFit
+        autoFitAnimation: AnimatedConfig.AutoFitAnimation
       }
     }
 
@@ -199,7 +199,7 @@ export function ConfigMixin<Document extends foundry.abstract.Document.Any, Cont
       return fittedDimensions;
     }
 
-    static AutoFit(this: AnimatedConfig) {
+    static AutoFitAnimation(this: AnimatedConfig) {
       const start = performance.now();
       try {
 
@@ -237,14 +237,13 @@ export function ConfigMixin<Document extends foundry.abstract.Document.Any, Cont
       if (elem instanceof HTMLInputElement) elem.value = value;
     }
 
-    protected lockAdjustmentDimensions = true;
-    static LockAdjustmentDimensions(this: AnimatedConfig) {
+    protected lockAnimationAdjustmentDimensions = true;
+    static LockAnimationAdjustmentDimensions(this: AnimatedConfig) {
       try {
-        this.lockAdjustmentDimensions = !this.lockAdjustmentDimensions;
-        const button = this.element.querySelector(`[data-action="lockAdjustmentDimensions"] i`);
-        console.log(button);
+        this.lockAnimationAdjustmentDimensions = !this.lockAnimationAdjustmentDimensions;
+        const button = this.element.querySelector(`[data-action="lockAnimationAdjustmentDimensions"] i`);
         if (!(button instanceof HTMLElement)) return;
-        if (!this.lockAdjustmentDimensions) {
+        if (!this.lockAnimationAdjustmentDimensions) {
           button.classList.remove("fa-link");
           button.classList.add("fa-link-slash");
         } else {
@@ -297,19 +296,19 @@ export function ConfigMixin<Document extends foundry.abstract.Document.Any, Cont
 
     // #region Import/Export Functions
 
-    protected async finishImport(data: AnimationFlags) {
+    protected async finishAnimationImport(data: AnimationFlags) {
       this.animationFlagCache = foundry.utils.deepClone(data);
       await this.render();
     }
 
-    protected async importFromClipboard() {
+    protected async importAnimationsFromClipboard() {
       try {
         if ((await navigator.permissions.query({ name: "clipboard-read" })).state === "granted") {
           const text = await navigator.clipboard.readText();
           if (text) {
             const data = JSON.parse(text) as AnimationFlags;
             ui.notifications?.info("SPRITE-ANIMATIONS.CONFIG.IMPORT.PASTED", { localize: true });
-            if (data) await this.finishImport(data);
+            if (data) await this.finishAnimationImport(data);
           }
         } else {
           const content = await foundry.applications.handlebars.renderTemplate(`modules/${__MODULE_ID__}/templates/PasteJSON.hbs`, {});
@@ -323,7 +322,7 @@ export function ConfigMixin<Document extends foundry.abstract.Document.Any, Cont
           if (typeof json === "string") {
             try {
               const data = JSON.parse(json) as AnimationFlags;
-              if (data) await this.finishImport(data)
+              if (data) await this.finishAnimationImport(data)
             } catch (err) {
               console.error(err);
               throw new LocalizedError("INVALIDJSON");
@@ -337,19 +336,19 @@ export function ConfigMixin<Document extends foundry.abstract.Document.Any, Cont
       }
     }
 
-    async uploadFile() {
+    async uploadAnimationsFile() {
       try {
         const data = await uploadJSON<AnimationFlags>();
         if (!data) return;
 
-        await this.finishImport(data);
+        await this.finishAnimationImport(data);
 
       } catch (err) {
         console.error(err);
         if (err instanceof Error) ui.notifications?.error(err.message, { console: false, localize: true });
       }
     }
-    async bulkImport() {
+    async bulkImportAnimations() {
       try {
         if (this.animationFlagCache?.animations?.length) {
           const confirmed = (await foundry.applications.api.DialogV2.confirm({
@@ -383,7 +382,7 @@ export function ConfigMixin<Document extends foundry.abstract.Document.Any, Cont
       }
     }
 
-    protected async exportToClipboard() {
+    protected async exportAnimationToClipboard() {
       try {
         if ((await navigator.permissions.query({ name: "clipboard-write" })).state === "granted") {
           await navigator.clipboard.writeText(JSON.stringify(this.animationFlagCache));
@@ -435,7 +434,7 @@ export function ConfigMixin<Document extends foundry.abstract.Document.Any, Cont
 
       if (this.animationDragAdjustments.width || this.animationDragAdjustments.height) {
         const mesh = this.getMesh();
-        if (this.lockAdjustmentDimensions && mesh) {
+        if (this.lockAnimationAdjustmentDimensions && mesh) {
           if (Math.abs(e.movementX) > Math.abs(e.movementY)) {
             const ratio = mesh.height / mesh.width;
             this.applyAnimationDragAdjustment(this.animationDragAdjustments.width, e.movementX);
@@ -619,17 +618,17 @@ export function ConfigMixin<Document extends foundry.abstract.Document.Any, Cont
           {
             name: "SPRITE-ANIMATIONS.CONFIG.IMPORT.BULK",
             icon: `<i class="fa-solid fa-folder-tree"></i>`,
-            callback: () => { void this.bulkImport(); }
+            callback: () => { void this.bulkImportAnimations(); }
           },
           {
             name: "SPRITE-ANIMATIONS.CONFIG.IMPORT.CLIPBOARD",
             icon: `<i class="fa-solid fa-paste"></i>`,
-            callback: () => { void this.importFromClipboard(); }
+            callback: () => { void this.importAnimationsFromClipboard(); }
           },
           {
             name: "SPRITE-ANIMATIONS.CONFIG.IMPORT.UPLOAD",
             icon: `<i class="fa-solid fa-upload"></i>`,
-            callback: () => { void this.uploadFile(); }
+            callback: () => { void this.uploadAnimationsFile(); }
           }
         ],
         {
@@ -646,7 +645,7 @@ export function ConfigMixin<Document extends foundry.abstract.Document.Any, Cont
           {
             name: "SPRITE-ANIMATIONS.CONFIG.EXPORT.CLIPBOARD",
             icon: `<i class="fa-solid fa-copy"></i>`,
-            callback: () => { void this.exportToClipboard(); }
+            callback: () => { void this.exportAnimationToClipboard(); }
           },
           {
             name: "SPRITE-ANIMATIONS.CONFIG.EXPORT.DOWNLOAD",
