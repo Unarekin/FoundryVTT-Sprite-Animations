@@ -2,27 +2,47 @@ import { AnimationConfig, MeshAdjustmentConfig } from "./interfaces";
 import { Animatable } from "./interfaces";
 import { DEFAULT_MESH_ADJUSTMENT } from "./constants";
 import { coerceAnimatable } from "coercion";
+import { HUDButtonPositions } from "types";
+
+export const SETTINGS = Object.freeze({
+  animateOtherTokens: "animateOtherTokens",
+  collapseHeaderButton: "collapseHeaderButton",
+  hudButtonPosition: "hudButtonPosition"
+})
 
 Hooks.on("ready", () => {
-  // eslint-disable-next-line @typescript-eslint/no-unsafe-call, @typescript-eslint/no-unsafe-member-access
-  (game.settings as any)?.register(__MODULE_ID__, "animateOtherTokens", {
-    name: "SPRITE-ANIMATIONS.SETTINGS.ANIMATEOTHERS.LABEL",
-    hint: "SPRITE-ANIMATIONS.SETTINGS.ANIMATEOTHERS.HINT",
-    scope: "world",
-    config: true,
-    type: Boolean,
-    default: false
-  });
+  if (game.settings) {
+    game.settings.register(__MODULE_ID__, "animateOtherTokens", {
+      name: "SPRITE-ANIMATIONS.SETTINGS.ANIMATEOTHERS.LABEL",
+      hint: "SPRITE-ANIMATIONS.SETTINGS.ANIMATEOTHERS.HINT",
+      scope: "world",
+      config: true,
+      type: Boolean,
+      default: false
+    });
 
-  // eslint-disable-next-line @typescript-eslint/no-unsafe-call, @typescript-eslint/no-unsafe-member-access
-  (game.settings as any)?.register(__MODULE_ID__, "collapseHeaderButton", {
-    name: "SPRITE-ANIMATIONS.SETTINGS.COLLAPSEHEADERBUTTON.LABEL",
-    hint: "SPRITE-ANIMATIONS.SETTINGS.COLLAPSEHEADERBUTTON.HINT",
-    scope: "client",
-    config: true,
-    type: Boolean,
-    default: false
-  });
+    game.settings.register(__MODULE_ID__, "collapseHeaderButton", {
+      name: "SPRITE-ANIMATIONS.SETTINGS.COLLAPSEHEADERBUTTON.LABEL",
+      hint: "SPRITE-ANIMATIONS.SETTINGS.COLLAPSEHEADERBUTTON.HINT",
+      scope: "client",
+      config: true,
+      type: Boolean,
+      default: false
+    });
+
+    game.settings.register(__MODULE_ID__, SETTINGS.hudButtonPosition, {
+      name: "SPRITE-ANIMATIONS.SETTINGS.HUDBUTTONPOSITION.LABEL",
+      hint: "SPRITE-ANIMATIONS.SETTINGS.HUDBUTTONPOSITION.HINT",
+      scope: "user" as "client",
+      requiresReload: true,
+      config: true,
+      type: String,
+      default: "left",
+      choices: Object.fromEntries(
+        HUDButtonPositions.map(pos => [pos, `SPRITE-ANIMATIONS.SETTINGS.HUDBUTTONPOSITION.${pos.toUpperCase()}`])
+      )
+    })
+  }
 })
 
 export function canAnimatePlaceable(user: User, target: Token | TokenDocument | Tile | TileDocument | Actor): boolean {

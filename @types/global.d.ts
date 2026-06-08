@@ -1,11 +1,14 @@
-declare const __DEV__: boolean;
-declare const __MODULE_TITLE__: string;
-// declare const __MODULE_ID__: string;
-const __MODULE_ID__ = "sprite-animations";
-declare const __MODULE_VERSION__: string;
+import { HUDButtonPosition } from "types";
+import { AnimationFlags } from "interfaces"
 
-declare const libWrapper: any;
-declare const socketlib: any;
+declare global {
+  declare const __DEV__: boolean;
+  declare const __MODULE_TITLE__: string;
+  // declare const __MODULE_ID__: string;
+  const __MODULE_ID__ = "sprite-animations";
+  declare const __MODULE_VERSION__: string;
+}
+
 
 declare module '*.scss';
 
@@ -20,18 +23,19 @@ declare module '*.vert' {
 }
 
 declare module "fvtt-types/configuration" {
-  interface SettingsConfig {
-    __MODULE_ID__: {
-      animateOtherTokens: boolean;
-    }
+  interface SettingConfig {
+    "sprite-animations.animateOtherTokens": boolean;
+    "sprite-animations.collapseHeaderButton": boolean;
+    "sprite-animations.hudButtonPosition": HUDButtonPosition
   }
 
   interface FlagConfig {
     Actor: {
-      __MODULE_ID__: AnimationFlags;
+      [__MODULE_ID__]: AnimationFlags;
     },
     TileDocument: {
-      __MODULE_ID__: AnimationFlags;
+      [__MODULE_ID__]: AnimationFlags;
     }
   }
 }
+export { }

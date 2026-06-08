@@ -22,3 +22,6 @@ export type AnyArray = readonly unknown[];
 export type AnyFunction = (arg0: never, ...args: never[]) => unknown;
 
 export type AnimationArgument = string | AnimationConfig;
+
+export const HUDButtonPositions = ["none", "left", "right"] as const;
+export type HUDButtonPosition = typeof HUDButtonPositions[number];
