@@ -41,7 +41,7 @@ Hooks.on("ready", () => {
     game.settings.register(__MODULE_ID__, "collapseHeaderButton", {
       name: "SPRITE-ANIMATIONS.SETTINGS.COLLAPSEHEADERBUTTON.LABEL",
       hint: "SPRITE-ANIMATIONS.SETTINGS.COLLAPSEHEADERBUTTON.HINT",
-      scope: "user",
+      scope: "user" as "client",
       config: true,
       type: Boolean,
       default: getClientSetting(SETTINGS.collapseHeaderButton, false)
