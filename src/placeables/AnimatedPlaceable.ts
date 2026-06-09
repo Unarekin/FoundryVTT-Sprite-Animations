@@ -1,9 +1,9 @@
 import { DEFAULT_MESH_ADJUSTMENT } from "../constants";
-import { AnimationConfig, AnimationFlags, MeshAdjustmentConfig, AnimatedPlaceable as AnimatedPlaceableInterface } from "interfaces";
+import { AnimationConfig, AnimationFlags, MeshAdjustmentConfig, AnimatedPlaceable as AnimatedPlaceableInterface, AnimationSequence, AnimationSequenceTask } from "interfaces";
 import { AnimationArgument, DeepPartial } from "types";
-import { animationEnd, isVideo } from "utils";
+import { animationEnd, isVideo, wait } from "utils";
 import { InvalidAnimationError, InvalidSpriteError } from "errors";
-import { playAnimations as socketPlayAnimations, queueAnimations as socketQueueAnimations } from "../sockets";
+import { playAnimations as socketPlayAnimations, queueAnimations as socketQueueAnimations, playAnimationSequence as socketPlayAnimationSequence } from "../sockets";
 import { canAnimatePlaceable } from "settings";
 
 const lastVideoElement: { mesh: foundry.canvas.primary.PrimarySpriteMesh, elem: HTMLVideoElement }[] = [];
@@ -171,6 +171,134 @@ export function AnimatedPlaceableMixin<t extends PlaceableConstructor>(base: t):
     /** Attempts to retrieve a single {@link AnimationConfig} by name */
     public getAnimation(name: string): AnimationConfig | undefined { return this.spriteAnimations.find(item => item.name === name); }
 
+    protected async doPlayAnimationSequence(sequence: AnimationSequence, localOnly = false): Promise<void> {
+      try {
+        if (!sequence.sequence.length) return console.warn("No animations to play");
+        const mesh = this.getMesh();
+        if (!mesh) throw new InvalidSpriteError(this);
+
+        if (!localOnly)
+          void socketPlayAnimationSequence(this.document.uuid, sequence);
+
+        // Preload
+        const knownAnimations: AnimationConfig[] = sequence.sequence
+          .map(anim => typeof anim.animation === "string" ? this.spriteAnimations.find(item => item.name === anim.animation) : anim.animation)
+          .filter((item, i, arr) => {
+            if (!item) return false;
+            return arr.findIndex(elem => elem?.name === item.name) === i;
+          });
+
+
+        await Promise.all([
+          this.preloadTextures(knownAnimations),
+          this.preloadSounds(knownAnimations)
+        ]);
+
+
+        // Build task queue
+        const taskQueue: AnimationSequenceTask[] = [];
+
+        for (const item of sequence.sequence) {
+          if (item.loopCount > 1) {
+            for (let j = 0; j < item.loopCount; j++) {
+              if (item.delay)
+                taskQueue.push({ type: "wait", duration: item.delay });
+
+              const anim = this.validateAnimationArguments([item.animation]);
+              if (!anim.length) throw new InvalidAnimationError(item.animation);
+
+              taskQueue.push({
+                type: "animation",
+                animation: foundry.utils.deepClone(anim[0])
+              });
+            }
+          } else {
+            if (item.delay)
+              taskQueue.push({ type: "wait", duration: item.delay });
+
+            const anim = this.validateAnimationArguments([item.animation]);
+            if (!anim.length) throw new InvalidAnimationError(item.animation);
+
+            taskQueue.push({
+              type: "animation",
+              animation: foundry.utils.deepClone(anim[0])
+            });
+          }
+        }
+
+        if (sequence.resetAnimation) {
+          const anim = this.validateAnimationArguments([sequence.resetAnimation])[0];
+          if (!anim) throw new InvalidAnimationError(sequence.resetAnimation);
+          taskQueue.push({
+            type: "animation",
+            animation: anim
+          });
+        }
+
+        const lastIndex = lastVideoElement.findIndex(elem => elem.mesh === mesh);
+        if (lastIndex !== -1) {
+          const lastElem = lastVideoElement[lastIndex];
+          lastVideoElement.splice(lastIndex, 1);
+          lastElem.elem.remove();
+        }
+
+        const lastAnim = taskQueue.toReversed().find(item => item.type === "animation");
+        if (!lastAnim) throw new InvalidAnimationError(lastAnim);
+
+        // Execute queue
+        for (const item of taskQueue) {
+          switch (item.type) {
+            case "wait": {
+              await wait(item.duration);
+              break;
+            }
+            case "animation": {
+              let texture: PIXI.Texture | undefined = undefined;
+              const loop = !!(item.animation.loop && item.animation === lastAnim.animation);
+
+              if (isVideo(item.animation.src)) {
+                const vid = document.createElement("video");
+                vid.src = item.animation.src;
+                vid.crossOrigin = "anonymous";
+                vid.loop = loop;
+                vid.playsInline = true;
+                vid.style.display = "none";
+
+                texture = PIXI.Texture.from(item.animation.src);
+              } else {
+                texture = PIXI.Texture.from(item.animation.src);
+              }
+
+              if (texture) {
+                await Promise.all([
+                  this.applyTexture(texture),
+                  this.playSound(item.animation)
+                ]);
+              }
+
+              this.applyPixelCorrection();
+
+              // eslint-disable-next-line @typescript-eslint/no-unsafe-assignment
+              const { resource } = (mesh.texture?.baseTexture as any);
+              if (resource instanceof PIXI.VideoResource) {
+                const { source } = resource;
+                source.currentTime = 0;
+                await source.play();
+                source.loop = loop;
+                if (!loop) await animationEnd(resource);
+              }
+
+              break;
+            }
+          }
+        }
+
+      } catch (err) {
+        console.error(err);
+        if (err instanceof Error) ui.notifications?.error(err.message, { console: false, localize: true });
+      }
+    }
+
     /** Simple wrapper to handle executing animations */
     protected async doPlayAnimations(animations: AnimationConfig[], localOnly = false): Promise<void> {
       try {
@@ -316,6 +444,19 @@ export function AnimatedPlaceableMixin<t extends PlaceableConstructor>(base: t):
     }
 
     /**
+     * Plays a pre-configured animation sequence
+     * @param {AnimationSequence} sequence - {@link AnimationSequence}
+     */
+    public async playLocalAnimationSequence(sequence: AnimationSequence): Promise<void> {
+      try {
+        await this.doPlayAnimationSequence(sequence, true);
+      } catch (err) {
+        console.error(err);
+        if (err instanceof Error) ui.notifications?.error(err.message, { console: false, localize: true });
+      }
+    }
+
+    /**
      * Plays a series of animations WITHOUT notifying remote clients
      * @param {AnimationArgument} args - Array of names or {@link AnimationConfig}
      */
@@ -337,6 +478,19 @@ export function AnimatedPlaceableMixin<t extends PlaceableConstructor>(base: t):
       try {
         const animations = this.validateAnimationArguments(args);
         await this.doPlayAnimations(animations);
+      } catch (err) {
+        console.error(err);
+        if (err instanceof Error) ui.notifications?.error(err.message, { console: false, localize: true });
+      }
+    }
+
+    /**
+     * Plays an animation sequence
+     * @param {AnimationSequence} sequence - {@link AnimationSequence}
+     */
+    public async playAnimationSequence(sequence: AnimationSequence): Promise<void> {
+      try {
+        await this.doPlayAnimationSequence(sequence);
       } catch (err) {
         console.error(err);
         if (err instanceof Error) ui.notifications?.error(err.message, { console: false, localize: true });

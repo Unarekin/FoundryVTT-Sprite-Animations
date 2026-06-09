@@ -36,7 +36,7 @@ export interface AnimationSequence {
   }[];
 }
 
-export const MESSAGE_TYPES = ["play", "queue"] as const;
+export const MESSAGE_TYPES = ["play", "queue", "playSequence"] as const;
 export type SocketMessageType = typeof MESSAGE_TYPES[number];
 
 
@@ -57,6 +57,12 @@ export interface PlaySocketMessage extends SocketMessage {
 export interface QueueSocketMessage extends SocketMessage {
   type: "queue";
   animations: (string | AnimationConfig)[];
+  target: string;
+}
+
+export interface PlaySequenceSocketMessage extends SocketMessage {
+  type: "playSequence";
+  sequence: AnimationSequence;
   target: string;
 }
 
@@ -84,15 +90,36 @@ export interface AnimatedPlaceable {
   playAnimation(animation: AnimationArgument): Promise<void>;
   queueAnimation(animation: AnimationArgument): Promise<void>;
   queueAnimations(...animations: AnimationArgument[]): Promise<void>;
+  playAnimationSequence(sequence: AnimationSequence): Promise<void>;
 
   playLocalAnimations(...animations: AnimationArgument[]): Promise<void>;
   playLocalAnimation(animation: AnimationArgument): Promise<void>;
   queueLocalAnimations(...animations: AnimationArgument[]): Promise<void>;
   queueLocalAnimation(animation: AnimationArgument): Promise<void>;
+  playLocalAnimationSequence(sequence: AnimationSequence): Promise<void>;
 
   doPlayAnimations(animations: AnimationConfig[], localOnly: boolean): Promise<void>;
   doQueueAnimations(animations: AnimationConfig[], localOnly: boolean): Promise<void>;
 };
+
+export const TASK_TYPES = ["wait", "animation"] as const;
+export type AnimationSequenceTaskType = typeof TASK_TYPES[number];
+
+interface BaseAnimationSequenceTask {
+  type: AnimationSequenceTaskType;
+}
+
+export interface AnimationSequenceWaitTask extends BaseAnimationSequenceTask {
+  type: "wait";
+  duration: number;
+}
+
+export interface AnimationSequenceAnimationTask extends BaseAnimationSequenceTask {
+  type: "animation";
+  animation: AnimationConfig;
+}
+
+export type AnimationSequenceTask = AnimationSequenceWaitTask | AnimationSequenceAnimationTask;
 
 export interface DND5EUseActivity {
   item: foundry.documents.Item;
