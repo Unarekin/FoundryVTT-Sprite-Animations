@@ -2,6 +2,10 @@ import { getSectionManager } from "./sequencer";
 import { AnimatedTileMixin, AnimatedTokenMixin } from "./placeables";
 import { TokenConfigMixin, TileConfigMixin, PrototypeTokenConfigMixin } from "./applications"
 import { AnimatedPlaceable } from "interfaces";
+import { SETTINGS } from "./settings";
+import * as systems from "./systems";
+import { BaseSystemHandler } from "./systems";
+import { log } from "utils";
 
 Hooks.on("canvasReady", () => {
   if (__DEV__) {
@@ -34,6 +38,7 @@ Hooks.once("canvasConfig", () => {
   }
 });
 
+
 Hooks.once("ready", () => {
   try {
     if (game.release?.isNewer("13")) {
@@ -43,6 +48,17 @@ Hooks.once("ready", () => {
       // eslint-disable-next-line @typescript-eslint/no-unsafe-assignment
       CONFIG.Token.prototypeSheetClass = PrototypeTokenConfigMixin(CONFIG.Token.prototypeSheetClass as any) as any;
     }
+
+    if (game.settings?.get(__MODULE_ID__, SETTINGS.itemRollWrapper)) {
+      const systemClass = Object.values(systems).find(system => system.systemId === game.system?.id);
+      if (systemClass) {
+        // eslint-disable-next-line @typescript-eslint/no-unsafe-call
+        const system = new (systemClass as any)() as BaseSystemHandler;
+        log(`Registering item handler for ${game.system.title}`);
+        system.register();
+      }
+    }
+
   } catch (err) {
     console.error(err);
     if (err instanceof Error) ui.notifications?.error(err.message, { console: false, localize: true });

@@ -1,6 +1,11 @@
-import { AnimationConfig } from "interfaces";
+import { AnimatedPlaceable, AnimationConfig, AnimationSequence } from "interfaces";
 import mimeJSON from "./mime.json";
+import { InvalidAnimationError } from "errors/InvalidAnimationError";
 const mimeDB = mimeJSON as Record<string, string>;
+
+export function log(...args: unknown[]) {
+  console.log(__MODULE_TITLE__, "|", ...args);
+}
 
 function applyProperPixels(mesh: foundry.canvas.primary.PrimarySpriteMesh) {
   if (game.modules?.get("proper-pixels")?.active) {
@@ -151,4 +156,30 @@ export function logImage(url: string, width = 256, height = 256) {
   }
 
   image.src = url;
+}
+
+export async function wait(duration: number): Promise<void> {
+  return new Promise(resolve => { setTimeout(resolve, duration); });
+}
+
+async function playAnimationCount(placeable: AnimatedPlaceable, animation: AnimationConfig, count: number, immediate: boolean): Promise<void> {
+  const playTimes = count === 0 ? 1 : count;
+  const animations = new Array(playTimes).fill(null).map(() => foundry.utils.deepClone(animation));
+  if (immediate) await placeable.playAnimations(...animations);
+  else await placeable.queueAnimations(...animations);
+}
+
+export async function playAnimationSequence(placeable: AnimatedPlaceable, sequence: AnimationSequence) {
+
+  for (let i = 0; i < sequence.sequence.length; i++) {
+    const item = sequence.sequence[i];
+    const anim = foundry.utils.deepClone(typeof item.animation === "string" ? placeable.getAnimation(item.animation) : item.animation);
+    if (!anim) throw new InvalidAnimationError(item.animation);
+
+    if (item.delay) await wait(item.delay);
+    if (item.loopCount) await playAnimationCount(placeable, anim, item.loopCount, sequence.immediate);
+
+    if (i !== sequence.sequence.length - 1) anim.loop = false;
+    await placeable.playAnimation(anim);
+  }
 }

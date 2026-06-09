@@ -24,6 +24,18 @@ export interface MeshAdjustmentConfig {
   }
 }
 
+export interface AnimationSequence {
+  id: string;
+  resetAnimation?: string;
+  immediate: boolean;
+  sequence: {
+    id: string;
+    animation: AnimationArgument;
+    delay: number;
+    loopCount: number;
+  }[];
+}
+
 export const MESSAGE_TYPES = ["play", "queue"] as const;
 export type SocketMessageType = typeof MESSAGE_TYPES[number];
 
@@ -81,3 +93,9 @@ export interface AnimatedPlaceable {
   doPlayAnimations(animations: AnimationConfig[], localOnly: boolean): Promise<void>;
   doQueueAnimations(animations: AnimationConfig[], localOnly: boolean): Promise<void>;
 };
+
+export interface DND5EUseActivity {
+  item: foundry.documents.Item;
+  actor: foundry.documents.Actor;
+  getUsageToken(): foundry.documents.TokenDocument | undefined;
+}

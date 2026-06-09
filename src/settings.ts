@@ -7,7 +7,8 @@ import { HUDButtonPositions } from "types";
 export const SETTINGS = Object.freeze({
   animateOtherTokens: "animateOtherTokens",
   collapseHeaderButton: "collapseHeaderButton",
-  hudButtonPosition: "hudButtonPosition"
+  hudButtonPosition: "hudButtonPosition",
+  itemRollWrapper: "itemRollWrapper"
 });
 
 
@@ -58,9 +59,21 @@ Hooks.on("ready", () => {
       choices: Object.fromEntries(
         HUDButtonPositions.map(pos => [pos, `SPRITE-ANIMATIONS.SETTINGS.HUDBUTTONPOSITION.${pos.toUpperCase()}`])
       )
-    })
+    });
+
+    if (game.modules.get('lib-wrapper')?.active) {
+      game.settings.register(__MODULE_ID__, SETTINGS.itemRollWrapper, {
+        name: "SPRITE-ANIMATIONS.SETTINGS.ITEMROLLWRAPPER.LABEL",
+        hint: "SPRITE-ANIMATIONS.SETTINGS.ITEMROLLWRAPPER.HINT",
+        scope: "world",
+        requiresReload: true,
+        config: true,
+        type: Boolean,
+        default: false
+      })
+    }
   }
-})
+});
 
 export function canAnimatePlaceable(user: User, target: Token | TokenDocument | Tile | TileDocument | Actor): boolean {
   // eslint-disable-next-line @typescript-eslint/no-unsafe-call, @typescript-eslint/no-unsafe-member-access
