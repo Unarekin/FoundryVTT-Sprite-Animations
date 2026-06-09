@@ -1,5 +1,5 @@
 import { HUDButtonPosition } from "types";
-import { AnimationFlags, AnimationSequenceItem } from "interfaces"
+import { AnimationFlags, AnimationSequence } from "interfaces"
 import { libWrapper as libwrapperType } from "./libwrapper"
 
 
@@ -51,7 +51,7 @@ declare module "fvtt-types/configuration" {
       [__MODULE_ID__]: {
         enable: boolean;
         immediate: boolean;
-        animations: AnimationSequenceItem[];
+        sequence: AnimationSequence;
       }
     }
   }

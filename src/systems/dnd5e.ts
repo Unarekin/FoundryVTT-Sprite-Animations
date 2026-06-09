@@ -19,8 +19,8 @@ export class DND5ESystemHandler extends BaseSystemHandler {
 
     const flags = (activity as unknown as foundry.documents.Item).flags[__MODULE_ID__];
 
-    if (flags?.enable && Array.isArray(flags.animations) && flags.animations.length) {
-      void playAnimationSequence(token.object as unknown as AnimatedPlaceable, flags.animations, !!flags.immediate);
+    if (flags?.enable && Array.isArray(flags.sequence) && flags.sequence.sequence.length) {
+      void playAnimationSequence(token.object as unknown as AnimatedPlaceable, flags.sequence);
     }
   }
 

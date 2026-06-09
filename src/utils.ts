@@ -1,4 +1,4 @@
-import { AnimatedPlaceable, AnimationConfig, AnimationSequence, AnimationSequenceItem } from "interfaces";
+import { AnimatedPlaceable, AnimationConfig, AnimationSequence } from "interfaces";
 import mimeJSON from "./mime.json";
 import { InvalidAnimationError } from "errors/InvalidAnimationError";
 const mimeDB = mimeJSON as Record<string, string>;
@@ -169,7 +169,7 @@ async function playAnimationCount(placeable: AnimatedPlaceable, animation: Anima
   else await placeable.queueAnimations(...animations);
 }
 
-export async function playAnimationSequence(placeable: AnimatedPlaceable, sequence: AnimationSequence, immediate = false) {
+export async function playAnimationSequence(placeable: AnimatedPlaceable, sequence: AnimationSequence) {
 
   for (let i = 0; i < sequence.sequence.length; i++) {
     const item = sequence.sequence[i];
@@ -177,7 +177,7 @@ export async function playAnimationSequence(placeable: AnimatedPlaceable, sequen
     if (!anim) throw new InvalidAnimationError(item.animation);
 
     if (item.delay) await wait(item.delay);
-    if (item.loopCount) await playAnimationCount(placeable, anim, item.loopCount, immediate);
+    if (item.loopCount) await playAnimationCount(placeable, anim, item.loopCount, sequence.immediate);
 
     if (i !== sequence.sequence.length - 1) anim.loop = false;
     await placeable.playAnimation(anim);

@@ -27,6 +27,7 @@ export interface MeshAdjustmentConfig {
 export interface AnimationSequence {
   id: string;
   resetAnimation?: string;
+  immediate: boolean;
   sequence: {
     id: string;
     animation: AnimationArgument;
