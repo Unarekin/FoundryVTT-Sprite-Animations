@@ -1,5 +1,7 @@
 import { HUDButtonPosition } from "types";
-import { AnimationFlags } from "interfaces"
+import { AnimationFlags, AnimationSequenceItem } from "interfaces"
+import { libWrapper as libwrapperType } from "./libwrapper"
+
 
 declare global {
   declare const __DEV__: boolean;
@@ -7,6 +9,8 @@ declare global {
   // declare const __MODULE_ID__: string;
   const __MODULE_ID__ = "sprite-animations";
   declare const __MODULE_VERSION__: string;
+
+  declare var libWrapper: typeof libwrapperType;
 }
 
 
@@ -26,7 +30,14 @@ declare module "fvtt-types/configuration" {
   interface SettingConfig {
     "sprite-animations.animateOtherTokens": boolean;
     "sprite-animations.collapseHeaderButton": boolean;
-    "sprite-animations.hudButtonPosition": HUDButtonPosition
+    "sprite-animations.hudButtonPosition": HUDButtonPosition;
+    "sprite-animations.itemRollWrapper": boolean;
+  }
+
+  namespace Hooks {
+    interface HookConfig {
+      "dnd5e.preUseActivity": (activity: DND5EUseActivity, usageConfig: unknown, dialogConfig: unknown, messageConfig: unknown) => void;
+    }
   }
 
   interface FlagConfig {
@@ -35,6 +46,13 @@ declare module "fvtt-types/configuration" {
     },
     TileDocument: {
       [__MODULE_ID__]: AnimationFlags;
+    },
+    Item: {
+      [__MODULE_ID__]: {
+        enable: boolean;
+        immediate: boolean;
+        animations: AnimationSequenceItem[];
+      }
     }
   }
 }

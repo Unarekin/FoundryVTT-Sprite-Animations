@@ -9,6 +9,10 @@
         "HINT": "If enabled, will hide the text label for the header button, reducing the space that the button takes up.\nNOTE: Only affects applications that use ApplicationV1.",
         "LABEL": "Collapse application header button"
       },
+      "ITEMROLLWRAPPER": {
+        "LABEL": "Enable Item Roll Wrapper",
+        "HINT": "If enabled, will allow for triggering animations when an item is used.  Requires the libWrapper module."
+      },
       "HUDBUTTONPOSITION": {
         "HINT": "The position on which to add the animation player button on the Token HUD",
         "LABEL": "Token HUD Button Position",
