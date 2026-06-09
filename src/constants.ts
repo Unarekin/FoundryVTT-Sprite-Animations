@@ -26,5 +26,6 @@ export const DEFAULT_ANIMATION: AnimationConfig = {
 
 export const DEFAULT_ANIMATION_FLAGS: AnimationFlags = {
   meshAdjustments: DEFAULT_MESH_ADJUSTMENT,
+  sequences: [],
   animations: []
 }

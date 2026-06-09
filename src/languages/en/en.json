@@ -1,12 +1,13 @@
 {
   "SPRITE-ANIMATIONS": {
-    "TITLE": "Sprite Animations",
     "HUD": {
       "PLAY": "Sprite Animation Player"
     },
     "TABS": {
       "ANIMATIONS": "Animations",
-      "MESH": "Mesh"
-    }
+      "MESH": "Mesh",
+      "SEQUENCES": "Sequences"
+    },
+    "TITLE": "Sprite Animations"
   }
 }

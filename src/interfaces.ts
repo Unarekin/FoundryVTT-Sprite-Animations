@@ -26,6 +26,7 @@ export interface MeshAdjustmentConfig {
 
 export interface AnimationSequence {
   id: string;
+  name: string;
   resetAnimation?: string;
   immediate: boolean;
   sequence: {
@@ -70,6 +71,7 @@ export interface PlaySequenceSocketMessage extends SocketMessage {
 
 export interface AnimationFlags {
   animations: AnimationConfig[];
+  sequences: AnimationSequence[];
   meshAdjustments: MeshAdjustmentConfig;
 }
 

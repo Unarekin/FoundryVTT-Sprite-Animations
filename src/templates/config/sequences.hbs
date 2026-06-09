@@ -1,0 +1,57 @@
+<div class="tab{{#if tab.active}} active{{/if}} sprite-animations-config scrollable" {{#unless omitGroup}}data-group="animations" {{/unless}} data-tab="sequences" data-application-part="sequences">
+  <p>{{localize "SPRITE-ANIMATIONS.CONFIG.SEQUENCES.DESCRIPTION"}}</p>
+
+  <div class="form-group">
+    <div class="flexrow">
+      <div class="flex1">
+        <label for="{{idPrefix}}.animations.clear">{{localize "SPRITE-ANIMATIONS.CONFIG.SEQUENCES.CLEAR.LABEL"}}</label>
+      </div>
+      <div class="flex0">
+        <a data-action="clearAnimationSequences" data-tooltip="SPRITE-ANIMATIONS.CONFIG.SEQUENCES.CLEAR.LABEL">
+          <i class="fa-solid fa-trash"></i>
+        </a>
+      </div>
+    </div>
+  </div>
+
+  <div class="form-group">
+    <div class="flexrow">
+      <div class="flex1">
+        <label for="{{idPrefix}}.animations.clear">{{localize "SPRITE-ANIMATIONS.CONFIG.SEQUENCES.ADD.LABEL"}}</label>
+      </div>
+      <div class="flex0">
+        <a data-action="addAnimationSequence" data-tooltip="{{localize "SPRITE-ANIMATIONS.CONFIG.SEQUENCES.ADD.LABEL"}}">
+          <i class="fa-solid fa-plus"></i>
+        </a>
+      </div>
+    </div>
+  </div>
+
+  <hr>
+
+  <div class="sprite-animations-list">
+    <div class="sprite-animations-list--header">{{localize "SPRITE-ANIMATIONS.CONFIG.NAME"}}</div>
+    <div class="sprite-animations-list--header"></div>
+    <div class="sprite-animations-list--header"></div>
+  </div>
+  <div class="sprite-animations-list" data-role="animation-list">
+    {{#each sequences as |animation|}}
+      <div class="sprite-animations-list__animation{{#if (isOdd @index)}} sprite-animations-list__animation--alt-row{{/if}}" data-tooltip="{{animation.tooltip}}" data-tooltip-direction="UP">
+        {{animation.name}}
+      </div>
+      <div class="sprite-animations-list__animation{{#if (isOdd @index)}} sprite-animations-list__animation--alt-row{{/if}}">
+      </div>
+      <div class="sprite-animations-list__animation{{#if (isOdd @index)}} sprite-animations-list__animation--alt-row{{/if}}">
+        <a data-action="editAnimationSequence" data-animation="{{animation.id}}" class="sprite-animations-list__animation--vertical-center" data-tooltip="{{localize "SPRITE-ANIMATIONS.CONFIG.TOOLTIPS.EDIT" animation=animation.name}}">
+          <i class="fa-solid fa-cogs"></i>
+        </a>
+      </div>
+      <div class="sprite-animations-list__animation{{#if (isOdd @index)}} sprite-animations-list__animation--alt-row{{/if}}">
+        <a data-action="removeAnimationSequence" data-animation="{{animation.id}}" class="sprite-animations-list__animation--vertical-center" data-tooltip="{{localize "SPRITE-ANIMATIONS.CONFIG.TOOLTIPS.REMOVE" animation=animation.name}}">
+          <i class="fa-solid fa-trash"></i>
+        </a>
+      </div>
+    {{/each}}
+  </div>
+
+</div>
