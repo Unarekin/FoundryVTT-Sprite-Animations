@@ -168,8 +168,11 @@ export function AnimatedPlaceableMixin<t extends PlaceableConstructor>(base: t):
       return adjustments;
     }
 
+    /** {@link AnimationSequence[] } */
+    public get spriteAnimationSequences() { return this.getAnimationFlags()?.sequences ?? []; }
+
     /** Attempts to retrieve a single {@link AnimationConfig} by name */
-    public getAnimation(name: string): AnimationConfig | undefined { return this.spriteAnimations.find(item => item.name === name); }
+    public getAnimation(name: string): AnimationConfig | undefined { return this.spriteAnimations.find(item => item.name === name || item.id === name); }
 
     protected async doPlayAnimationSequence(sequence: AnimationSequence, localOnly = false): Promise<void> {
       try {
@@ -182,12 +185,11 @@ export function AnimatedPlaceableMixin<t extends PlaceableConstructor>(base: t):
 
         // Preload
         const knownAnimations: AnimationConfig[] = sequence.sequence
-          .map(anim => typeof anim.animation === "string" ? this.spriteAnimations.find(item => item.name === anim.animation) : anim.animation)
+          .map(anim => typeof anim.animation === "string" ? this.getAnimation(anim.animation) : anim.animation)
           .filter((item, i, arr) => {
             if (!item) return false;
             return arr.findIndex(elem => elem?.name === item.name) === i;
-          });
-
+          }) as AnimationConfig[];
 
         await Promise.all([
           this.preloadTextures(knownAnimations),
@@ -484,12 +486,18 @@ export function AnimatedPlaceableMixin<t extends PlaceableConstructor>(base: t):
       }
     }
 
+    protected getAnimationSequence(arg: string): AnimationSequence | undefined {
+      return this.getAnimationFlags()?.sequences?.find(item => item.id === arg || item.name === arg);
+    }
+
     /**
      * Plays an animation sequence
-     * @param {AnimationSequence} sequence - {@link AnimationSequence}
+     * @param {AnimationSequence} arg - {@link AnimationSequence}
      */
-    public async playAnimationSequence(sequence: AnimationSequence): Promise<void> {
+    public async playAnimationSequence(arg: AnimationSequence | string): Promise<void> {
       try {
+        const sequence = typeof arg === "string" ? this.getAnimationSequence(arg) : arg;
+        if (!sequence) throw new InvalidAnimationError(arg);
         await this.doPlayAnimationSequence(sequence);
       } catch (err) {
         console.error(err);
