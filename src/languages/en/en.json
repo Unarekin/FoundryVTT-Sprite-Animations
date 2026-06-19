@@ -3,6 +3,7 @@
     "HUD": {
       "PLAY": "Sprite Animation Player"
     },
+    "NEWSEQUENCE": "New Sequence",
     "TABS": {
       "ANIMATIONS": "Animations",
       "MESH": "Mesh",

@@ -160,3 +160,8 @@ export function logImage(url: string, width = 256, height = 256) {
 export async function wait(duration: number): Promise<void> {
   return new Promise(resolve => { setTimeout(resolve, duration); });
 }
+
+export function getFormData<t>(element: HTMLFormElement): t {
+  const formData = new foundry.applications.ux.FormDataExtended(element);
+  return foundry.utils.expandObject(formData.object) as t;
+}

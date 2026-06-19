@@ -61,17 +61,16 @@ Hooks.on("ready", () => {
       )
     });
 
-    if (game.modules.get('lib-wrapper')?.active) {
-      game.settings.register(__MODULE_ID__, SETTINGS.itemRollWrapper, {
-        name: "SPRITE-ANIMATIONS.SETTINGS.ITEMROLLWRAPPER.LABEL",
-        hint: "SPRITE-ANIMATIONS.SETTINGS.ITEMROLLWRAPPER.HINT",
-        scope: "world",
-        requiresReload: true,
-        config: true,
-        type: Boolean,
-        default: false
-      })
-    }
+
+    game.settings.register(__MODULE_ID__, SETTINGS.itemRollWrapper, {
+      name: "SPRITE-ANIMATIONS.SETTINGS.ITEMROLLWRAPPER.LABEL",
+      hint: "SPRITE-ANIMATIONS.SETTINGS.ITEMROLLWRAPPER.HINT",
+      scope: "world",
+      requiresReload: true,
+      config: !!game.modules.get('lib-wrapper')?.active,
+      type: Boolean,
+      default: false
+    });
   }
 });
 

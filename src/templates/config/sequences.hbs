@@ -42,12 +42,12 @@
       <div class="sprite-animations-list__animation{{#if (isOdd @index)}} sprite-animations-list__animation--alt-row{{/if}}">
       </div>
       <div class="sprite-animations-list__animation{{#if (isOdd @index)}} sprite-animations-list__animation--alt-row{{/if}}">
-        <a data-action="editAnimationSequence" data-animation="{{animation.id}}" class="sprite-animations-list__animation--vertical-center" data-tooltip="{{localize "SPRITE-ANIMATIONS.CONFIG.TOOLTIPS.EDIT" animation=animation.name}}">
+        <a data-action="editAnimationSequence" data-sequence="{{animation.id}}" class="sprite-animations-list__animation--vertical-center" data-tooltip="{{localize "SPRITE-ANIMATIONS.CONFIG.TOOLTIPS.EDIT" animation=animation.name}}">
           <i class="fa-solid fa-cogs"></i>
         </a>
       </div>
       <div class="sprite-animations-list__animation{{#if (isOdd @index)}} sprite-animations-list__animation--alt-row{{/if}}">
-        <a data-action="removeAnimationSequence" data-animation="{{animation.id}}" class="sprite-animations-list__animation--vertical-center" data-tooltip="{{localize "SPRITE-ANIMATIONS.CONFIG.TOOLTIPS.REMOVE" animation=animation.name}}">
+        <a data-action="removeAnimationSequence" data-sequence="{{animation.id}}" class="sprite-animations-list__animation--vertical-center" data-tooltip="{{localize "SPRITE-ANIMATIONS.CONFIG.TOOLTIPS.REMOVE" animation=animation.name}}">
           <i class="fa-solid fa-trash"></i>
         </a>
       </div>

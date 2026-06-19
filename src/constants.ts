@@ -1,4 +1,4 @@
-import { AnimationConfig, AnimationFlags, MeshAdjustmentConfig } from "interfaces";
+import { AnimationConfig, AnimationFlags, AnimationSequence, MeshAdjustmentConfig, SequenceItem } from "interfaces";
 
 export const TRANSLATION_KEY = "SPRITE-ANIMATIONS";
 
@@ -29,3 +29,18 @@ export const DEFAULT_ANIMATION_FLAGS: AnimationFlags = {
   sequences: [],
   animations: []
 }
+
+export const DEFAULT_ANIMATION_SEQUENCE: AnimationSequence = {
+  id: "",
+  name: game.i18n?.localize("SPRITE-ANIMATIONS.NEWSEQUENCE") ?? "New Sequence",
+  resetAnimation: "",
+  immediate: false,
+  sequence: []
+}
+
+export const DEFAULT_ANIMATION_SEQUENCE_ITEM: SequenceItem = Object.freeze({
+  id: "",
+  animation: "",
+  delay: 0,
+  loopCount: 0
+})

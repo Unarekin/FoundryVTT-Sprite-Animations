@@ -24,17 +24,19 @@ export interface MeshAdjustmentConfig {
   }
 }
 
+export interface SequenceItem {
+  id: string;
+  animation: AnimationArgument;
+  delay: number;
+  loopCount: number
+}
+
 export interface AnimationSequence {
   id: string;
   name: string;
   resetAnimation?: string;
   immediate: boolean;
-  sequence: {
-    id: string;
-    animation: AnimationArgument;
-    delay: number;
-    loopCount: number;
-  }[];
+  sequence: SequenceItem[];
 }
 
 export const MESSAGE_TYPES = ["play", "queue", "playSequence"] as const;
