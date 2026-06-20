@@ -115,8 +115,8 @@ export interface AnimatedPlaceable {
   queueLocalAnimation(animation: AnimationArgument): Promise<void>;
   playLocalAnimationSequence(sequence: AnimationSequence): Promise<void>;
 
-  doPlayAnimations(animations: AnimationConfig[], localOnly: boolean): Promise<void>;
-  doQueueAnimations(animations: AnimationConfig[], localOnly: boolean): Promise<void>;
+  doPlayAnimations(animations: AnimationConfig[], localOnly: boolean, loop: boolean): Promise<void>;
+  doQueueAnimations(animations: AnimationConfig[], localOnly: boolean, loop: boolean): Promise<void>;
 };
 
 export const TASK_TYPES = ["wait", "animation"] as const;

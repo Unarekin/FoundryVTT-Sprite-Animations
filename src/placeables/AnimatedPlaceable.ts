@@ -220,7 +220,7 @@ export function AnimatedPlaceableMixin<t extends PlaceableConstructor>(base: t):
       return queue;
     }
 
-    protected async doPlayAnimations(animations: (AnimationConfig | AnimationSequence)[], localOnly = false): Promise<void> {
+    protected async doPlayAnimations(animations: (AnimationConfig | AnimationSequence)[], localOnly = false, loop = false): Promise<void> {
       try {
         if (!animations.length) return void console.warn("No animations to play");
         const mesh = this.getMesh();
@@ -253,7 +253,6 @@ export function AnimatedPlaceableMixin<t extends PlaceableConstructor>(base: t):
         }
 
         const animationQueue = this.buildAnimationQueue(animations);
-        console.log("Animation queue:", animationQueue);
         const lastAnimation = animationQueue.findLast(item => item.type === "animation");
 
         // eslint-disable-next-line @typescript-eslint/prefer-for-of
@@ -286,7 +285,7 @@ export function AnimatedPlaceableMixin<t extends PlaceableConstructor>(base: t):
               const { resource } = (mesh.texture?.baseTexture as any);
               if (resource instanceof PIXI.VideoResource) {
                 const source = resource.source;
-                source.loop = !!config.loop && (config === lastAnimation?.data);
+                source.loop = (!!config.loop || loop) && (config === lastAnimation?.data);
                 source.currentTime = 0;
                 await source.play();
                 if (!source.loop) await animationEnd(resource);
@@ -303,17 +302,14 @@ export function AnimatedPlaceableMixin<t extends PlaceableConstructor>(base: t):
     }
 
     /** Simple wrapper to handle queueing animations */
-    protected async doQueueAnimations(animations: AnimationConfig[], localOnly = false): Promise<void> {
+    protected async doQueueAnimations(animations: (AnimationConfig | AnimationSequence)[], localOnly = false, loop = false): Promise<void> {
       try {
         const mesh = this.getMesh();
         if (!mesh) throw new InvalidSpriteError(this);
 
         if (!localOnly)
           void socketQueueAnimations(this.document.uuid, animations);
-        await Promise.all([
-          this.preloadTextures(animations),
-          this.preloadSounds(animations)
-        ]);
+
         if (mesh.texture?.baseTexture.resource instanceof PIXI.VideoResource) {
           const { source } = mesh.texture.baseTexture.resource;
           if ((source.currentTime > 0 && !source.paused && !source.ended && source.readyState > 2)) {
@@ -321,7 +317,7 @@ export function AnimatedPlaceableMixin<t extends PlaceableConstructor>(base: t):
             await animationEnd(mesh.texture.baseTexture.resource);
           }
         }
-        await this.doPlayAnimations(animations, localOnly);
+        await this.doPlayAnimations(animations, localOnly, loop);
       } catch (err) {
         console.error(err);
         if (err instanceof Error) ui.notifications?.error(err.message, { console: false, localize: true });

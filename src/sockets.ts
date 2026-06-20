@@ -1,5 +1,5 @@
 import { InvalidSpriteError, LocalizedError } from "errors";
-import { AnimationConfig, PlaySocketMessage, QueueSocketMessage, SocketMessage } from "interfaces";
+import { PlaySocketMessage, QueueSocketMessage, SocketMessage } from "interfaces";
 import { coerceSprite } from "coercion";
 import { AnimationArgument } from "types";
 
@@ -54,7 +54,7 @@ export function playAnimations(spriteId: string, animations: AnimationArgument[]
   game.socket.emit(SOCKET_IDENTIFIER, msg);
 }
 
-export function queueAnimations(spriteId: string, animations: (AnimationConfig | string)[]): void {
+export function queueAnimations(spriteId: string, animations: AnimationArgument[]): void {
   if (!game.socket) throw new LocalizedError("SOCKETNOTINITIALIZED");
   const msg = createMessage<QueueSocketMessage>({
     type: "queue",
