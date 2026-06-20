@@ -25,8 +25,8 @@ export type TileRenderOptions = RenderOptions;
 export type TileConfiguration = Configuration<foundry.documents.TileDocument>;
 
 export interface PlayerRenderContext extends foundry.applications.api.ApplicationV2.RenderContext {
-  animations: AnimationConfig[];
-  queue: AnimationConfig[];
+  animations: (AnimationConfig | AnimationSequence)[];
+  queue: (AnimationConfig | AnimationSequence)[];
   idPrefix: string;
   buttons: foundry.applications.api.ApplicationV2.FormFooterButton[];
 }
