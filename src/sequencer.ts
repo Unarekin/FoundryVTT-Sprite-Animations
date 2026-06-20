@@ -1,5 +1,5 @@
 import { InvalidAnimationError, InvalidSpriteError, LocalizedError } from "errors";
-import { Animatable, AnimatedPlaceable, AnimationConfig } from "./interfaces";
+import { Animatable, AnimatedPlaceable, AnimationConfig, AnimationSequence } from "./interfaces";
 import { coerceAnimation, coerceSprite } from "coercion";
 
 let sectionManagerClass: Class;
@@ -16,7 +16,7 @@ export function getSectionManager(): Class {
       static niceName = "SpriteAnimation";
 
       private _target: TokenLike | undefined = undefined;;
-      private _animations: (string | AnimationConfig)[] = [];
+      private _animations: (string | AnimationConfig | AnimationSequence)[] = [];
       private _immediate = false;
       private _loop: boolean | undefined = undefined;
       private _local = false;
@@ -44,9 +44,19 @@ export function getSectionManager(): Class {
        * @param animations 
        */
       add(...animations: (string | AnimationConfig)[]): this {
-        const coerced = animations.map(anim => coerceAnimation(anim, this._target)) as AnimationConfig[];
+        // const coerced = animations.map(anim => coerceAnimation(anim, this._target)) as AnimationConfig[];
+        const coerced = animations.map(id => {
+          if (typeof id === "string") {
+            let anim: AnimationConfig | AnimationSequence | undefined = this._target?.getAnimation(id);
+            if (anim) return anim;
+            anim = this._target?.getAnimationSequence(id);
+            if (anim) return anim;
+          } else {
+            return id;
+          }
+        })
         if (coerced.some(anim => !anim)) throw new InvalidAnimationError(animations.find(anim => !anim));
-        this._animations.push(...animations);
+        this._animations.push(...coerced as AnimationConfig[]);
         return this;
       }
 
@@ -106,7 +116,6 @@ export function getSectionManager(): Class {
 
 
         const local = this._local;
-        console.log("Calling:", this._target, animations, local);
         // eslint-disable-next-line @typescript-eslint/no-unsafe-member-access
         if ((this as any)._waitUntilFinished) await playFunc.call(this._target, animations, local);
         else void playFunc.call(this._target, animations, local);

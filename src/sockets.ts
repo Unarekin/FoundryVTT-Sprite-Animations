@@ -1,5 +1,5 @@
 import { InvalidSpriteError, LocalizedError } from "errors";
-import { AnimationConfig, AnimationSequence, PlaySequenceSocketMessage, PlaySocketMessage, QueueSocketMessage, SocketMessage } from "interfaces";
+import { AnimationConfig, PlaySocketMessage, QueueSocketMessage, SocketMessage } from "interfaces";
 import { coerceSprite } from "coercion";
 import { AnimationArgument } from "types";
 
@@ -27,11 +27,6 @@ Hooks.once("ready", () => {
         doQueueAnimations(msg.target, msg.animations).catch((err: Error) => { ui.notifications?.error(err.message, { localize: true }) });
         break;
       }
-      case "playSequence": {
-        const msg = message as PlaySequenceSocketMessage;
-        doPlayAnimationSequence(msg.target, msg.sequence).catch((err: Error) => { ui.notifications?.error(err.message, { localize: true }) });
-      }
-
     }
   })
 })
@@ -47,20 +42,7 @@ function createMessage<t extends SocketMessage = SocketMessage>(message: Partial
   } as any;
 }
 
-export function playAnimationSequence(spriteId: string, sequence: AnimationSequence): void {
-  if (!game.socket) throw new LocalizedError("SOCKETNOTINITIALIZED");
-  const msg = createMessage<PlaySequenceSocketMessage>({
-    type: "playSequence",
-    target: spriteId,
-    users: game.users?.filter(user => user.active).map(user => user.id),
-    sequence
-  });
-
-  game.socket.emit(SOCKET_IDENTIFIER, msg);
-}
-
-
-export function playAnimations(spriteId: string, animations: (AnimationConfig | string)[]): void {
+export function playAnimations(spriteId: string, animations: AnimationArgument[]): void {
   if (!game.socket) throw new LocalizedError("SOCKETNOTINITIALIZED");
   const msg = createMessage<PlaySocketMessage>({
     type: "play",
@@ -96,10 +78,4 @@ async function doPlayAnimations(uuid: string, animations: AnimationArgument[]) {
   if (!sprite) throw new InvalidSpriteError(uuid);
 
   await sprite.playLocalAnimations(...animations);
-}
-
-async function doPlayAnimationSequence(uuid: string, sequence: AnimationSequence) {
-  const sprite = coerceSprite(uuid);
-  if (!sprite) throw new InvalidSpriteError(uuid);
-  await sprite.playLocalAnimationSequence(sequence);
 }

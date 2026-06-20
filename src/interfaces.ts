@@ -1,4 +1,4 @@
-import { AnimationArgument, DeepPartial } from "types";
+import { AnimationArgument, AnimationQueueItemType, DeepPartial } from "types";
 
 export type Animatable = Actor | Tile | TileDocument;
 
@@ -11,6 +11,25 @@ export interface AnimationConfig {
   volume: number;
   enableSound: boolean;
 }
+
+interface BaseAnimationQueueItem<t> {
+  type: AnimationQueueItemType;
+  data: t;
+}
+
+interface WaitData {
+  duration: number;
+}
+
+export interface WaitAnimationQueueItem extends BaseAnimationQueueItem<WaitData> {
+  type: "wait";
+}
+
+export interface PlayAnimationQueueItem extends BaseAnimationQueueItem<AnimationConfig> {
+  type: "animation";
+}
+
+export type AnimationQueueItem = WaitAnimationQueueItem | PlayAnimationQueueItem;
 
 export interface MeshAdjustmentConfig {
   enable: boolean;
@@ -53,23 +72,15 @@ export interface SocketMessage {
 
 export interface PlaySocketMessage extends SocketMessage {
   type: "play";
-  animations: (string | AnimationConfig)[];
+  animations: AnimationArgument[];
   target: string;
 }
 
 export interface QueueSocketMessage extends SocketMessage {
   type: "queue";
-  animations: (string | AnimationConfig)[];
+  animations: AnimationArgument[];
   target: string;
 }
-
-export interface PlaySequenceSocketMessage extends SocketMessage {
-  type: "playSequence";
-  sequence: AnimationSequence;
-  target: string;
-}
-
-
 
 export interface AnimationFlags {
   animations: AnimationConfig[];
@@ -83,11 +94,13 @@ export interface AnimatedPlaceable {
   canAnimate: boolean;
   canUserAnimate(user: User): boolean;
   spriteAnimations: AnimationConfig[];
+  spriteAnimationSequences: AnimationSequence[];
   animationMeshAdjustments: MeshAdjustmentConfig;
   getFittedMeshSize(): { x: number, y: number, width: number, height: number } | undefined;
   previewAnimationAdjustments: MeshAdjustmentConfig | undefined;
   applyAnimationMeshAdjustments(adjustments: MeshAdjustmentConfig, force?: boolean): void;
   getAnimation(name: string): AnimationConfig | undefined;
+  getAnimationSequence(name: string): AnimationSequence | undefined;
   getAnimationFlags(): DeepPartial<AnimationFlags> | undefined;
 
   playAnimations(...animations: AnimationArgument[]): Promise<void>;
