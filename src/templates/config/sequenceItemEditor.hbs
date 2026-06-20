@@ -1,0 +1,44 @@
+<div>
+  <input type="hidden" name="id" value="{{item.id}}" />
+  <div class="form-group">
+    <label for="{{idPrefix}}-animation">{{localize
+        "SPRITE-ANIMATIONS.ITEMEDITOR.ANIMATION.LABEL"
+      }}</label>
+    <select id="{{idPrefix}}-animation" name="animation">
+      {{selectOptions animations selected=item.animation}}
+    </select>
+    <p class="hint">{{localize
+        "SPRITE-ANIMATIONS.ITEMEDITOR.ANIMATION.LABEL"
+      }}</p>
+  </div>
+
+  <div class="form-group">
+    <label for="{{idPrefix}}-delay">{{localize
+        "SPRITE-ANIMATIONS.ITEMEDITOR.DELAY.LABEL"
+      }}</label>
+    <input
+      type="number"
+      id="{{idPrefix}}-delay"
+      name="delay"
+      value="{{item.delay}}"
+    />
+    <p class="hint">{{localize "SPRITE-ANIMATIONS.ITEMEDITOR.DELAY.HINT"}}</p>
+  </div>
+
+  <div class="form-group">
+    <label for="{{idPrefix}}-loopCount">{{localize
+        "SPRITE-ANIMATIONS.ITEMEDITOR.LOOPCOUNT.LABEL"
+      }}</label>
+    <input
+      type="number"
+      id="{{idPrefix}}-loopCount"
+      name="loopCount"
+      value="{{item.loopCount}}"
+      min="0"
+      step="1"
+    />
+    <p class="hint">{{localize
+        "SPRITE-ANIMATIONS.ITEMEDITOR.LOOPCOUNT.HINT"
+      }}</p>
+  </div>
+</div>

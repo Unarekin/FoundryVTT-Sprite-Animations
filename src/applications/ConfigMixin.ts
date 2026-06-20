@@ -1,34 +1,34 @@
+/* eslint-disable @typescript-eslint/unbound-method */
 import { DeepPartial } from "fvtt-types/utils";
 import { RenderContext, RenderOptions, Configuration, AutoFitDimensions } from "./types";
 import { AnimatedPlaceable, AnimationConfig, AnimationFlags } from "interfaces";
 import { downloadJSON, generatePreviewTooltip, isImage, isVideo, uploadJSON } from "utils";
-import { DEFAULT_ANIMATION, DEFAULT_ANIMATION_FLAGS, DEFAULT_MESH_ADJUSTMENT } from "../constants";
+import { DEFAULT_ANIMATION, DEFAULT_ANIMATION_FLAGS, DEFAULT_ANIMATION_SEQUENCE, DEFAULT_MESH_ADJUSTMENT } from "../constants";
 import { LocalizedError } from "errors";
 import { AnimationConfiguration } from "./AnimationConfig";
+import { SequenceEditor } from "./SequenceEditor";
 
 
 export function ConfigMixin<Document extends foundry.abstract.Document.Any, Context extends RenderContext, Config extends Configuration<Document>, Options extends RenderOptions>(Base: typeof foundry.applications.api.DocumentSheetV2<Document, Context, Config, Options>) {
 
   abstract class AnimatedConfig extends Base {
 
-    static DEFAULT_OPTIONS: Configuration = {
+    static DEFAULT_OPTIONS: DeepPartial<Configuration> = {
       // eslint-disable-next-line @typescript-eslint/no-unsafe-member-access
       ...((Base as any).DEFAULT_OPTIONS as DeepPartial<Configuration>),
       actions: {
         // eslint-disable-next-line @typescript-eslint/no-unsafe-member-access
         ...(((Base as any).DEFAULT_OPTIONS as DeepPartial<Configuration>).actions),
-        // eslint-disable-next-line @typescript-eslint/unbound-method
         addAnimation: AnimatedConfig.AddAnimation,
-        // eslint-disable-next-line @typescript-eslint/unbound-method,
         editAnimation: AnimatedConfig.EditAnimation,
-        // eslint-disable-next-line @typescript-eslint/unbound-method
         clearAnimations: AnimatedConfig.ClearAnimations,
-        // eslint-disable-next-line @typescript-eslint/unbound-method
         removeAnimation: AnimatedConfig.RemoveAnimation,
-        // eslint-disable-next-line @typescript-eslint/unbound-method
         lockAnimationAdjustmentDimensions: AnimatedConfig.LockAnimationAdjustmentDimensions,
-        // eslint-disable-next-line @typescript-eslint/unbound-method
-        autoFitAnimation: AnimatedConfig.AutoFitAnimation
+        autoFitAnimation: AnimatedConfig.AutoFitAnimation,
+        removeAnimationSequence: AnimatedConfig.RemoveAnimationSequence,
+        clearAnimationSequences: AnimatedConfig.ClearAnimationSequences,
+        addAnimationSequence: AnimatedConfig.AddAnimationSequence,
+        editAnimationSequence: AnimatedConfig.EditAnimationSequence
       }
     }
 
@@ -41,6 +41,7 @@ export function ConfigMixin<Document extends foundry.abstract.Document.Any, Cont
         scrollable: [".sprite-animations-list"],
         templates: [
           `modules/${__MODULE_ID__}/templates/config/animations.hbs`,
+          `modules/${__MODULE_ID__}/templates/config/sequences.hbs`,
           `modules/${__MODULE_ID__}/templates/config/mesh.hbs`
         ]
       }
@@ -76,6 +77,39 @@ export function ConfigMixin<Document extends foundry.abstract.Document.Any, Cont
 
     // #region Action Handlers
 
+    static async AddAnimationSequence(this: AnimatedConfig): Promise<void> {
+      try {
+        const sequence = await SequenceEditor.Edit({
+          ...foundry.utils.deepClone(DEFAULT_ANIMATION_SEQUENCE),
+          id: foundry.utils.randomID()
+        }, this.animationFlagCache?.animations);
+        if (!sequence) return;
+        this.animationFlagCache?.sequences.push(sequence);
+        await this.render();
+      } catch (err) {
+        console.error(err);
+        if (err instanceof Error) ui.notifications?.error(err.message, { console: false, localize: true });
+      }
+    }
+
+    static async ClearAnimationSequences(this: AnimatedConfig) {
+      try {
+        if (!this.animationFlagCache?.sequences?.length) return;
+        const confirmed = (await foundry.applications.api.DialogV2.confirm({
+          window: { title: game?.i18n?.localize("SPRITE-ANIMATIONS.CONFIG.SEQUENCES.CLEAR.LABEL") ?? "" },
+          content: game?.i18n?.localize("SPRITE-ANIMATIONS.CONFIG.SEQUENCES.CLEAR.MESSAGE") ?? ""
+        })) as boolean;
+
+        if (!confirmed) return;
+
+        this.animationFlagCache.sequences = [];
+        await this.render();
+      } catch (err) {
+        console.error(err);
+        if (err instanceof Error) ui.notifications?.error(err.message, { console: false, localize: true });
+      }
+    }
+
     static async EditAnimation(this: AnimatedConfig, event: Event, element: HTMLElement) {
       try {
         if (!this.animationFlagCache) return;
@@ -90,6 +124,28 @@ export function ConfigMixin<Document extends foundry.abstract.Document.Any, Cont
           this.animationFlagCache.animations[index] = edited;
           await this.render();
         }
+      } catch (err) {
+        console.error(err);
+        if (err instanceof Error) ui.notifications?.error(err.message, { console: false, localize: true });
+      }
+    }
+
+
+    static async RemoveAnimationSequence(this: AnimatedConfig, event: Event, element: HTMLElement) {
+      try {
+        const id = element.dataset.animation;
+        if (!id) return;
+        const sequence = this.animationFlagCache?.sequences.find(seq => seq.id === id);
+        if (!sequence) return;
+        const confirmed = (await foundry.applications.api.DialogV2.confirm({
+          window: { title: game?.i18n?.localize("SPRITE-ANIMATIONS.CONFIG.REMOVE.TITLE") ?? "" },
+          content: game?.i18n?.format("SPRITE-ANIMATIONS.CONFIG.REMOVE.MESSAGE", { name: sequence.name })
+        })) as boolean;
+        if (!confirmed) return;
+
+        const index = this.animationFlagCache?.sequences.findIndex(seq => seq.id === id) ?? -1;
+        if (index > -1) this.animationFlagCache?.sequences.splice(index, 1);
+        await this.render();
       } catch (err) {
         console.error(err);
         if (err instanceof Error) ui.notifications?.error(err.message, { console: false, localize: true });
@@ -286,6 +342,28 @@ export function ConfigMixin<Document extends foundry.abstract.Document.Any, Cont
 
         this.animationFlagCache.animations = [];
         await this.render();
+      } catch (err) {
+        console.error(err);
+        if (err instanceof Error) ui.notifications?.error(err.message, { console: false, localize: true });
+      }
+    }
+
+    static async EditAnimationSequence(this: AnimatedConfig, event: Event, element: HTMLElement) {
+      try {
+        if (!this.animationFlagCache) return;
+        const id = element.dataset.sequence;
+        if (!id) return;
+
+        const anim = this.animationFlagCache.sequences.find(item => item.id === id);
+        if (!anim) return;
+        const edited = await SequenceEditor.Edit(foundry.utils.deepClone(anim), this.animationFlagCache?.animations ?? []);
+        if (!edited) return;
+
+        const index = this.animationFlagCache.sequences.findIndex(item => item.id === id);
+        if (index !== -1) {
+          this.animationFlagCache.sequences.splice(index, 1, edited);
+          await this.render();
+        }
       } catch (err) {
         console.error(err);
         if (err instanceof Error) ui.notifications?.error(err.message, { console: false, localize: true });
@@ -534,7 +612,8 @@ export function ConfigMixin<Document extends foundry.abstract.Document.Any, Cont
         foundry.utils.deleteProperty(formData as any, `flags.${__MODULE_ID__}`);
         await this.setAnimationFlags({
           ...flags,
-          animations: this.animationFlagCache?.animations ?? []
+          animations: this.animationFlagCache?.animations ?? [],
+          sequences: this.animationFlagCache?.sequences ?? []
         });
 
       }
@@ -698,6 +777,7 @@ export function ConfigMixin<Document extends foundry.abstract.Document.Any, Cont
         adjustSizeTooltip: "",
         tabs: [
           { id: "animations", group: "animations", active: this.tabGroups.animations === "animations" || !this.tabGroups.animations, cssClass: "", icon: "fa-solid fa-cog", label: "SPRITE-ANIMATIONS.TABS.ANIMATIONS" },
+          { id: "sequences", group: "animations", active: this.tabGroups.animations === "sequences", cssClass: "", icon: "fa-solid fa-person-running", label: "SPRITE-ANIMATIONS.TABS.SEQUENCES" },
           { id: "mesh", group: "animations", active: this.tabGroups.animations === "mesh", cssClass: "", icon: "fa-solid fa-cube", label: "SPRITE-ANIMATIONS.TABS.MESH" }
         ]
       };

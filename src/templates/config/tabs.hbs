@@ -2,6 +2,7 @@
   {{#with animations}}
     {{> "templates/generic/tab-navigation.hbs" }}
     {{> "modules/sprite-animations/templates/config/animations.hbs" tab=(lookup tabs 0) }}
-    {{> "modules/sprite-animations/templates/config/mesh.hbs" tab=(lookup tabs 1) }}
+    {{> "modules/sprite-animations/templates/config/sequences.hbs" tab=(lookup tabs 1)}}
+    {{> "modules/sprite-animations/templates/config/mesh.hbs" tab=(lookup tabs 2) }}
   {{/with}}
 </div>

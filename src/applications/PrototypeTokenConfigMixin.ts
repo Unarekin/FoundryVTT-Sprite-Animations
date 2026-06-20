@@ -24,7 +24,6 @@ export function PrototypeTokenConfigMixin<t extends typeof foundry.applications.
     protected async setAnimationFlags(flags: AnimationFlags): Promise<void> {
       const actualFlags = foundry.utils.mergeObject(foundry.utils.deepClone(DEFAULT_ANIMATION_FLAGS), flags);
       // eslint-disable-next-line @typescript-eslint/no-unsafe-member-access
-      // eslint-disable-next-line @typescript-eslint/no-unsafe-member-access
       if ((this as any).actor) {
         // eslint-disable-next-line @typescript-eslint/no-unsafe-member-access, @typescript-eslint/no-unsafe-call
         await (this as any).actor.update({
@@ -54,7 +53,7 @@ export function PrototypeTokenConfigMixin<t extends typeof foundry.applications.
       await super._onSubmitForm(formConfig, e);
       if (!(e.target instanceof HTMLFormElement)) return;
 
-      const formData = foundry.utils.expandObject(new FormDataExtended(e.target).object);
+      const formData = foundry.utils.expandObject(new foundry.applications.ux.FormDataExtended(e.target).object);
       const flags = foundry.utils.mergeObject(foundry.utils.deepClone(DEFAULT_ANIMATION_FLAGS), foundry.utils.getProperty(formData, `flags.${__MODULE_ID__}`) as object) as AnimationFlags | undefined;
 
       if (flags) {

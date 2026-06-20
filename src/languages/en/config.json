@@ -35,6 +35,16 @@
         "UPLOAD": "Upload JSON"
       },
       "LOOP": "Loop",
+      "SEQUENCES": {
+        "DESCRIPTION": "Here you can pre-configure sequences of animations to be played as a set",
+        "ADD": {
+          "LABEL": "Add Sequence"
+        },
+        "CLEAR": {
+          "LABEL": "Clear Sequences",
+          "MESSAGE": "Are you sure you want to do this?"
+        }
+      },
       "MESH": {
         "DESCRIPTION": "The following options can be used to adjust the display of the underlying SpriteMesh used for this token or tile, should you need to adjust the scale or positioning relative to the actual placeable object's selectable area, in order to fit larger animations.",
         "ENABLE": "Enable Mesh Adjustments",

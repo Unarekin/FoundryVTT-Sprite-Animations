@@ -34,13 +34,37 @@
   }
 }
 
-
 .sprite-animations-list {
   max-height: 256px;
   overflow-y: auto;
 
   display: grid;
   grid-template-columns: 1fr 1fr 24px 24px;
+
+  &__animation {
+    padding: 4px 6px;
+    position: relative;
+
+    &--vertical-center {
+      position: absolute;
+      top: 50%;
+      left: 50%;
+      margin-top: -12px;
+      margin-left: -12px;
+    }
+
+    &--alt-row {
+      background-color: var(--table-row-color-even);
+    }
+  }
+}
+
+.sprite-animationsequence-list {
+  max-height: 256px;
+  overflow-y: auto;
+
+  display: grid;
+  grid-template-columns: 1fr 1fr 1fr 24px 24px;
 
   &__animation {
     padding: 4px 6px;

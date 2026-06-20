@@ -1,4 +1,4 @@
-import { AnimationConfig, MeshAdjustmentConfig } from "interfaces";
+import { AnimationConfig, AnimationSequence, MeshAdjustmentConfig, SequenceItem } from "interfaces";
 
 export interface RenderContext<t extends foundry.abstract.Document.Any = foundry.abstract.Document.Any> extends foundry.applications.api.DocumentSheetV2.RenderContext<t> {
   animations: {
@@ -25,8 +25,8 @@ export type TileRenderOptions = RenderOptions;
 export type TileConfiguration = Configuration<foundry.documents.TileDocument>;
 
 export interface PlayerRenderContext extends foundry.applications.api.ApplicationV2.RenderContext {
-  animations: AnimationConfig[];
-  queue: AnimationConfig[];
+  animations: (AnimationConfig | AnimationSequence)[];
+  queue: (AnimationConfig | AnimationSequence)[];
   idPrefix: string;
   buttons: foundry.applications.api.ApplicationV2.FormFooterButton[];
 }
@@ -55,4 +55,18 @@ export interface AutoFitDimensions {
     x: number;
     y: number;
   }
+}
+
+export interface SequenceEditorContext extends foundry.applications.api.ApplicationV2.RenderContext {
+  idPrefix: string;
+  sequence: AnimationSequence;
+  animations: Record<string, string>;
+  buttons: foundry.applications.api.ApplicationV2.FormFooterButton[];
+}
+
+export interface SequenceItemEditorContext extends foundry.applications.api.ApplicationV2.RenderContext {
+  idPrefix: string;
+  item: SequenceItem;
+  animations: Record<string, string>;
+  buttons: foundry.applications.api.ApplicationV2.FormFooterButton[];
 }

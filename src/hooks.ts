@@ -58,7 +58,6 @@ Hooks.once("ready", () => {
         system.register();
       }
     }
-
   } catch (err) {
     console.error(err);
     if (err instanceof Error) ui.notifications?.error(err.message, { console: false, localize: true });

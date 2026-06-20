@@ -1,4 +1,4 @@
-import { AnimationConfig } from "interfaces";
+import { AnimationConfig, AnimationSequence } from "interfaces";
 
 export type IsObject<T> = T extends Readonly<Record<string, any>>
   ? T extends AnyArray | AnyFunction
@@ -21,7 +21,10 @@ export type DeepPartial<T> = T extends unknown
 export type AnyArray = readonly unknown[];
 export type AnyFunction = (arg0: never, ...args: never[]) => unknown;
 
-export type AnimationArgument = string | AnimationConfig;
+export type AnimationArgument = string | AnimationConfig | AnimationSequence;
 
 export const HUDButtonPositions = ["none", "left", "right"] as const;
 export type HUDButtonPosition = typeof HUDButtonPositions[number];
+
+export const AnimationQueueItemTypes = ["wait", "animation"] as const;
+export type AnimationQueueItemType = typeof AnimationQueueItemTypes[number];

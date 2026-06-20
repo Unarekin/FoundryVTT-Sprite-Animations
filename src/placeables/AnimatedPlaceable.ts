@@ -1,7 +1,7 @@
 import { DEFAULT_MESH_ADJUSTMENT } from "../constants";
-import { AnimationConfig, AnimationFlags, MeshAdjustmentConfig, AnimatedPlaceable as AnimatedPlaceableInterface } from "interfaces";
+import { AnimationConfig, AnimationFlags, MeshAdjustmentConfig, AnimatedPlaceable as AnimatedPlaceableInterface, AnimationSequence, AnimationQueueItem } from "interfaces";
 import { AnimationArgument, DeepPartial } from "types";
-import { animationEnd, isVideo } from "utils";
+import { animationEnd, wait } from "utils";
 import { InvalidAnimationError, InvalidSpriteError } from "errors";
 import { playAnimations as socketPlayAnimations, queueAnimations as socketQueueAnimations } from "../sockets";
 import { canAnimatePlaceable } from "settings";
@@ -168,26 +168,83 @@ export function AnimatedPlaceableMixin<t extends PlaceableConstructor>(base: t):
       return adjustments;
     }
 
-    /** Attempts to retrieve a single {@link AnimationConfig} by name */
-    public getAnimation(name: string): AnimationConfig | undefined { return this.spriteAnimations.find(item => item.name === name); }
+    /** {@link AnimationSequence[] } */
+    public get spriteAnimationSequences() { return this.getAnimationFlags()?.sequences ?? []; }
 
-    /** Simple wrapper to handle executing animations */
-    protected async doPlayAnimations(animations: AnimationConfig[], localOnly = false): Promise<void> {
+    /** Attempts to retrieve a single {@link AnimationConfig} by name */
+    public getAnimation(name: string): AnimationConfig | undefined { return this.spriteAnimations.find(item => item.name === name || item.id === name); }
+
+    protected buildAnimationQueueSequence(sequence: AnimationSequence): AnimationQueueItem[] {
+      const queue: AnimationQueueItem[] = [];
+
+      for (const item of sequence.sequence) {
+        const iterations = item.loopCount || 1;
+        const anim = typeof item.animation === "string" ? this.getAnimation(item.animation) : item.animation as AnimationConfig;
+        if (!anim) throw new InvalidAnimationError(item.animation);
+
+        for (let i = 0; i < iterations; i++) {
+          if (item.delay)
+            queue.push({ type: "wait", data: { duration: item.delay } });
+          queue.push({ type: "animation", data: anim });
+        }
+      }
+
+      if (sequence.resetAnimation) {
+        const anim = this.getAnimation(sequence.resetAnimation);
+        if (anim)
+          queue.push({ type: "animation", data: anim });
+      }
+      return queue;
+    }
+
+    protected buildAnimationQueue(animations: AnimationArgument[]): AnimationQueueItem[] {
+      const queue: AnimationQueueItem[] = [];
+      for (const entry of animations) {
+        if (typeof entry === "string") {
+          const seq = this.getAnimationSequence(entry);
+          const anim = this.getAnimation(entry);
+          if (seq) {
+            queue.push(...this.buildAnimationQueueSequence(seq));
+          } else if (anim) {
+            queue.push({ type: "animation", data: anim });
+          } else {
+            throw new InvalidAnimationError(entry);
+          }
+        } else if ((entry as AnimationSequence).sequence) {
+          queue.push(...this.buildAnimationQueueSequence(entry as AnimationSequence));
+        } else {
+          queue.push({ type: "animation", data: entry as AnimationConfig });
+        }
+      }
+
+      return queue;
+    }
+
+    protected async doPlayAnimations(animations: (AnimationConfig | AnimationSequence)[], localOnly = false, loop = false): Promise<void> {
       try {
-        if (!animations.length) return console.warn("No animations to play");
+        if (!animations.length) return void console.warn("No animations to play");
         const mesh = this.getMesh();
         if (!mesh) throw new InvalidSpriteError(this);
-
         if (!localOnly)
           void socketPlayAnimations(this.document.uuid, animations);
+
+        // Preload
+        const knownAnimations = animations.map(anim => {
+          if ((anim as AnimationSequence).sequence) {
+            return (anim as AnimationSequence).sequence.map(item => typeof item.animation === "string" ? this.getAnimation(item.animation) : item.animation);
+          } else {
+            return anim as AnimationConfig;
+          }
+        }).flat();
+
+        const invalid = knownAnimations.some(item => !item);
+        if (invalid) throw new InvalidAnimationError(undefined);
+
         await Promise.all([
-          this.preloadTextures(animations),
-          this.preloadSounds(animations)
+          this.preloadTextures(knownAnimations as AnimationConfig[]),
+          this.preloadSounds(knownAnimations as AnimationConfig[])
         ]);
 
-        const filters = [...mesh.filters ?? []];
-
-        // const vidElements: HTMLVideoElement[] = [];
         const lastIndex = lastVideoElement.findIndex(elem => elem.mesh === mesh);
         if (lastIndex !== -1) {
           const lastElem = lastVideoElement[lastIndex];
@@ -195,69 +252,64 @@ export function AnimatedPlaceableMixin<t extends PlaceableConstructor>(base: t):
           lastElem.elem.remove();
         }
 
-        for (let i = 0; i < animations.length; i++) {
-          const config = animations[i];
-          const loop = (i < animations.length - 1 ? false : typeof config.loop === "boolean" ? config.loop : true);
+        const animationQueue = this.buildAnimationQueue(animations);
+        const lastAnimation = animationQueue.findLast(item => item.type === "animation");
 
+        // eslint-disable-next-line @typescript-eslint/prefer-for-of
+        for (let i = 0; i < animationQueue.length; i++) {
+          const queueItem = animationQueue[i];
+          switch (queueItem.type) {
+            case "wait": {
+              await wait(queueItem.data.duration);
+              break;
+            }
+            case "animation": {
+              const config = queueItem.data;
+              if (foundry.helpers.media.VideoHelper.hasVideoExtension(config.src)) {
+                const texture = PIXI.Texture.from(config.src);
+                await Promise.all([
+                  this.applyTexture(texture),
+                  this.playSound(config)
+                ]);
+              } else {
+                const texture = PIXI.Texture.from(config.src);
+                await Promise.all([
+                  this.applyTexture(texture),
+                  this.playSound(config)
+                ]);
+              }
 
-          if (isVideo(config.src)) {
-            // We explicitly make a video element so that it can play at a different point
-            // as the base resource, since PIXI will re-use video elements from its cache
-            const vid = document.createElement("video");
-            vid.src = config.src;
-            vid.crossOrigin = "anonymous";
-            vid.loop = loop;
-            vid.playsInline = true;
-            vid.style.display = "none";
+              this.applyPixelCorrection();
 
-            const texture = PIXI.Texture.from(config.src);
-
-            await Promise.all([
-              this.applyTexture(texture),
-              this.playSound(config)
-            ]);
-          } else {
-            const texture = PIXI.Texture.from(config.src);
-            await Promise.all([
-              this.applyTexture(texture),
-              this.playSound(config)
-            ]);
-          }
-          if (mesh.filters) mesh.filters.splice(0, mesh.filters.length, ...filters);
-          else mesh.filters = [...filters];
-
-          this.applyPixelCorrection();
-
-          // eslint-disable-next-line @typescript-eslint/no-unsafe-assignment
-          const { resource } = (mesh.texture?.baseTexture as any);
-          if (resource instanceof PIXI.VideoResource) {
-            const { source } = resource;
-            source.currentTime = 0;
-            await source.play();
-            source.loop = loop;
-            if (!loop) await animationEnd(resource);
+              // eslint-disable-next-line @typescript-eslint/no-unsafe-assignment
+              const { resource } = (mesh.texture?.baseTexture as any);
+              if (resource instanceof PIXI.VideoResource) {
+                const source = resource.source;
+                source.loop = (!!config.loop || loop) && (config === lastAnimation?.data);
+                source.currentTime = 0;
+                await source.play();
+                if (!source.loop) await animationEnd(resource);
+              }
+              break;
+            }
           }
         }
 
-
       } catch (err) {
         console.error(err);
-        if (err instanceof Error) ui.notifications?.error(err.message, { console: false, localize: true });
+        if (err instanceof Error) ui.notifications?.error(err.message, { console: false });
       }
     }
 
     /** Simple wrapper to handle queueing animations */
-    protected async doQueueAnimations(animations: AnimationConfig[], localOnly = false): Promise<void> {
+    protected async doQueueAnimations(animations: (AnimationConfig | AnimationSequence)[], localOnly = false, loop = false): Promise<void> {
       try {
         const mesh = this.getMesh();
         if (!mesh) throw new InvalidSpriteError(this);
 
         if (!localOnly)
           void socketQueueAnimations(this.document.uuid, animations);
-        await Promise.all([
-          this.preloadTextures(animations),
-          this.preloadSounds(animations)
-        ]);
+
         if (mesh.texture?.baseTexture.resource instanceof PIXI.VideoResource) {
           const { source } = mesh.texture.baseTexture.resource;
           if ((source.currentTime > 0 && !source.paused && !source.ended && source.readyState > 2)) {
@@ -265,7 +317,7 @@ export function AnimatedPlaceableMixin<t extends PlaceableConstructor>(base: t):
             await animationEnd(mesh.texture.baseTexture.resource);
           }
         }
-        await this.doPlayAnimations(animations, localOnly);
+        await this.doPlayAnimations(animations, localOnly, loop);
       } catch (err) {
         console.error(err);
         if (err instanceof Error) ui.notifications?.error(err.message, { console: false, localize: true });
@@ -280,7 +332,15 @@ export function AnimatedPlaceableMixin<t extends PlaceableConstructor>(base: t):
      * @throws Will throw {@link InvalidAnimationError} if any invalid arguments are provided
      */
     protected validateAnimationArguments(args: AnimationArgument[]): AnimationConfig[] {
-      const animations = args.map(anim => typeof anim === "string" ? this.getAnimation(anim) : anim);
+      const animations = args.map(anim => {
+        if (typeof anim === "string") {
+          const seq = this.getAnimationSequence(anim);
+          if (seq) return seq;
+          return this.getAnimation(anim);
+        } else {
+          return anim;
+        }
+      });
       const invalidIndex = animations.findIndex(item => !item);
       if (invalidIndex > -1) throw new InvalidAnimationError(args[invalidIndex]);
       return animations as AnimationConfig[];
@@ -341,6 +401,10 @@ export function AnimatedPlaceableMixin<t extends PlaceableConstructor>(base: t):
         console.error(err);
         if (err instanceof Error) ui.notifications?.error(err.message, { console: false, localize: true });
       }
+    }
+
+    protected getAnimationSequence(arg: string): AnimationSequence | undefined {
+      return this.getAnimationFlags()?.sequences?.find(item => item.id === arg || item.name === arg);
     }
 
     /**

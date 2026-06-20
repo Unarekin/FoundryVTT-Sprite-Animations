@@ -1,12 +1,14 @@
 {
   "SPRITE-ANIMATIONS": {
-    "TITLE": "Sprite Animations",
     "HUD": {
       "PLAY": "Sprite Animation Player"
     },
+    "NEWSEQUENCE": "New Sequence",
     "TABS": {
       "ANIMATIONS": "Animations",
-      "MESH": "Mesh"
-    }
+      "MESH": "Mesh",
+      "SEQUENCES": "Sequences"
+    },
+    "TITLE": "Sprite Animations"
   }
 }

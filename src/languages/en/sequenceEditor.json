@@ -1,0 +1,42 @@
+{
+  "SPRITE-ANIMATIONS": {
+    "ITEMEDITOR": {
+      "ANIMATION": {
+        "HINT": "The animation to play.",
+        "LABEL": "Animation"
+      },
+      "DELAY": {
+        "HINT": "Time in milliseconds to wait before beginning this animation",
+        "LABEL": "Delay"
+      },
+      "LOOPCOUNT": {
+        "HINT": "Number of times in a row to play this animation.",
+        "LABEL": "Loop Count"
+      },
+      "TITLE": "Sequence Item Editor"
+    },
+    "SEQUENCEEDITOR": {
+      "ANIMATIONS": "Animations",
+      "BUTTONS": {
+        "ADD": "Add Animation",
+        "CLEAR": "Clear Animations",
+        "REMOVE": "Remove Animation"
+      },
+      "DESCRIPTION": "",
+      "IMMEDIATE": {
+        "HINT": "If enabled, will not wait for the current animation to finish when playing this sequence.",
+        "LABEL": "Immediate"
+      },
+      "NAME": {
+        "HINT": "",
+        "LABEL": "Name"
+      },
+      "RESETANIMATION": {
+        "HINT": "The animation to play after this sequence finishes, if any.",
+        "LABEL": "Reset Animation"
+      },
+      "TITLE": "Sequence Editor",
+      "LOOPS": "Loops"
+    }
+  }
+}

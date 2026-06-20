@@ -1,6 +1,7 @@
 import { InvalidAnimationError, InvalidSpriteError, LocalizedError } from "errors";
-import { Animatable, AnimatedPlaceable, AnimationConfig } from "./interfaces";
-import { coerceAnimation, coerceSprite } from "coercion";
+import { Animatable, AnimatedPlaceable, AnimationConfig, AnimationSequence } from "./interfaces";
+import { coerceSprite } from "coercion";
+import { AnimationArgument } from "types";
 
 let sectionManagerClass: Class;
 
@@ -16,7 +17,7 @@ export function getSectionManager(): Class {
       static niceName = "SpriteAnimation";
 
       private _target: TokenLike | undefined = undefined;;
-      private _animations: (string | AnimationConfig)[] = [];
+      private _animations: AnimationArgument[] = [];
       private _immediate = false;
       private _loop: boolean | undefined = undefined;
       private _local = false;
@@ -44,9 +45,19 @@ export function getSectionManager(): Class {
        * @param animations 
        */
       add(...animations: (string | AnimationConfig)[]): this {
-        const coerced = animations.map(anim => coerceAnimation(anim, this._target)) as AnimationConfig[];
+        // const coerced = animations.map(anim => coerceAnimation(anim, this._target)) as AnimationConfig[];
+        const coerced = animations.map(id => {
+          if (typeof id === "string") {
+            const seq = this._target?.getAnimationSequence(id);
+            if (seq) return seq;
+            return this._target?.getAnimation(id);
+          } else {
+            return id;
+          }
+        });
+
         if (coerced.some(anim => !anim)) throw new InvalidAnimationError(animations.find(anim => !anim));
-        this._animations.push(...animations);
+        this._animations.push(...coerced as (AnimationConfig | AnimationSequence)[]);
         return this;
       }
 
@@ -87,10 +98,10 @@ export function getSectionManager(): Class {
         if (!mesh) throw new InvalidSpriteError(this._target);
 
 
-        const animations = this._animations.map(anim => coerceAnimation(anim, this._target)) as AnimationConfig[];
-        if (animations.some(anim => !anim)) throw new InvalidAnimationError(animations.find(anim => !anim));
+        // const animations = this._animations.map(anim => coerceAnimation(anim, this._target)) as AnimationConfig[];
+        // if (animations.some(anim => !anim)) throw new InvalidAnimationError(animations.find(anim => !anim));
 
-        if (this._loop) animations[animations.length - 1].loop = true;
+
 
         // eslint-disable-next-line @typescript-eslint/no-unsafe-function-type
         let playFunc: Function | undefined = undefined;
@@ -106,10 +117,9 @@ export function getSectionManager(): Class {
 
 
         const local = this._local;
-        console.log("Calling:", this._target, animations, local);
         // eslint-disable-next-line @typescript-eslint/no-unsafe-member-access
-        if ((this as any)._waitUntilFinished) await playFunc.call(this._target, animations, local);
-        else void playFunc.call(this._target, animations, local);
+        if ((this as any)._waitUntilFinished) await playFunc.call(this._target, this._animations, local, !!this._loop);
+        else void playFunc.call(this._target, this._animations, local, !!this._loop);
 
         // eslint-disable-next-line @typescript-eslint/no-unsafe-argument, @typescript-eslint/no-unsafe-member-access
         await new Promise(resolve => { setTimeout(resolve, (this as any)._currentWaitTime) });

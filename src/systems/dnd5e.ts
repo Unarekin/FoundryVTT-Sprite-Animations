@@ -1,7 +1,5 @@
 import { AnimatedPlaceable, DND5EUseActivity } from "interfaces";
 import { BaseSystemHandler } from "./base";
-import { playAnimationSequence } from "utils";
-
 
 
 export class DND5ESystemHandler extends BaseSystemHandler {
@@ -20,7 +18,7 @@ export class DND5ESystemHandler extends BaseSystemHandler {
     const flags = (activity as unknown as foundry.documents.Item).flags[__MODULE_ID__];
 
     if (flags?.enable && Array.isArray(flags.sequence) && flags.sequence.sequence.length) {
-      void playAnimationSequence(token.object as unknown as AnimatedPlaceable, flags.sequence);
+      void (token.object as unknown as AnimatedPlaceable).playAnimationSequence(flags.sequence);
     }
   }
 

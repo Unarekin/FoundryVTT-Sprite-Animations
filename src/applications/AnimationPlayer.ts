@@ -1,11 +1,11 @@
 import { DeepPartial } from "types";
 import { PlayerRenderContext, PlayerConfiguration, PlayerRenderOptions } from "./types";
-import { AnimatedPlaceable, AnimationConfig, AnimationFlags } from "interfaces";
+import { AnimatedPlaceable, AnimationConfig, AnimationFlags, AnimationSequence } from "interfaces";
 import { InvalidAnimationError } from "errors";
 
 export class AnimationPlayer extends foundry.applications.api.HandlebarsApplicationMixin(foundry.applications.api.ApplicationV2<PlayerRenderContext, PlayerConfiguration, PlayerRenderOptions>) {
 
-  #animationQueue: AnimationConfig[] = [];
+  #animationQueue: (AnimationConfig | AnimationSequence)[] = [];
 
   public static PARTS: Record<string, foundry.applications.api.HandlebarsApplicationMixin.HandlebarsTemplatePart> = {
     header: {
@@ -62,12 +62,16 @@ export class AnimationPlayer extends foundry.applications.api.HandlebarsApplicat
     await this.close();
   }
 
-  protected getAnimationFromElement(elem: HTMLElement): AnimationConfig {
+  protected getAnimationFromElement(elem: HTMLElement): AnimationConfig | AnimationSequence {
     const animationId = elem.dataset.animation;
     if (!animationId) throw new InvalidAnimationError(animationId);
-    const animation = this.getAnimationFlags()?.animations?.find(anim => anim.id === animationId);
-    if (!animation) throw new InvalidAnimationError(animationId);
-    return animation;
+    const flags = this.getAnimationFlags();
+    const anim = flags?.animations?.find(anim => anim.id === animationId);
+    if (anim) return anim;
+    const seq = flags?.sequences?.find(seq => seq.id === animationId);
+    if (seq) return seq;
+
+    throw new InvalidAnimationError(animationId);
   }
 
 
@@ -195,12 +199,25 @@ export class AnimationPlayer extends foundry.applications.api.HandlebarsApplicat
     const context = await super._prepareContext(options);
 
     context.idPrefix = foundry.utils.randomID();
-    context.queue = foundry.utils.deepClone(this.#animationQueue);
-    context.animations = (this.getAnimationFlags()?.animations ?? []).map(anim => {
-      // Data from older versions of the module may not have IDs on the animations
-      if (!anim.id) anim.id = foundry.utils.randomID();
-      return anim;
-    })
+    context.queue = foundry.utils.deepClone(this.#animationQueue).map(item => {
+      if ((item as AnimationSequence).sequence)
+        item.name = game.i18n?.format(`SPRITE-ANIMATIONS.PLAYER.SEQUENCEITEM`, { name: item.name }) ?? item.name
+      return item
+    });
+
+    const flags = this.getAnimationFlags();
+
+    context.animations = [
+      ...(flags?.animations ?? []).map(anim => {
+        // Data from older versions of the module may not have IDs on the animations
+        if (!anim.id) anim.id = foundry.utils.randomID();
+        return anim;
+      }),
+      ...(flags?.sequences ?? []).map(seq => ({
+        ...seq,
+        name: game.i18n?.format(`SPRITE-ANIMATIONS.PLAYER.SEQUENCEITEM`, { name: seq.name }) ?? seq.name
+      }))
+    ].sort((a, b) => a.name.localeCompare(b.name));
 
 
     context.buttons = [
