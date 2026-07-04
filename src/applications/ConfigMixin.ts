@@ -98,7 +98,7 @@ export function ConfigMixin<Document extends foundry.abstract.Document.Any, Cont
         const confirmed = (await foundry.applications.api.DialogV2.confirm({
           window: { title: game?.i18n?.localize("SPRITE-ANIMATIONS.CONFIG.SEQUENCES.CLEAR.LABEL") ?? "" },
           content: game?.i18n?.localize("SPRITE-ANIMATIONS.CONFIG.SEQUENCES.CLEAR.MESSAGE") ?? ""
-        })) as boolean;
+        }))!;
 
         if (!confirmed) return;
 
@@ -140,7 +140,7 @@ export function ConfigMixin<Document extends foundry.abstract.Document.Any, Cont
         const confirmed = (await foundry.applications.api.DialogV2.confirm({
           window: { title: game?.i18n?.localize("SPRITE-ANIMATIONS.CONFIG.REMOVE.TITLE") ?? "" },
           content: game?.i18n?.format("SPRITE-ANIMATIONS.CONFIG.REMOVE.MESSAGE", { name: sequence.name })
-        })) as boolean;
+        }))!;
         if (!confirmed) return;
 
         const index = this.animationFlagCache?.sequences.findIndex(seq => seq.id === id) ?? -1;
@@ -161,7 +161,7 @@ export function ConfigMixin<Document extends foundry.abstract.Document.Any, Cont
         const confirmed = (await foundry.applications.api.DialogV2.confirm({
           window: { title: game?.i18n?.localize("SPRITE-ANIMATIONS.CONFIG.REMOVE.TITLE") ?? "" },
           content: game?.i18n?.format("SPRITE-ANIMATIONS.CONFIG.REMOVE.MESSAGE", { name: animation.name })
-        })) as boolean;
+        }))!;
         if (!confirmed) return;
 
         const index = this.animationFlagCache?.animations.findIndex(animation => animation.id === id) ?? -1;
@@ -336,7 +336,7 @@ export function ConfigMixin<Document extends foundry.abstract.Document.Any, Cont
         const confirmed = (await foundry.applications.api.DialogV2.confirm({
           window: { title: game?.i18n?.localize("SPRITE-ANIMATIONS.CONFIG.CLEAR.LABEL") ?? "" },
           content: game?.i18n?.localize("SPRITE-ANIMATIONS.CONFIG.CLEAR.MESSAGE") ?? ""
-        })) as boolean;
+        }))!;
 
         if (!confirmed) return;
 
@@ -432,7 +432,7 @@ export function ConfigMixin<Document extends foundry.abstract.Document.Any, Cont
           const confirmed = (await foundry.applications.api.DialogV2.confirm({
             window: { title: game?.i18n?.localize("SPRITE-ANIMATIONS.CONFIG.IMPORT.BULK") ?? "" },
             content: game?.i18n?.localize("SPRITE-ANIMATIONS.CONFIG.IMPORT.BULKWARNING") ?? ""
-          })) as boolean;
+          }))!;
           if (!confirmed) return;
         }
         const path = (await new Promise(resolve => { void new foundry.applications.apps.FilePicker.implementation({ type: "folder", callback: resolve }).browse("/"); }));

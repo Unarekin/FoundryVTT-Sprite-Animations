@@ -83,7 +83,7 @@ export class SequenceEditor extends foundry.applications.api.HandlebarsApplicati
       const confirmed = (await foundry.applications.api.DialogV2.confirm({
         window: { title: game?.i18n?.localize("SPRITE-ANIMATIONS.CONFIG.REMOVE.TITLE") ?? "" },
         content: game?.i18n?.format("SPRITE-ANIMATIONS.CONFIG.REMOVE.MESSAGE", { name: animation.name })
-      })) as boolean;
+      }))!;
       if (!confirmed) return;
       const index = this.sequence.sequence.findIndex(anim => anim.id === id);
       if (index !== -1) this.sequence.sequence.splice(index, 1);
