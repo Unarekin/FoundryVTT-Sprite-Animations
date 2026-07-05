@@ -1,13 +1,26 @@
 {
   "$schema": "https://json.schemastore.org/tsconfig.json",
-  "exclude": ["./node_modules"],
-  "files": ["./src/module.ts"],
+  "exclude": [
+    "./node_modules"
+  ],
+  "files": [
+    "./src/module.ts"
+  ],
   "compilerOptions": {
-    "baseUrl": "./src",
+    "rootDir": "./src",
     "outDir": "dist",
+    "paths": {
+      "*": [
+        "./src/*"
+      ]
+    },
     "esModuleInterop": true,
     "allowSyntheticDefaultImports": true,
-    "types": ["fvtt-types", "./@types/global.d.ts", "sequencer/typings/types.d.ts"],
+    "types": [
+      "fvtt-types",
+      "./@types/global.d.ts",
+      "sequencer/typings/types.d.ts"
+    ],
     "moduleResolution": "bundler",
     "noEmit": false,
     "target": "ESNext",
