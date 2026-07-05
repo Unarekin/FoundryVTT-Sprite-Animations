@@ -54,13 +54,14 @@ export function PrototypeTokenConfigMixin<t extends typeof foundry.applications.
       if (!(e.target instanceof HTMLFormElement)) return;
 
       const formData = foundry.utils.expandObject(new foundry.applications.ux.FormDataExtended(e.target).object);
-      const flags = foundry.utils.mergeObject(foundry.utils.deepClone(DEFAULT_ANIMATION_FLAGS), foundry.utils.getProperty(formData, `flags.${__MODULE_ID__}`) as object) as AnimationFlags | undefined;
+      // const flags = foundry.utils.mergeObject(foundry.utils.deepClone(DEFAULT_ANIMATION_FLAGS), foundry.utils.getProperty(formData, `flags.${__MODULE_ID__}`) as object) as AnimationFlags | undefined;
+      const flags = {
+        ...(this.animationFlagCache ?? {}),
+        ...foundry.utils.getProperty(formData instanceof foundry.applications.ux.FormDataExtended ? foundry.utils.expandObject(formData.object) : formData, `flags.${__MODULE_ID__}`) as AnimationFlags | undefined
+      } as AnimationFlags
 
       if (flags) {
-        await this.setAnimationFlags({
-          ...flags,
-          animations: this.animationFlagCache?.animations ?? []
-        });
+        await this.setAnimationFlags(flags);
       }
     }
   }
